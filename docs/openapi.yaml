@@ -1,0 +1,1169 @@
+openapi: 3.0.3
+info:
+  title: 雅思课程网站 API
+  version: 0.1.0
+  description: |
+    C 端（PC Web 为主 + 微信 H5）+ 讲师后台 + 管理后台接口。
+    配套文档：需求与方案梳理.md、页面级PRD.md。
+    约定：
+      - 金额单位：分（integer）。
+      - 时间：ISO8601 UTC，如 2026-06-20T08:00:00Z。
+      - 鉴权：除登录/支付回调外均需 Bearer Token（JWT）。
+      - 单端在线：所有需登录接口校验 token 内 sid 是否为该用户当前活跃 session，否则 401 SESSION_KICKED。
+      - 统一响应包裹：见 components.schemas.ApiResult / ApiError。
+servers:
+  - url: https://api.ielts-courses.com
+    description: 生产
+  - url: https://api-test.ielts-courses.com
+    description: 测试
+
+tags:
+  - name: auth
+    description: 登录、手机号绑定
+  - name: catalog
+    description: 课程、套餐、订阅、搜索（公开）
+  - name: order
+    description: 下单、支付、退款
+  - name: play
+    description: 播放鉴权、课件预览、心跳
+  - name: me
+    description: 我的学习/订单/优惠券/订阅/设置
+  - name: teacher
+    description: 讲师后台
+  - name: admin
+    description: 管理后台
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ============ AUTH ============
+  /api/auth/wx/qrcode:
+    get:
+      tags: [auth]
+      summary: PC 扫码登录 - 获取二维码
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          sceneId: { type: string, description: 轮询用唯一标识 }
+                          qrcodeUrl: { type: string, description: 二维码图片地址 }
+                          expireIn: { type: integer, example: 120 }
+
+  /api/auth/wx/qrcode/state:
+    get:
+      tags: [auth]
+      summary: PC 扫码登录 - 轮询扫码状态
+      security: []
+      parameters:
+        - { name: sceneId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          state:
+                            type: string
+                            enum: [PENDING, SCANNED, CONFIRMED, EXPIRED]
+                          token:
+                            type: string
+                            nullable: true
+                            description: CONFIRMED 时返回 JWT
+                          needBindPhone:
+                            type: boolean
+                            description: 是否需强制绑定手机号
+
+  /api/auth/wx/h5/callback:
+    get:
+      tags: [auth]
+      summary: H5 公众号网页授权回调换 token
+      security: []
+      parameters:
+        - { name: code, in: query, required: true, schema: { type: string } }
+        - { name: state, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          token: { type: string }
+                          needBindPhone: { type: boolean }
+
+  /api/auth/phone/send-code:
+    post:
+      tags: [auth]
+      summary: 发送手机号绑定/换绑短信验证码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { type: string, example: '13800001234' }
+                captcha: { type: string, description: 图形验证码（防刷） }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/auth/phone/bind:
+    post:
+      tags: [auth]
+      summary: 绑定/换绑手机号
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, code]
+              properties:
+                phone: { type: string }
+                code: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      summary: 退出登录（清除当前活跃 session）
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  # ============ CATALOG ============
+  /api/courses:
+    get:
+      tags: [catalog]
+      summary: 课程列表（筛选/排序/分页）
+      security: []
+      parameters:
+        - { name: categoryId, in: query, schema: { type: integer } }
+        - { name: targetScore, in: query, schema: { type: string, example: '6.5' } }
+        - { name: classType, in: query, schema: { type: string, enum: [BASIC, INTENSIVE, SPRINT] } }
+        - { name: inSubscription, in: query, schema: { type: boolean } }
+        - { name: sort, in: query, schema: { type: string, enum: [DEFAULT, NEWEST, SALES, PRICE_ASC, PRICE_DESC], default: DEFAULT } }
+        - { name: keyword, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/PageCourseCard' }
+
+  /api/courses/{id}:
+    get:
+      tags: [catalog]
+      summary: 课程详情
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/CourseDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/courses/{id}/materials:
+    get:
+      tags: [catalog]
+      summary: 课程课件清单（仅元信息，无下载地址）
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/MaterialMeta' }
+
+  /api/bundles:
+    get:
+      tags: [catalog]
+      summary: 套餐列表
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Bundle' } }
+
+  /api/bundles/{id}:
+    get:
+      tags: [catalog]
+      summary: 套餐详情（含课程清单）
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/BundleDetail' }
+
+  /api/sub-plans:
+    get:
+      tags: [catalog]
+      summary: 订阅计划列表 + 订阅专区课程预览
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          plans: { type: array, items: { $ref: '#/components/schemas/SubPlan' } }
+                          zoneCourses: { type: array, items: { $ref: '#/components/schemas/CourseCard' } }
+
+  /api/search:
+    get:
+      tags: [catalog]
+      summary: 搜索课程
+      security: []
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/PageCourseCard' }
+
+  # ============ ORDER & PAY ============
+  /api/orders/preview:
+    post:
+      tags: [order]
+      summary: 试算订单价格（选券后实时算价，不创建订单）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderCreateReq' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/OrderAmount' }
+
+  /api/orders:
+    post:
+      tags: [order]
+      summary: 创建订单（服务端算价，幂等）
+      description: 同一用户同一商品存在未支付订单时复用或关闭旧单。
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderCreateReq' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/Order' }
+        '409':
+          description: 商品已拥有/券已用等冲突
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /api/orders/{orderNo}:
+    get:
+      tags: [order]
+      summary: 查询订单（前端轮询支付结果）
+      parameters:
+        - { name: orderNo, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/Order' }
+
+  /api/orders/{orderNo}/pay:
+    post:
+      tags: [order]
+      summary: 调起微信支付
+      parameters:
+        - { name: orderNo, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel]
+              properties:
+                channel: { type: string, enum: [NATIVE, JSAPI, H5], description: PC=NATIVE，公众号内=JSAPI }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: object
+                        description: NATIVE 返回 codeUrl(二维码)；JSAPI 返回微信支付参数
+                        properties:
+                          channel: { type: string }
+                          codeUrl: { type: string, nullable: true }
+                          jsapiParams:
+                            type: object
+                            nullable: true
+                            properties:
+                              appId: { type: string }
+                              timeStamp: { type: string }
+                              nonceStr: { type: string }
+                              package: { type: string }
+                              signType: { type: string }
+                              paySign: { type: string }
+
+  /api/orders/{orderNo}/cancel:
+    post:
+      tags: [order]
+      summary: 取消未支付订单
+      parameters:
+        - { name: orderNo, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/orders/{orderNo}/refund:
+    post:
+      tags: [order]
+      summary: 申请退款（规则内，后台审核）
+      parameters:
+        - { name: orderNo, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+        '403':
+          description: 不符合退款规则（超观看比例/超天数）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /api/pay/wx/notify:
+    post:
+      tags: [order]
+      summary: 微信支付异步回调（验签+幂等+发权限）
+      security: []
+      description: 微信服务端调用。以本回调为权限发放权威来源。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, description: 微信支付平台报文（密文） }
+      responses:
+        '200':
+          description: 必须按微信要求返回 {code, message}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code: { type: string, example: SUCCESS }
+                  message: { type: string }
+
+  # ============ PLAY & MATERIAL ============
+  /api/play/credential:
+    post:
+      tags: [play]
+      summary: 获取播放凭证（核心鉴权）
+      description: |
+        校验链路：登录态 + 单端在线 + (已购Entitlement有效 或 订阅有效且课程在专区 或 试看节) + 风控限流。
+        通过后返回腾讯云 VOD fileId + psign(短时效，内含水印参数) + 水印展示参数。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lessonId]
+              properties:
+                lessonId: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/PlayCredential' }
+        '401':
+          description: 未登录 / 单端被踢
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '403':
+          description: 无权限（未购/订阅无效/已过期）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/materials/{id}/preview-url:
+    get:
+      tags: [play]
+      summary: 获取课件短时效预览签名 URL（禁下载）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          type: { type: string, enum: [PDF, IMAGE, AUDIO] }
+                          previewUrl: { type: string, description: 短时效签名 URL }
+                          expireIn: { type: integer, example: 300 }
+                          watermark: { $ref: '#/components/schemas/Watermark' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/play/heartbeat:
+    post:
+      tags: [play]
+      summary: 播放心跳（上报进度 + 维持单端在线校验）
+      description: 客户端每 15-30s 调用；服务端去重合并写 watch_record；若非活跃端返回 KICKED。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lessonId, position]
+              properties:
+                lessonId: { type: integer }
+                position: { type: integer, description: 当前播放秒 }
+                delta: { type: integer, description: 本次新增观看秒 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          alive: { type: boolean, description: false=被踢，需停播 }
+
+  # ============ ME ============
+  /api/me/profile:
+    get:
+      tags: [me]
+      summary: 当前用户信息
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/UserProfile' }
+
+  /api/me/courses:
+    get:
+      tags: [me]
+      summary: 我的课程（在学/已完成/已过期）
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [LEARNING, FINISHED, EXPIRED] } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/MyCourse' }
+
+  /api/me/records:
+    get:
+      tags: [me]
+      summary: 某课程的学习记录（各课时进度）
+      parameters:
+        - { name: courseId, in: query, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/WatchRecord' }
+
+  /api/me/orders:
+    get:
+      tags: [me]
+      summary: 我的订单
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [UNPAID, PAID, CLOSED, REFUNDED] } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Order' }
+
+  /api/me/coupons:
+    get:
+      tags: [me]
+      summary: 我的优惠券
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [AVAILABLE, USED, EXPIRED] } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/UserCoupon' }
+
+  /api/me/subscription:
+    get:
+      tags: [me]
+      summary: 我的订阅状态与历史
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data: { $ref: '#/components/schemas/MySubscription' }
+
+  /api/me/account:
+    delete:
+      tags: [me]
+      summary: 账号注销（合规，二次确认后）
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  # ============ TEACHER ============
+  /api/teacher/overview:
+    get:
+      tags: [teacher]
+      summary: 讲师工作台概览
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResult' } } } }
+
+  /api/teacher/courses:
+    get:
+      tags: [teacher]
+      summary: 我的课程列表（仅本人）
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResult' } } } }
+    post:
+      tags: [teacher]
+      summary: 新建课程（草稿）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TeacherCourseReq' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResult' } } } }
+
+  /api/teacher/courses/{id}:
+    put:
+      tags: [teacher]
+      summary: 编辑课程（基本信息/大纲/课件）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TeacherCourseReq' }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/teacher/courses/{id}/submit:
+    post:
+      tags: [teacher]
+      summary: 提交课程审核（DRAFT→REVIEWING）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/teacher/courses/{id}/stats:
+    get:
+      tags: [teacher]
+      summary: 课程学习数据（完播率/进度分布，无收入）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResult' } } } }
+
+  /api/teacher/vod/upload-sign:
+    get:
+      tags: [teacher]
+      summary: 获取腾讯云 VOD 客户端上传签名（前端直传）
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResult'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          signature: { type: string }
+                          taskFlow: { type: string, description: 转码+私有加密任务流名 }
+
+  # ============ ADMIN（节选，结构同讲师，权限 ADMIN）============
+  /api/admin/dashboard:
+    get:
+      tags: [admin]
+      summary: 数据看板（GMV/订单/活跃/转化/完播/订阅）
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResult' } } } }
+
+  /api/admin/courses/{id}/review:
+    post:
+      tags: [admin]
+      summary: 课程审核（通过上架/驳回）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [APPROVE, REJECT] }
+                comment: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/admin/courses/{id}/status:
+    put:
+      tags: [admin]
+      summary: 上下架课程
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [ONLINE, OFFLINE] }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/admin/coupons:
+    post:
+      tags: [admin]
+      summary: 创建优惠券
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CouponReq' }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/admin/refunds/{id}/audit:
+    post:
+      tags: [admin]
+      summary: 退款审核（通过则发起微信退款+回收权限）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action: { type: string, enum: [APPROVE, REJECT] }
+                comment: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/admin/users/{id}/kick:
+    post:
+      tags: [admin]
+      summary: 强制用户下线（清除活跃 session）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/admin/users/{id}/ban:
+    post:
+      tags: [admin]
+      summary: 封禁/解封用户
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ban: { type: boolean }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+  /api/admin/security/watermark:
+    put:
+      tags: [admin]
+      summary: 配置水印模板与播放凭证时效
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                template: { type: string, example: '{phoneTail} · UID{uid} · {time}' }
+                credentialTtl: { type: integer, example: 300 }
+                previewUrlTtl: { type: integer, example: 300 }
+      responses:
+        '200': { $ref: '#/components/responses/Ok' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Ok:
+      description: 成功
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResult' }
+    BadRequest:
+      description: 参数错误
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    NotFound:
+      description: 不存在
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Forbidden:
+      description: 无权限
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    RateLimited:
+      description: 触发限流/风控
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+
+  schemas:
+    ApiResult:
+      type: object
+      properties:
+        code: { type: integer, example: 0, description: 0=成功 }
+        message: { type: string, example: ok }
+        data: { type: object, nullable: true }
+    ApiError:
+      type: object
+      properties:
+        code: { type: integer, example: 40301 }
+        message: { type: string, example: 无观看权限 }
+        bizCode:
+          type: string
+          example: NO_ENTITLEMENT
+          description: 业务错误码，如 SESSION_KICKED / NO_ENTITLEMENT / COURSE_EXPIRED / COUPON_USED / NEED_BIND_PHONE
+
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        size: { type: integer }
+        total: { type: integer }
+
+    CourseCard:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        cover: { type: string }
+        teacherName: { type: string }
+        targetScore: { type: string }
+        lessonCount: { type: integer }
+        price: { type: integer, description: 分 }
+        originalPrice: { type: integer }
+        inSubscription: { type: boolean }
+        sales: { type: integer }
+
+    PageCourseCard:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/CourseCard' } }
+        meta: { $ref: '#/components/schemas/PageMeta' }
+
+    CourseDetail:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        cover: { type: string }
+        intro: { type: string, description: 富文本 }
+        teacher: { $ref: '#/components/schemas/TeacherBrief' }
+        targetScore: { type: string }
+        price: { type: integer }
+        originalPrice: { type: integer }
+        validityType: { type: string, enum: [PERMANENT, DAYS, FIXED_DATE] }
+        validityDays: { type: integer, nullable: true }
+        fixedExpireAt: { type: string, nullable: true }
+        inSubscription: { type: boolean }
+        sales: { type: integer }
+        ctaState:
+          type: string
+          enum: [GUEST_BUY, BUY, SUBSCRIBE, LEARN, EXPIRED]
+          description: 按当前用户态计算的 CTA 状态
+        chapters:
+          type: array
+          items: { $ref: '#/components/schemas/Chapter' }
+        materials:
+          type: array
+          items: { $ref: '#/components/schemas/MaterialMeta' }
+
+    Chapter:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        lessons: { type: array, items: { $ref: '#/components/schemas/LessonBrief' } }
+
+    LessonBrief:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        duration: { type: integer, description: 秒 }
+        freeTrial: { type: boolean }
+        locked: { type: boolean, description: 当前用户是否锁定 }
+        progress: { type: integer, description: 已学百分比 }
+
+    MaterialMeta:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { type: string, enum: [PDF, IMAGE, AUDIO] }
+        previewOnly: { type: boolean, example: true }
+
+    TeacherBrief:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        avatar: { type: string }
+        intro: { type: string }
+
+    Bundle:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        price: { type: integer }
+        originalPrice: { type: integer, description: 含课程原价合计 }
+        courseCount: { type: integer }
+
+    BundleDetail:
+      allOf:
+        - $ref: '#/components/schemas/Bundle'
+        - type: object
+          properties:
+            courses: { type: array, items: { $ref: '#/components/schemas/CourseCard' } }
+
+    SubPlan:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        period: { type: string, enum: [MONTH, QUARTER, YEAR] }
+        price: { type: integer }
+        dailyPrice: { type: integer, description: 日均价（展示用） }
+
+    OrderCreateReq:
+      type: object
+      required: [itemType, itemId]
+      properties:
+        itemType: { type: string, enum: [COURSE, BUNDLE, SUBSCRIPTION] }
+        itemId: { type: integer }
+        userCouponId: { type: integer, nullable: true }
+
+    OrderAmount:
+      type: object
+      properties:
+        originAmount: { type: integer }
+        discountAmount: { type: integer }
+        payAmount: { type: integer }
+        couponApplicable: { type: boolean }
+        couponReason: { type: string, nullable: true, description: 不可用原因 }
+
+    Order:
+      type: object
+      properties:
+        orderNo: { type: string }
+        itemType: { type: string, enum: [COURSE, BUNDLE, SUBSCRIPTION] }
+        itemId: { type: integer }
+        itemTitle: { type: string }
+        originAmount: { type: integer }
+        discountAmount: { type: integer }
+        payAmount: { type: integer }
+        status: { type: string, enum: [UNPAID, PAID, CLOSED, REFUNDED] }
+        payChannel: { type: string, enum: [NATIVE, JSAPI, H5], nullable: true }
+        createdAt: { type: string }
+        paidAt: { type: string, nullable: true }
+        expireAt: { type: string, nullable: true, description: 未支付关单时间 }
+
+    PlayCredential:
+      type: object
+      properties:
+        vodFileId: { type: string }
+        psign: { type: string, description: 腾讯云播放器签名，短时效 }
+        appId: { type: string }
+        expireIn: { type: integer, example: 300 }
+        lastPosition: { type: integer, description: 断点续播位置（秒） }
+        isTrial: { type: boolean, description: 是否试看（受 Try 时长限制） }
+        watermark: { $ref: '#/components/schemas/Watermark' }
+
+    Watermark:
+      type: object
+      properties:
+        text: { type: string, example: '138****6021 · UID1024' }
+        opacity: { type: number, example: 0.3 }
+        mode: { type: string, enum: [MARQUEE, FIXED], default: MARQUEE }
+
+    UserProfile:
+      type: object
+      properties:
+        id: { type: integer }
+        nickname: { type: string }
+        avatar: { type: string }
+        phone: { type: string, nullable: true, description: 脱敏 138****6021 }
+        roles: { type: array, items: { type: string, enum: [USER, TEACHER, ADMIN] } }
+        subscribed: { type: boolean }
+
+    MyCourse:
+      type: object
+      properties:
+        courseId: { type: integer }
+        title: { type: string }
+        cover: { type: string }
+        overallProgress: { type: integer }
+        lastLessonId: { type: integer, nullable: true }
+        lastPosition: { type: integer, nullable: true }
+        source: { type: string, enum: [PURCHASE, BUNDLE, SUBSCRIPTION] }
+        expireAt: { type: string, nullable: true }
+        status: { type: string, enum: [LEARNING, FINISHED, EXPIRED] }
+
+    WatchRecord:
+      type: object
+      properties:
+        lessonId: { type: integer }
+        progress: { type: integer }
+        lastPosition: { type: integer }
+        durationWatched: { type: integer }
+        finished: { type: boolean }
+        updatedAt: { type: string }
+
+    UserCoupon:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { type: string, enum: [FULL_CUT, DISCOUNT] }
+        amountDesc: { type: string, example: 满300减50 }
+        scopeDesc: { type: string }
+        status: { type: string, enum: [AVAILABLE, USED, EXPIRED] }
+        endAt: { type: string }
+
+    MySubscription:
+      type: object
+      properties:
+        active: { type: boolean }
+        planTitle: { type: string, nullable: true }
+        startAt: { type: string, nullable: true }
+        expireAt: { type: string, nullable: true }
+        remainingDays: { type: integer, nullable: true }
+        history: { type: array, items: { type: object } }
+
+    TeacherCourseReq:
+      type: object
+      properties:
+        title: { type: string }
+        cover: { type: string }
+        intro: { type: string }
+        targetScore: { type: string }
+        categoryId: { type: integer }
+        chapters:
+          type: array
+          items:
+            type: object
+            properties:
+              title: { type: string }
+              sort: { type: integer }
+              lessons:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title: { type: string }
+                    vodFileId: { type: string }
+                    duration: { type: integer }
+                    freeTrial: { type: boolean }
+                    sort: { type: integer }
+
+    CouponReq:
+      type: object
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [FULL_CUT, DISCOUNT] }
+        rule:
+          type: object
+          description: 满减阈值/折扣/适用范围
+          properties:
+            threshold: { type: integer, description: 满 X 分 }
+            cut: { type: integer, description: 减 X 分（FULL_CUT） }
+            discount: { type: number, description: 折扣 0-1（DISCOUNT） }
+            scope: { type: string, enum: [ALL, CATEGORY, COURSE] }
+            scopeIds: { type: array, items: { type: integer } }
+        startAt: { type: string }
+        endAt: { type: string }
+        totalCount: { type: integer }

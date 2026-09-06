@@ -1,0 +1,17 @@
+{
+  "name": "ielts-courses",
+  "version": "0.1.0",
+  "private": true,
+  "description": "雅思在线课程网站 — monorepo（Vue3 前端 + Spring Boot 后端）",
+  "packageManager": "pnpm@11.8.0",
+  "scripts": {
+    "dev:web": "pnpm --filter @ielts/web dev",
+    "build:web": "pnpm --filter @ielts/web build",
+    "build:types": "pnpm --filter @ielts/shared-types build",
+    "dev:server": "cd server && mvn spring-boot:run",
+    "build:server": "cd server && mvn -q clean package"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

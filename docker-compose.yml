@@ -1,0 +1,80 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: courses-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Jackson@mysql
+      MYSQL_DATABASE: ielts_courses
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pJackson@mysql"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: courses-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: courses-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ielts_courses
+      DB_USER: root
+      DB_PASSWORD: Jackson@mysql
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      VOD_APP_ID: ${VOD_APP_ID:-0}
+      VOD_SUB_APP_ID: ${VOD_SUB_APP_ID:-0}
+      VOD_SECRET_ID: ${VOD_SECRET_ID}
+      VOD_SECRET_KEY: ${VOD_SECRET_KEY}
+      VOD_PLAY_KEY: ${VOD_PLAY_KEY}
+      COS_BUCKET: ${COS_BUCKET}
+      COS_REGION: ${COS_REGION}
+      COS_PREVIEW_URL: ${COS_PREVIEW_URL}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: courses-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:

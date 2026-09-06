@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//Users/jackson/.nvm/versions/**)",
+      "Bash(find /opt /usr/local /usr ~/.nvm ~/.volta -name \"npx\" -type f 2>/dev/null | head -10; echo \"---\"; find /opt /usr/local -name \"node\" -type f 2>/dev/null | head -5)",
+      "mcp__visualize__read_me"
+    ]
+  }
+}
