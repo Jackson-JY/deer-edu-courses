@@ -295,4 +295,9 @@ function playLesson(lessonId: number, locked: boolean, trial: boolean) {
   .head, .body { grid-template-columns: 1fr; }
   .buy-card { position: static; }
 }
+@media (max-width: 480px) {
+  .detail-page { padding: 16px 12px 36px; }
+  .buy-price { font-size: 26px; }
+  .buy-price .cur { font-size: 15px; }
+}
 </style>

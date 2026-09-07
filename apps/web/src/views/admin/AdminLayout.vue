@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const sidebarOpen = ref(false)
 
 const menus = [
   { path: '/admin', label: '工作台', icon: 'DataLine' },
@@ -20,11 +21,21 @@ function logout() {
   auth.logout()
   router.push('/admin/login')
 }
+
+function onMenuClick() {
+  // 移动端点击菜单后收起侧边栏
+  if (window.innerWidth <= 768) {
+    sidebarOpen.value = false
+  }
+}
 </script>
 
 <template>
   <div class="admin-layout">
-    <aside class="admin-sidebar">
+    <!-- 移动端遮罩 -->
+    <div v-if="sidebarOpen" class="sidebar-overlay" @click="sidebarOpen = false" />
+
+    <aside :class="['admin-sidebar', { open: sidebarOpen }]">
       <div class="admin-brand">
         <span class="mark">IELTS</span>
         <span>管理后台</span>
@@ -35,6 +46,7 @@ function logout() {
           :key="m.path"
           :to="m.path"
           :class="['admin-menu-item', { active: active === m.path || active.startsWith(m.path + '/') }]"
+          @click="onMenuClick"
         >
           <el-icon><component :is="m.icon" /></el-icon>
           <span>{{ m.label }}</span>
@@ -44,9 +56,15 @@ function logout() {
 
     <main class="admin-main">
       <header class="admin-header">
-        <span class="admin-header-title">{{ route.meta.title || '管理后台' }}</span>
+        <div class="admin-header-left">
+          <el-icon class="sidebar-toggle" @click="sidebarOpen = !sidebarOpen">
+            <Fold v-if="sidebarOpen" />
+            <Expand v-else />
+          </el-icon>
+          <span class="admin-header-title">{{ route.meta.title || '管理后台' }}</span>
+        </div>
         <div class="admin-header-user">
-          <span>{{ auth.user?.phone }}</span>
+          <span class="admin-phone">{{ auth.user?.phone }}</span>
           <el-button text @click="logout">退出</el-button>
         </div>
       </header>
@@ -120,9 +138,20 @@ function logout() {
   justify-content: space-between;
   padding: 0 24px;
 }
+.admin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .admin-header-title {
   font-weight: 600;
   font-size: 16px;
+}
+.sidebar-toggle {
+  display: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text-2);
 }
 .admin-header-user {
   display: flex;
@@ -135,5 +164,46 @@ function logout() {
   flex: 1;
   padding: 24px;
   overflow: auto;
+}
+
+/* 移动端遮罩 */
+.sidebar-overlay {
+  display: none;
+}
+
+/* ===== 响应式：768px 以下 ===== */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: flex;
+    align-items: center;
+  }
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 150;
+  }
+  .admin-header {
+    padding: 0 16px;
+  }
+  .admin-phone {
+    display: none;
+  }
+  .admin-body {
+    padding: 16px;
+  }
 }
 </style>

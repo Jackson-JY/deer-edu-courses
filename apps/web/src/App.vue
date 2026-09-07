@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { features } from '@/config'
@@ -10,6 +10,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const keyword = ref('')
+const mobileMenuOpen = ref(false)
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
@@ -25,6 +26,9 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('auth:kicked', onKicked)
 })
+
+// 路由变化时关闭移动端菜单
+watch(() => route.path, () => { mobileMenuOpen.value = false })
 
 const navs = computed(() =>
   [
@@ -59,7 +63,8 @@ function onUserCommand(cmd: string) {
         <span class="brand-name">雅思学堂</span>
       </RouterLink>
 
-      <nav class="links">
+      <!-- PC端导航 -->
+      <nav class="links pc-only">
         <RouterLink
           v-for="n in navs"
           :key="n.to"
@@ -85,7 +90,7 @@ function onUserCommand(cmd: string) {
           <el-dropdown @command="onUserCommand">
             <span class="user-trigger">
               <span class="user-avatar">{{ (auth.user?.nickname || '我')[0] }}</span>
-              <el-icon><ArrowDown /></el-icon>
+              <el-icon class="pc-only"><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -99,7 +104,31 @@ function onUserCommand(cmd: string) {
           </el-dropdown>
         </template>
         <el-button v-else type="primary" round @click="auth.openLogin()">登录 / 注册</el-button>
+
+        <!-- 移动端汉堡按钮 -->
+        <el-icon class="mobile-menu-btn" @click="mobileMenuOpen = !mobileMenuOpen">
+          <Fold v-if="mobileMenuOpen" />
+          <Expand v-else />
+        </el-icon>
       </div>
+    </div>
+
+    <!-- 移动端下拉导航 -->
+    <div v-if="mobileMenuOpen" class="mobile-nav">
+      <RouterLink
+        v-for="n in navs"
+        :key="n.to"
+        :to="n.to"
+        :class="['mobile-nav__link', { active: isActive(n.to) }]"
+      >
+        {{ n.label }}
+      </RouterLink>
+      <template v-if="auth.isLoggedIn">
+        <RouterLink to="/my/orders" class="mobile-nav__link">我的订单</RouterLink>
+        <RouterLink to="/my/coupons" class="mobile-nav__link">我的优惠券</RouterLink>
+        <RouterLink to="/my/settings" class="mobile-nav__link">账号设置</RouterLink>
+        <a class="mobile-nav__link" @click="onUserCommand('logout')">退出登录</a>
+      </template>
     </div>
   </header>
 
@@ -209,6 +238,30 @@ function onUserCommand(cmd: string) {
   font-size: 14px;
   font-weight: 600;
 }
+.mobile-menu-btn {
+  display: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-2);
+}
+.mobile-nav {
+  display: none;
+  flex-direction: column;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.mobile-nav__link {
+  display: block;
+  padding: 14px 20px;
+  font-size: 15px;
+  color: var(--text-1);
+  border-bottom: 1px solid var(--line);
+}
+.mobile-nav__link.active {
+  color: var(--brand-600);
+  font-weight: 600;
+}
 .page {
   min-height: calc(100vh - 64px - 200px);
 }
@@ -254,5 +307,51 @@ function onUserCommand(cmd: string) {
   font-size: 13px;
   color: #6b7888;
   padding: 16px;
+}
+
+/* ===== 响应式断点 ===== */
+
+/* 平板：768px 以下 */
+@media (max-width: 768px) {
+  .pc-only {
+    display: none !important;
+  }
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+  }
+  .mobile-nav {
+    display: flex;
+  }
+  .topnav__inner {
+    gap: 12px;
+  }
+  .search {
+    width: 120px;
+  }
+  .footer__inner {
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 28px;
+  }
+  .footer {
+    margin-top: 40px;
+  }
+  .page {
+    min-height: calc(100vh - 64px - 280px);
+  }
+}
+
+/* 手机：480px 以下 */
+@media (max-width: 480px) {
+  .brand-name {
+    display: none;
+  }
+  .search {
+    width: 100px;
+  }
+  .footer-links {
+    gap: 16px;
+  }
 }
 </style>

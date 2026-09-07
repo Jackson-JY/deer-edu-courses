@@ -280,4 +280,11 @@ onMounted(load)
 .lesson-form .el-input { flex: 1; }
 .section-tip { font-size: 12px; color: var(--text-3); margin: 0 0 12px; }
 .material-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 768px) {
+  .course-form { max-width: 100%; }
+  .chapter-form { flex-direction: column; max-width: 100%; }
+  .lesson-form { flex-wrap: wrap; }
+  .lesson-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .material-form { flex-direction: column; align-items: stretch; }
+}
 </style>

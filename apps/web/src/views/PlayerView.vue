@@ -262,4 +262,9 @@ function startHeartbeat(lessonId: number) {
 @media (max-width: 980px) {
   .player-wrap { grid-template-columns: 1fr; }
 }
+@media (max-width: 480px) {
+  .player-wrap { gap: 12px; padding: 12px; }
+  .player-area { min-height: 200px; }
+  .toc { max-height: 300px; }
+}
 </style>

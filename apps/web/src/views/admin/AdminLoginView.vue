@@ -93,6 +93,7 @@ async function login() {
 }
 .login-card {
   width: 380px;
+  max-width: 90vw;
   background: #fff;
   border-radius: var(--r-lg);
   padding: 36px;
@@ -117,4 +118,7 @@ async function login() {
 .code-row { display: flex; gap: 10px; margin-bottom: 24px; }
 .code-row .el-input { flex: 1; }
 .submit { width: 100%; }
+@media (max-width: 480px) {
+  .login-card { padding: 24px 20px; }
+}
 </style>

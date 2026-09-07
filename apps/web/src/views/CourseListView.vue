@@ -95,4 +95,10 @@ const list = computed(() => {
 .result-meta { font-size: 13px; color: var(--text-3); margin-bottom: 14px; }
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 @media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) {
+  .grid { grid-template-columns: 1fr; }
+  .list-page { padding: 20px 12px 36px; }
+  .filters { padding: 8px 12px; }
+  .frow { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
 </style>

@@ -52,4 +52,8 @@ onMounted(load)
 <style scoped>
 .page-title { font-size: 22px; margin-bottom: 20px; }
 .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+@media (max-width: 768px) {
+  .page-title { font-size: 18px; }
+  .search-bar { flex-wrap: wrap; }
+}
 </style>

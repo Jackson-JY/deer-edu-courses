@@ -112,4 +112,8 @@ watch(visible, (v) => {
 .ld-code .el-input { flex: 1; }
 .ld-submit { width: 100%; }
 .ld-agree { font-size: 12px; color: var(--text-3); margin: 16px 0 0; }
+@media (max-width: 480px) {
+  .ld { padding: 4px 4px 8px; }
+  .ld-code { gap: 8px; }
+}
 </style>

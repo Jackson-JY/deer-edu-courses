@@ -74,4 +74,8 @@ onMounted(load)
 .page-title { font-size: 22px; margin-bottom: 8px; }
 .tip { color: var(--text-3); font-size: 13px; margin-bottom: 20px; }
 .form { max-width: 480px; }
+@media (max-width: 768px) {
+  .form { max-width: 100%; }
+  .page-title { font-size: 18px; }
+}
 </style>
