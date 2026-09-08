@@ -10,7 +10,7 @@ defineProps<{ course: CourseCard }>()
     <div class="media">
       <img v-if="course.cover" :src="course.cover" :alt="course.title" />
       <div v-else class="media-placeholder">
-        <span>{{ course.targetScore }}</span>
+        <span>{{ course.title || '未命名课程' }}</span>
       </div>
     </div>
     <div class="card-body">
@@ -54,10 +54,17 @@ defineProps<{ course: CourseCard }>()
   justify-content: center;
 }
 .media-placeholder span {
-  font-size: 2.5rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--brand-500);
-  opacity: 0.6;
+  opacity: 0.85;
+  padding: 0 18px;
+  text-align: center;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .card-body {
   padding: 14px 16px 16px;
