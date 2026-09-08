@@ -124,3 +124,18 @@ export function createMaterial(courseId: number, data: { name: string; type: str
 export function deleteMaterial(courseId: number, id: number) {
   return del<void>(`/api/admin/courses/${courseId}/materials/${id}`)
 }
+
+/** 上传课程封面图到 COS，返回可访问 URL */
+export function uploadCover(file: File) {
+  const fd = new FormData()
+  fd.append('file', file)
+  return post<{ url: string; key: string }>('/api/admin/upload/cover', fd)
+}
+
+/** 上传课件文件到 COS 并自动登记为课程课件 */
+export function uploadMaterialFile(courseId: number, file: File, lessonId?: number) {
+  const fd = new FormData()
+  fd.append('file', file)
+  if (lessonId) fd.append('lessonId', String(lessonId))
+  return post<any>(`/api/admin/courses/${courseId}/materials/upload`, fd)
+}

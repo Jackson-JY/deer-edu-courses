@@ -21,6 +21,7 @@ export function heartbeat(lessonId: number, progressSeconds: number, totalSecond
 export interface WatchProgress {
   lessonId: number
   courseId: number
+  lessonTitle?: string
   progress: number
   lastPosition: number
   durationWatched: number

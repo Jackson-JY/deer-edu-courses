@@ -6,7 +6,7 @@ import {
   getAdminCourse, createAdminCourse, updateAdminCourse,
   createChapter, updateChapter, deleteChapter,
   createLesson, updateLesson, deleteLesson,
-  createMaterial, deleteMaterial,
+  deleteMaterial, uploadCover, uploadMaterialFile,
   type AdminCourse, type AdminChapter, type AdminLesson,
 } from '@/api/admin'
 import { uploadVideoToVod } from '@/utils/vod-upload'
@@ -43,9 +43,14 @@ const uploadLessonId = ref<number | null>(null)
 const videoFileRef = ref<HTMLInputElement | null>(null)
 const pendingUploadLesson = ref<AdminLesson | null>(null)
 
+// 封面上传状态
+const uploadingCover = ref(false)
+const coverFileRef = ref<HTMLInputElement | null>(null)
+
 // 课件管理
 const materials = ref<any[]>([])
-const materialForm = ref({ name: '', type: 'PDF', cosKey: '', previewOnly: true })
+const uploadingMaterial = ref(false)
+const materialFileRef = ref<HTMLInputElement | null>(null)
 
 async function load() {
   if (isCreate || !courseId) return
@@ -182,19 +187,53 @@ async function onVideoFileChange(e: Event) {
   }
 }
 
-async function addMaterial() {
+// 封面上传
+function triggerCoverUpload() {
+  coverFileRef.value?.click()
+}
+
+async function onCoverFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  uploadingCover.value = true
+  try {
+    const res = await uploadCover(file)
+    course.value.cover = res.url
+    ElMessage.success('封面上传成功，点击「保存课程」后生效')
+  } catch (err: any) {
+    ElMessage.error('封面上传失败：' + (err?.message || '未知错误'))
+  } finally {
+    uploadingCover.value = false
+  }
+}
+
+// 课件上传
+function triggerMaterialUpload() {
   if (!courseId) {
     ElMessage.warning('请先保存课程')
     return
   }
-  if (!materialForm.value.name || !materialForm.value.cosKey) {
-    ElMessage.warning('请填写课件名称和文件路径')
-    return
+  materialFileRef.value?.click()
+}
+
+async function onMaterialFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file || !courseId) return
+  uploadingMaterial.value = true
+  try {
+    ElMessage.info(`正在上传「${file.name}」...`)
+    await uploadMaterialFile(courseId, file)
+    ElMessage.success('课件上传成功')
+    load()
+  } catch (err: any) {
+    ElMessage.error('课件上传失败：' + (err?.message || '未知错误'))
+  } finally {
+    uploadingMaterial.value = false
   }
-  await createMaterial(courseId, materialForm.value)
-  materialForm.value = { name: '', type: 'PDF', cosKey: '', previewOnly: true }
-  load()
-  ElMessage.success('课件已添加')
 }
 
 async function removeMaterial(m: any) {
@@ -215,7 +254,16 @@ onMounted(load)
         <el-input v-model="course.title" placeholder="课程标题" />
       </el-form-item>
       <el-form-item label="封面">
-        <el-input v-model="course.cover" placeholder="封面图片 URL" />
+        <div class="cover-row">
+          <div class="cover-preview">
+            <img v-if="course.cover" :src="course.cover" alt="封面预览" />
+            <span v-else>无封面</span>
+          </div>
+          <el-input v-model="course.cover" placeholder="上传后自动填充，也可手动粘贴图片 URL" />
+          <el-button type="primary" :loading="uploadingCover" @click="triggerCoverUpload">
+            {{ uploadingCover ? '上传中…' : '上传封面' }}
+          </el-button>
+        </div>
       </el-form-item>
       <el-form-item label="目标分">
         <el-input v-model="course.targetScore" placeholder="6.5 / 7.0" />
@@ -296,17 +344,13 @@ onMounted(load)
 
     <div v-if="!isCreate" class="section">
       <h2 class="section-title">课件管理</h2>
-      <p class="section-tip">课件仅支持在线预览，禁止下载</p>
-      <div class="material-form">
-        <el-input v-model="materialForm.name" placeholder="课件名称" style="width: 180px" />
-        <el-select v-model="materialForm.type" style="width: 120px">
-          <el-option label="PDF" value="PDF" />
-          <el-option label="图片" value="IMAGE" />
-          <el-option label="音频" value="AUDIO" />
-        </el-select>
-        <el-input v-model="materialForm.cosKey" placeholder="COS 文件路径 / Key" style="width: 220px" />
-        <el-checkbox v-model="materialForm.previewOnly">仅预览</el-checkbox>
-        <el-button type="primary" @click="addMaterial">添加</el-button>
+      <div class="material-upload">
+        <el-button type="primary" :loading="uploadingMaterial" @click="triggerMaterialUpload">
+          {{ uploadingMaterial ? '上传中…' : '上传课件文件' }}
+        </el-button>
+        <span class="section-tip" style="margin: 0">
+          支持 PDF、图片（JPG/PNG/WebP/GIF）、音频（MP3/AAC/M4A/WAV），上传后自动登记；课件仅在线预览
+        </span>
       </div>
       <el-table :data="materials" border style="margin-top: 12px">
         <el-table-column prop="id" label="ID" width="70" />
@@ -329,11 +373,46 @@ onMounted(load)
       style="display: none"
       @change="onVideoFileChange"
     >
+
+    <!-- 隐藏的封面文件选择 -->
+    <input
+      ref="coverFileRef"
+      type="file"
+      accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif"
+      style="display: none"
+      @change="onCoverFileChange"
+    >
+
+    <!-- 隐藏的课件文件选择 -->
+    <input
+      ref="materialFileRef"
+      type="file"
+      accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp3,.aac,.m4a,.wav"
+      style="display: none"
+      @change="onMaterialFileChange"
+    >
   </div>
 </template>
 
 <style scoped>
-.course-form { max-width: 640px; }
+.course-form { max-width: 720px; }
+.cover-row { display: flex; gap: 12px; align-items: center; width: 100%; }
+.cover-preview {
+  width: 88px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.cover-preview img { width: 100%; height: 100%; object-fit: cover; }
+.material-upload { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
 .section { margin-top: 32px; }
 .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
 .chapter-form { display: flex; gap: 10px; margin-bottom: 16px; max-width: 480px; }
@@ -356,12 +435,12 @@ onMounted(load)
 .lesson-form { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
 .lesson-form .el-input { flex: 1; }
 .section-tip { font-size: 12px; color: var(--muted-foreground); margin: 0 0 12px; }
-.material-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 @media (max-width: 768px) {
   .course-form { max-width: 100%; }
   .chapter-form { flex-direction: column; max-width: 100%; }
   .lesson-form { flex-wrap: wrap; }
   .lesson-row { flex-direction: column; align-items: flex-start; gap: 6px; }
-  .material-form { flex-direction: column; align-items: stretch; }
+  .cover-row { flex-wrap: wrap; }
+  .material-upload { flex-direction: column; align-items: stretch; }
 }
 </style>

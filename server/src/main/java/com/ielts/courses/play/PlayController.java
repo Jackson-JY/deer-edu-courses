@@ -1,6 +1,8 @@
 package com.ielts.courses.play;
 
 import com.ielts.courses.auth.LoginUser;
+import com.ielts.courses.catalog.Lesson;
+import com.ielts.courses.catalog.LessonRepository;
 import com.ielts.courses.common.ApiResult;
 import com.ielts.courses.common.CurrentUser;
 import jakarta.validation.Valid;
@@ -21,9 +23,11 @@ import java.util.stream.Collectors;
 public class PlayController {
 
     private final PlayService playService;
+    private final LessonRepository lessonRepository;
 
-    public PlayController(PlayService playService) {
+    public PlayController(PlayService playService, LessonRepository lessonRepository) {
         this.playService = playService;
+        this.lessonRepository = lessonRepository;
     }
 
     @PostMapping("/credential")
@@ -46,6 +50,8 @@ public class PlayController {
                     Map<String, Object> m = new HashMap<>();
                     m.put("lessonId", r.getLessonId());
                     m.put("courseId", r.getCourseId());
+                    m.put("lessonTitle", lessonRepository.findById(r.getLessonId())
+                            .map(Lesson::getTitle).orElse(""));
                     m.put("progress", r.getProgress() != null ? r.getProgress() : 0);
                     m.put("lastPosition", r.getLastPosition() != null ? r.getLastPosition() : 0);
                     m.put("durationWatched", r.getDurationWatched() != null ? r.getDurationWatched() : 0);

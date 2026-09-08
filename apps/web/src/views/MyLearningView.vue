@@ -50,6 +50,23 @@ function progressPct(r: WatchProgress): number {
   return pct
 }
 
+/** 友好时间：近 7 天显示相对时间，更早显示日期 */
+function formatTime(iso: string): string {
+  if (!iso) return ''
+  const t = new Date(iso.replace(' ', 'T'))
+  if (Number.isNaN(t.getTime())) return iso.slice(0, 16).replace('T', ' ')
+  const diff = Date.now() - t.getTime()
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return '刚刚'
+  if (min < 60) return `${min} 分钟前`
+  const hour = Math.floor(min / 60)
+  if (hour < 24) return `${hour} 小时前`
+  const day = Math.floor(hour / 24)
+  if (day < 7) return `${day} 天前`
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())}`
+}
+
 async function load() {
   loading.value = true
   try {
@@ -78,7 +95,11 @@ async function load() {
         courseId: r.courseId,
         title,
         progress: finished ? 100 : progressPct(latest),
-        lastLesson: finished ? '已学完' : `课时 #${latest.lessonId}`,
+        lastLesson: finished
+          ? '已学完'
+          : latest.lessonTitle
+            ? latest.lessonTitle
+            : `课时 #${latest.lessonId}`,
         lastLessonId: latest.lessonId,
         updatedAt: latest.updatedAt || '',
         finished,
@@ -175,7 +196,7 @@ onMounted(load)
           </div>
           <div class="row-meta">
             <span>上次学到：{{ r.lastLesson }}</span>
-            <span v-if="r.updatedAt">更新于 {{ r.updatedAt.slice(0, 16) }}</span>
+            <span v-if="r.updatedAt">更新于 {{ formatTime(r.updatedAt) }}</span>
           </div>
         </div>
         <button class="btn btn-primary" @click="cont(r)">
