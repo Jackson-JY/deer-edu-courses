@@ -165,6 +165,7 @@ public class AdminCourseController {
         map.put("id", course.getId());
         map.put("title", course.getTitle());
         map.put("cover", course.getCover() == null ? "" : course.getCover());
+        map.put("intro", course.getIntro() == null ? "" : course.getIntro());
         map.put("price", course.getPrice());
         map.put("originalPrice", course.getOriginalPrice());
         map.put("validityType", course.getValidityType());
