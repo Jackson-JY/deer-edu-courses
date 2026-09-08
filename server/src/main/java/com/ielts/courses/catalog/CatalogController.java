@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class CatalogController {
         result.put("validityDays", course.getValidityDays());
         result.put("fixedExpireAt", course.getFixedExpireAt());
         result.put("inSubscription", course.getInSubscription() != null && course.getInSubscription() == 1);
-        result.put("sales", 0);
+        result.put("sales", (int) entitlementRepository.countActiveStudentsByCourse(id, LocalDateTime.now()));
         result.put("ctaState", ctaState);
         result.put("chapters", detail.chapters().stream().map(this::toChapterMap).collect(Collectors.toList()));
         result.put("materials", detail.materials().stream().map(this::toMaterialMap).collect(Collectors.toList()));
@@ -117,7 +118,7 @@ public class CatalogController {
                 "price", course.getPrice() == null ? 0 : course.getPrice(),
                 "originalPrice", course.getOriginalPrice() == null ? 0 : course.getOriginalPrice(),
                 "inSubscription", course.getInSubscription() != null && course.getInSubscription() == 1,
-                "sales", 0
+                "sales", (int) entitlementRepository.countActiveStudentsByCourse(course.getId(), LocalDateTime.now())
         );
     }
 
