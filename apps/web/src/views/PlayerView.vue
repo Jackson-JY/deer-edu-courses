@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import type { PlayCredential } from '@ielts/shared-types'
-import { fetchPlayCredential, heartbeat } from '@/api/courses'
+import type { CourseDetail, LessonBrief, MaterialMeta, PlayCredential } from '@ielts/shared-types'
+import { fetchCourseDetail, fetchMaterialPreviewUrl, fetchPlayCredential, heartbeat } from '@/api/courses'
 
 const route = useRoute()
+const router = useRouter()
+const lessonId = Number(route.params.lessonId)
+const courseId = Number(route.params.courseId)
 const cred = ref<PlayCredential | null>(null)
 const error = ref('')
 const loading = ref(true)
@@ -16,8 +19,12 @@ let player: any = null
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 let observer: MutationObserver | null = null
 
+// 课程详情（右侧目录 + 课件）
+const detail = ref<CourseDetail | null>(null)
+const showMaterials = ref(false)
+const materialLoading = ref(false)
+
 onMounted(async () => {
-  const lessonId = Number(route.params.lessonId)
   try {
     cred.value = await fetchPlayCredential(lessonId)
     wmText.value = cred.value?.watermark?.text || ''
@@ -29,7 +36,47 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  loadCourseDetail()
 })
+
+async function loadCourseDetail() {
+  if (!courseId) return
+  try {
+    detail.value = await fetchCourseDetail(courseId)
+  } catch {
+    // 目录/课件加载失败不阻断播放
+  }
+}
+
+function currentLessonTitle(): string {
+  for (const ch of detail.value?.chapters ?? []) {
+    const ls = ch.lessons.find((l) => l.id === lessonId)
+    if (ls) return ls.title
+  }
+  return ''
+}
+
+function goLesson(ls: LessonBrief) {
+  if (ls.id === lessonId) return
+  if (ls.locked && !ls.freeTrial) {
+    ElMessage.warning('该课时未解锁，请先开通课程')
+    return
+  }
+  // RouterView 以 fullPath 为 key，跳转后整页重挂载、播放器重建
+  router.push(`/learn/${courseId}/${ls.id}`)
+}
+
+async function openMaterial(m: MaterialMeta) {
+  materialLoading.value = true
+  try {
+    const res = await fetchMaterialPreviewUrl(m.id)
+    window.open(res.url, '_blank', 'noopener')
+  } catch (e: any) {
+    ElMessage.error('课件打开失败：' + (e?.message || '未知错误'))
+  } finally {
+    materialLoading.value = false
+  }
+}
 
 onBeforeUnmount(() => {
   if (heartbeatTimer) clearInterval(heartbeatTimer)
@@ -222,26 +269,48 @@ function startHeartbeat(lessonId: number) {
 
       <div class="below">
         <div class="lesson-head">
-          <h1>课程播放</h1>
+          <h1>{{ currentLessonTitle() || '课程播放' }}</h1>
           <span v-if="cred?.lastPosition" class="resume">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
             上次看到 {{ Math.floor(cred.lastPosition / 60) }}:{{ String(cred.lastPosition % 60).padStart(2, '0') }}
           </span>
         </div>
         <div class="toolbar">
-          <button class="btn btn-ghost btn-sm">
+          <button
+            class="btn btn-ghost btn-sm"
+            :class="{ 'btn-active': showMaterials }"
+            @click="showMaterials = !showMaterials"
+          >
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            本节课件
-          </button>
-          <button class="btn btn-ghost btn-sm">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-            笔记
-          </button>
-          <button class="btn btn-ghost btn-sm">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            收藏
+            课件资料
+            <span v-if="detail?.materials.length" class="mat-badge">{{ detail.materials.length }}</span>
           </button>
         </div>
+
+        <!-- 课件列表面板 -->
+        <div v-if="showMaterials" class="material-panel">
+          <div v-if="!detail" class="mp-empty">课件加载中…</div>
+          <div v-else-if="detail.materials.length === 0" class="mp-empty">本课程暂无课件</div>
+          <template v-else>
+            <div
+              v-for="m in detail.materials"
+              :key="m.id"
+              class="mp-item"
+              :class="{ disabled: materialLoading }"
+              @click="openMaterial(m)"
+            >
+              <svg class="mp-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span class="mp-name">{{ m.name }}</span>
+              <span class="mp-type">{{ m.type }}</span>
+              <span class="mp-open">在线预览</span>
+            </div>
+            <p class="mp-tip">课件仅支持在线预览，不支持下载，请勿录屏传播。</p>
+          </template>
+        </div>
+
         <p class="wm-note">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           视频含动态水印（UID + 时间），加密播放、禁止下载与转发。
@@ -252,8 +321,29 @@ function startHeartbeat(lessonId: number) {
     <aside class="toc">
       <div class="toc-head">
         <span>课程目录</span>
+        <span v-if="detail" class="toc-course">{{ detail.title }}</span>
       </div>
-      <div class="toc-empty">请在课程详情页选择课时</div>
+      <div v-if="!detail" class="toc-empty">目录加载中…</div>
+      <div v-else-if="detail.chapters.length === 0" class="toc-empty">暂无课时</div>
+      <div v-else class="toc-body">
+        <div v-for="ch in detail.chapters" :key="ch.id" class="toc-chapter">
+          <div class="toc-ch-title">{{ ch.title }}</div>
+          <div
+            v-for="ls in ch.lessons"
+            :key="ls.id"
+            :class="['toc-lesson', { active: ls.id === lessonId, locked: ls.locked && !ls.freeTrial }]"
+            @click="goLesson(ls)"
+          >
+            <svg class="tl-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon v-if="!ls.locked || ls.freeTrial" points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+              <rect v-else x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path v-if="ls.locked && !ls.freeTrial" d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span class="tl-title">{{ ls.title }}</span>
+            <span v-if="ls.freeTrial" class="tag-trial">试看</span>
+          </div>
+        </div>
+      </div>
     </aside>
   </div>
 </template>
@@ -292,22 +382,28 @@ function startHeartbeat(lessonId: number) {
   font-size: 14px;
 }
 .stage-error { color: #ff9f9f; }
+/* 动态水印：集中在画面顶部区域，水平轻微漂移；
+   白色文字 + 深色描边阴影，在明暗画面上都清晰可辨，又不遮挡视频主体 */
 .player-watermark {
   position: absolute;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.28);
-  transform: rotate(-14deg);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.65);
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
   z-index: 10;
 }
-.wm-1 { top: 20%; left: 10%; animation: drift 8s linear infinite alternate; }
-.wm-2 { top: 55%; left: 55%; animation: drift 10s linear infinite alternate-reverse; }
-.wm-3 { top: 78%; left: 25%; animation: drift 12s linear infinite alternate; }
-@keyframes drift {
-  from { transform: rotate(-14deg) translateX(0); }
-  to { transform: rotate(-14deg) translateX(40px); }
+.wm-1 { top: 5%; left: 4%; animation: drift-x 9s ease-in-out infinite alternate; }
+.wm-2 { top: 13%; left: 36%; animation: drift-x 11s ease-in-out infinite alternate-reverse; }
+.wm-3 { top: 6%; left: 66%; animation: drift-x 13s ease-in-out infinite alternate; }
+@keyframes drift-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(36px); }
 }
 .below { padding-top: 1rem; }
 .lesson-head {
@@ -345,12 +441,77 @@ function startHeartbeat(lessonId: number) {
   background: var(--secondary);
 }
 .toc-empty { padding: 40px 16px; text-align: center; color: var(--muted-foreground); font-size: 13px; }
+.toc-course {
+  font-size: 12px; font-weight: 400; color: var(--muted-foreground);
+  max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.toc-body { max-height: 600px; overflow-y: auto; padding: 8px 8px 12px; }
+.toc-chapter { margin-bottom: 8px; }
+.toc-ch-title {
+  font-size: 12.5px; font-weight: 600; color: var(--muted-foreground);
+  padding: 8px 8px 6px;
+}
+.toc-lesson {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  font-size: 13.5px; line-height: 1.35; color: var(--foreground);
+  cursor: pointer; transition: background 0.15s;
+}
+.toc-lesson:hover { background: var(--secondary); }
+.tl-icon { flex-shrink: 0; color: var(--primary); }
+.tl-title { flex: 1; word-break: break-all; }
+.toc-lesson.locked { color: var(--muted-foreground); cursor: not-allowed; }
+.toc-lesson.locked .tl-icon { color: var(--muted-foreground); }
+.toc-lesson.active {
+  background: var(--primary-50, rgba(0, 122, 255, 0.1));
+  color: var(--primary); font-weight: 600;
+}
+.tag-trial {
+  font-size: 10px; color: var(--primary); border: 1px solid var(--primary);
+  border-radius: 4px; padding: 0 4px; flex-shrink: 0; line-height: 16px;
+}
+
+/* 课件按钮与面板 */
+.mat-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; margin-left: 2px;
+  border-radius: 999px; background: var(--primary); color: #fff;
+  font-size: 11px; line-height: 1;
+}
+.btn-active { border-color: var(--primary); color: var(--primary); }
+.material-panel {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--card); padding: 8px; margin: 0 0 14px;
+}
+.mp-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px; border-radius: var(--radius-sm);
+  font-size: 13.5px; cursor: pointer; transition: background 0.15s;
+}
+.mp-item:hover { background: var(--secondary); }
+.mp-item.disabled { opacity: 0.6; pointer-events: none; }
+.mp-icon { color: var(--primary); flex-shrink: 0; }
+.mp-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-type {
+  font-size: 11px; color: var(--muted-foreground);
+  border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; flex-shrink: 0;
+}
+.mp-open { font-size: 12px; color: var(--primary); flex-shrink: 0; }
+.mp-empty { padding: 24px 12px; text-align: center; color: var(--muted-foreground); font-size: 13px; }
+.mp-tip { margin: 6px 4px 2px; font-size: 12px; color: var(--muted-foreground); }
+
 @media (max-width: 991px) {
   .player-wrap { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
   .player-wrap { gap: 12px; padding: 12px; }
   .stage { min-height: 200px; }
-  .toc { max-height: 300px; }
+  .toc { max-height: 360px; }
+  .toc-body { max-height: 320px; }
+  /* 小屏水印缩小并收紧位置，避免文字被裁切 */
+  .player-watermark { font-size: 11px; }
+  .wm-1 { top: 4%; left: 3%; }
+  .wm-2 { top: 12%; left: 24%; }
+  .wm-3 { top: 5%; left: 46%; }
 }
 </style>

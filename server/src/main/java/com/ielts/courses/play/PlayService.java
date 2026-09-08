@@ -5,18 +5,26 @@ import com.ielts.courses.catalog.Lesson;
 import com.ielts.courses.catalog.LessonRepository;
 import com.ielts.courses.common.ApiException;
 import com.ielts.courses.common.BizCode;
+import com.ielts.courses.user.User;
+import com.ielts.courses.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Service
 public class PlayService {
+
+    private static final DateTimeFormatter WM_TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final LessonRepository lessonRepository;
     private final EntitlementService entitlementService;
     private final WatchRecordRepository watchRecordRepository;
     private final VodPsignGenerator psignGenerator;
     private final StringRedisTemplate redisTemplate;
+    private final UserRepository userRepository;
 
     @Value("${app.tencent.vod.app-id:0}")
     private long vodAppId;
@@ -32,12 +40,13 @@ public class PlayService {
 
     public PlayService(LessonRepository lessonRepository, EntitlementService entitlementService,
                        WatchRecordRepository watchRecordRepository, VodPsignGenerator psignGenerator,
-                       StringRedisTemplate redisTemplate) {
+                       StringRedisTemplate redisTemplate, UserRepository userRepository) {
         this.lessonRepository = lessonRepository;
         this.entitlementService = entitlementService;
         this.watchRecordRepository = watchRecordRepository;
         this.psignGenerator = psignGenerator;
         this.redisTemplate = redisTemplate;
+        this.userRepository = userRepository;
     }
 
     public PlayCredential issueCredential(LoginUser user, long lessonId) {
@@ -111,11 +120,16 @@ public class PlayService {
     }
 
     private String buildWatermarkText(LoginUser user) {
-        String phoneTail = user.phoneBound() ? String.valueOf(user.userId()) : "USER";
+        // 手机尾号：取手机号后 4 位；取不到时回退为 UID
+        String phoneTail = userRepository.findById(user.userId())
+                .map(User::getPhone)
+                .filter(p -> p != null && p.length() >= 4)
+                .map(p -> p.substring(p.length() - 4))
+                .orElse("UID" + user.userId());
         return watermarkTemplate
                 .replace("{phoneTail}", phoneTail)
                 .replace("{uid}", String.valueOf(user.userId()))
-                .replace("{time}", String.valueOf(System.currentTimeMillis() / 1000));
+                .replace("{time}", LocalDateTime.now().format(WM_TIME_FMT));
     }
 
     private int findLastPosition(long userId, long lessonId) {

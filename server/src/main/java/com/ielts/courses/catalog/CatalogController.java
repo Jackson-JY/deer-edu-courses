@@ -55,6 +55,8 @@ public class CatalogController {
         CatalogService.CourseDetail detail = catalogService.getCourseDetail(id);
         Course course = detail.course();
         String ctaState = resolveCtaState(user, id);
+        // 已开通（有有效权益）的用户，其付费课时应视为解锁；未开通者仅试看课时可看
+        boolean entitled = "LEARN".equals(ctaState);
 
         Map<String, Object> result = new HashMap<>();
         result.put("id", course.getId());
@@ -72,7 +74,7 @@ public class CatalogController {
         result.put("inSubscription", course.getInSubscription() != null && course.getInSubscription() == 1);
         result.put("sales", (int) entitlementRepository.countActiveStudentsByCourse(id, LocalDateTime.now()));
         result.put("ctaState", ctaState);
-        result.put("chapters", detail.chapters().stream().map(this::toChapterMap).collect(Collectors.toList()));
+        result.put("chapters", detail.chapters().stream().map(ch -> toChapterMap(ch, entitled)).collect(Collectors.toList()));
         result.put("materials", detail.materials().stream().map(this::toMaterialMap).collect(Collectors.toList()));
         return ApiResult.ok(result);
     }
@@ -122,22 +124,23 @@ public class CatalogController {
         );
     }
 
-    private Map<String, Object> toChapterMap(Chapter chapter) {
+    private Map<String, Object> toChapterMap(Chapter chapter, boolean entitled) {
         return Map.of(
                 "id", chapter.getId(),
                 "title", chapter.getTitle(),
-                "lessons", chapter.getLessons().stream().map(this::toLessonMap).collect(Collectors.toList())
+                "lessons", chapter.getLessons().stream().map(ls -> toLessonMap(ls, entitled)).collect(Collectors.toList())
         );
     }
 
-    private Map<String, Object> toLessonMap(Lesson lesson) {
+    private Map<String, Object> toLessonMap(Lesson lesson, boolean entitled) {
         boolean trial = lesson.getFreeTrial() != null && lesson.getFreeTrial() == 1;
         return Map.of(
                 "id", lesson.getId(),
                 "title", lesson.getTitle(),
                 "duration", lesson.getDuration() == null ? 0 : lesson.getDuration(),
                 "freeTrial", trial,
-                "locked", !trial,
+                // 试看课时对所有人开放；其余课时仅在用户已开通课程时解锁
+                "locked", !trial && !entitled,
                 "progress", 0
         );
     }

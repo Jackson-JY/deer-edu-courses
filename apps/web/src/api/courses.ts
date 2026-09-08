@@ -18,6 +18,18 @@ export function heartbeat(lessonId: number, progressSeconds: number, totalSecond
   return post<{ alive: boolean; progressSeconds: number }>('/api/play/heartbeat', { lessonId, progressSeconds, totalSeconds })
 }
 
+export interface MaterialPreview {
+  url: string
+  name: string
+  type: string
+  previewOnly: boolean
+  expireIn: number
+}
+
+export function fetchMaterialPreviewUrl(materialId: number) {
+  return get<MaterialPreview>(`/api/materials/${materialId}/preview-url`)
+}
+
 export interface WatchProgress {
   lessonId: number
   courseId: number

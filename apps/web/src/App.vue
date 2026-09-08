@@ -129,7 +129,8 @@ function onUserCommand(cmd: string) {
   </header>
 
   <main class="page">
-    <RouterView />
+    <!-- 按完整路径 key：切换课时（/learn/:courseId/:lessonId）时整页重挂载，确保播放器干净重建 -->
+    <RouterView :key="route.fullPath" />
   </main>
 
   <footer v-if="!isAdminRoute" class="site-footer">

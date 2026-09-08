@@ -27,8 +27,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        // 默认代理本地后端；可用 VITE_API_TARGET 指向其他环境（如线上）做联调/验证
+        target: process.env.VITE_API_TARGET || 'http://localhost:8080',
         changeOrigin: true,
+        secure: false,
       },
     },
   },
