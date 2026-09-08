@@ -42,6 +42,10 @@ public class CatalogService {
         return new CourseDetail(course, chapters, materials);
     }
 
+    public Course findById(Long courseId) {
+        return courseRepository.findById(courseId).orElse(null);
+    }
+
     public record CourseDetail(Course course, List<Chapter> chapters, List<Material> materials) {
     }
 }

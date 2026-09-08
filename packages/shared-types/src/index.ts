@@ -158,7 +158,7 @@ export interface PlayCredential {
 }
 
 // ---------- me ----------
-export type Role = 'USER' | 'TEACHER' | 'ADMIN'
+export type Role = 'STUDENT' | 'TEACHER' | 'ADMIN'
 
 export interface UserProfile {
   id: number

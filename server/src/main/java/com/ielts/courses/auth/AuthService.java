@@ -6,6 +6,7 @@ import com.ielts.courses.user.StaffRepository;
 import com.ielts.courses.user.User;
 import com.ielts.courses.user.UserRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -18,45 +19,59 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final StaffRepository staffRepository;
-    private final SmsCodeService smsCodeService;
     private final JwtIssuer jwtIssuer;
     private final StringRedisTemplate redisTemplate;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthService(UserRepository userRepository, StaffRepository staffRepository,
-                       SmsCodeService smsCodeService, JwtIssuer jwtIssuer,
-                       StringRedisTemplate redisTemplate) {
+                       JwtIssuer jwtIssuer, StringRedisTemplate redisTemplate,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.staffRepository = staffRepository;
-        this.smsCodeService = smsCodeService;
         this.jwtIssuer = jwtIssuer;
         this.redisTemplate = redisTemplate;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public LoginResult loginOrRegister(String phone, String code) {
-        if (!smsCodeService.verify(phone, code)) {
-            throw new com.ielts.courses.common.ApiException(BizCode.BAD_REQUEST, "验证码错误或已过期");
+    /** 用户注册：手机号 + 密码 + 昵称，默认 STUDENT 角色 */
+    public LoginResult register(String phone, String password, String nickname) {
+        if (userRepository.findByPhone(phone).isPresent()) {
+            throw new com.ielts.courses.common.ApiException(BizCode.BAD_REQUEST, "该手机号已注册，请直接登录");
         }
 
+        User user = new User();
+        user.setPhone(phone);
+        user.setNickname(nickname != null && !nickname.isBlank()
+                ? nickname.trim()
+                : "学员" + phone.substring(phone.length() - 4));
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setStatus(1);
+        user = userRepository.save(user);
+
+        // 默认学生角色
+        Staff staff = new Staff();
+        staff.setUserId(user.getId());
+        staff.setRole("STUDENT");
+        staff.setStatus(1);
+        staffRepository.save(staff);
+
+        return issueTokenAndResult(user);
+    }
+
+    /** 密码登录 */
+    public LoginResult loginByPassword(String phone, String password) {
         User user = userRepository.findByPhone(phone)
-                .orElseGet(() -> createUser(phone));
+                .orElseThrow(() -> new com.ielts.courses.common.ApiException(BizCode.BAD_REQUEST, "手机号或密码错误"));
 
         if (user.getStatus() == null || user.getStatus() == 0) {
             throw new com.ielts.courses.common.ApiException(BizCode.BAD_REQUEST, "账号已被封禁");
         }
 
-        String sid = UUID.randomUUID().toString().replace("-", "");
-        redisTemplate.opsForValue().set("login:session:" + user.getId(), sid,
-                Duration.ofSeconds(jwtIssuerTtlSeconds()));
-
-        List<String> roles = staffRepository.findByUserIdAndStatus(user.getId(), 1).stream()
-                .map(Staff::getRole)
-                .collect(Collectors.toList());
-        if (roles.isEmpty()) {
-            roles = List.of("USER");
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new com.ielts.courses.common.ApiException(BizCode.BAD_REQUEST, "手机号或密码错误");
         }
 
-        String token = jwtIssuer.issue(user.getId(), sid, roles, true);
-        return new LoginResult(token, toProfile(user, roles));
+        return issueTokenAndResult(user);
     }
 
     public void logout(long userId) {
@@ -66,21 +81,33 @@ public class AuthService {
     public UserProfile getProfile(long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new com.ielts.courses.common.ApiException(BizCode.NOT_FOUND));
+        List<String> roles = resolveRoles(userId);
+        return toProfile(user, roles);
+    }
+
+    private LoginResult issueTokenAndResult(User user) {
+        if (user.getStatus() == null || user.getStatus() == 0) {
+            throw new com.ielts.courses.common.ApiException(BizCode.BAD_REQUEST, "账号已被封禁");
+        }
+
+        String sid = UUID.randomUUID().toString().replace("-", "");
+        redisTemplate.opsForValue().set("login:session:" + user.getId(), sid,
+                Duration.ofSeconds(jwtIssuerTtlSeconds()));
+
+        List<String> roles = resolveRoles(user.getId());
+
+        String token = jwtIssuer.issue(user.getId(), sid, roles, true);
+        return new LoginResult(token, toProfile(user, roles));
+    }
+
+    private List<String> resolveRoles(long userId) {
         List<String> roles = staffRepository.findByUserIdAndStatus(userId, 1).stream()
                 .map(Staff::getRole)
                 .collect(Collectors.toList());
         if (roles.isEmpty()) {
-            roles = List.of("USER");
+            roles = List.of("STUDENT");
         }
-        return toProfile(user, roles);
-    }
-
-    private User createUser(String phone) {
-        User user = new User();
-        user.setPhone(phone);
-        user.setNickname("学员" + phone.substring(phone.length() - 4));
-        user.setStatus(1);
-        return userRepository.save(user);
+        return roles;
     }
 
     private UserProfile toProfile(User user, List<String> roles) {
@@ -102,7 +129,7 @@ public class AuthService {
     }
 
     private long jwtIssuerTtlSeconds() {
-        // JwtIssuer 内部从 JwtProperties 读取，这里为了简单直接返回 7 天
+        // JwtIssuer 内部从 JwtProperties 读取，这里返回 7 天
         return 604800L;
     }
 

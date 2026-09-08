@@ -6,12 +6,14 @@ export interface LoginResult {
   profile: UserProfile
 }
 
-export function sendSmsCode(phone: string) {
-  return post<{ message: string; mockCode: string }>('/api/auth/phone/send-code', { phone })
+/** 密码登录 */
+export function loginByPassword(phone: string, password: string) {
+  return post<LoginResult>('/api/auth/login', { phone, password })
 }
 
-export function loginByPhone(phone: string, code: string) {
-  return post<LoginResult>('/api/auth/phone/login', { phone, code })
+/** 用户注册：手机号 + 密码 + 昵称 */
+export function registerByPhone(phone: string, password: string, nickname: string) {
+  return post<LoginResult>('/api/auth/register', { phone, password, nickname })
 }
 
 export function logout() {

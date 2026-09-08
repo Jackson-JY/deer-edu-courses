@@ -35,6 +35,13 @@ http.interceptors.response.use(
     return resp
   },
   (error) => {
+    const status = error?.response?.status
+    // HTTP 401/403：token 失效或权限不足 → 清 token 并触发重新登录
+    if (status === 401 || status === 403) {
+      clearToken()
+      window.dispatchEvent(new CustomEvent('auth:kicked'))
+      return Promise.reject(new Error('登录已失效，请重新登录'))
+    }
     const body = error?.response?.data as ApiError | undefined
     if (body) return Promise.reject(handleBizError(body))
     return Promise.reject(error)

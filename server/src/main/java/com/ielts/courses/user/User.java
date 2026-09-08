@@ -29,6 +29,9 @@ public class User {
     @Column(name = "avatar", length = 255)
     private String avatar;
 
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
+
     @Column(name = "phone", unique = true, length = 20)
     private String phone;
 
@@ -89,6 +92,14 @@ public class User {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getPhone() {

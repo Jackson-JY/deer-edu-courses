@@ -90,10 +90,15 @@ export interface AdminUser {
   phone: string
   nickname: string
   status: number
+  roles: string[]
 }
 
 export function listAdminUsers(phone?: string) {
   return get<AdminUser[]>('/api/admin/users', phone ? { phone } : undefined)
+}
+
+export function assignUserRole(userId: number, role: 'STUDENT' | 'TEACHER' | 'ADMIN') {
+  return post<{ userId: number; role: string }>(`/api/admin/users/${userId}/role`, { role })
 }
 
 export function grantEntitlement(userId: number, data: { courseId: number; source?: string; expireAt?: string }) {
@@ -105,7 +110,7 @@ export function getSecurityConfig() {
 }
 
 export function getVodUploadSign() {
-  return get<{ appId: number; subAppId: number; secretId: string; signature: string; expireIn: number; configured: boolean }>('/api/admin/vod/upload-sign')
+  return get<{ appId: number; subAppId: number; secretId: string; signature: string; expireTime: number; configured: boolean }>('/api/admin/vod/upload-sign')
 }
 
 export function listMaterials(courseId: number) {

@@ -5,41 +5,33 @@ import com.ielts.courses.common.CurrentUser;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-
     private final AuthService authService;
-    private final SmsCodeService smsCodeService;
 
-    public AuthController(AuthService authService, SmsCodeService smsCodeService) {
+    public AuthController(AuthService authService) {
         this.authService = authService;
-        this.smsCodeService = smsCodeService;
     }
 
-    @PostMapping("/phone/send-code")
-    public ApiResult<Map<String, String>> sendCode(@Valid @RequestBody SendCodeReq req) {
-        String code = smsCodeService.sendCode(req.phone);
-        log.info("[SMS] 验证码已发送 phone={}, code={}", req.phone, code);
-        // 开发环境把验证码返回给前端，方便联调；生产环境建议移除该字段
-        return ApiResult.ok(Map.of("message", "验证码已发送", "mockCode", code));
+    /** 用户注册：手机号 + 密码 + 昵称（无需验证码） */
+    @PostMapping("/register")
+    public ApiResult<AuthService.LoginResult> register(@Valid @RequestBody RegisterReq req) {
+        return ApiResult.ok(authService.register(req.phone, req.password, req.nickname));
     }
 
-    @PostMapping("/phone/login")
+    /** 密码登录 */
+    @PostMapping("/login")
     public ApiResult<AuthService.LoginResult> login(@Valid @RequestBody LoginReq req) {
-        return ApiResult.ok(authService.loginOrRegister(req.phone, req.code));
+        return ApiResult.ok(authService.loginByPassword(req.phone, req.password));
     }
 
     @PostMapping("/logout")
@@ -58,10 +50,14 @@ public class AuthController {
         return ApiResult.ok(authService.getProfile(user.userId()));
     }
 
-    public record SendCodeReq(
+    public record RegisterReq(
             @NotBlank(message = "手机号不能为空")
             @Pattern(regexp = "^1\\d{10}$", message = "手机号格式不正确")
-            String phone
+            String phone,
+            @NotBlank(message = "密码不能为空")
+            @Size(min = 6, max = 32, message = "密码长度需为 6-32 位")
+            String password,
+            String nickname
     ) {
     }
 
@@ -69,9 +65,8 @@ public class AuthController {
             @NotBlank(message = "手机号不能为空")
             @Pattern(regexp = "^1\\d{10}$", message = "手机号格式不正确")
             String phone,
-            @NotBlank(message = "验证码不能为空")
-            @Pattern(regexp = "^\\d{6}$", message = "验证码为 6 位数字")
-            String code
+            @NotBlank(message = "密码不能为空")
+            String password
     ) {
     }
 }

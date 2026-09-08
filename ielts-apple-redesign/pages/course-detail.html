@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程详情</title>
+    <style id="theme-vars">
+/*
+ * Pinguo design tokens
+ * Brand: Pinguo
+ * Domain: Consumer imaging product
+ * Style: Restrained, elegant, Apple-inspired
+ * Theme mode: light-dark
+ * Source language: zh
+ * Output language: en
+ *
+ * Color architecture (two layers):
+ *   1. Primitive palette - six categories. brand / background / text / icon
+ *      are each a 10-step scale (50 lightest to 900 darkest). state-success and
+ *      state-error are functional colors anchored on Apple system colors.
+ *      Anchors follow Apple Human Interface Guidelines system colors
+ *      (System Blue #007AFF, System Green #34C759, System Red #FF3B30,
+ *      system grays / label / background colors).
+ *   2. Semantic tokens - :root (light) and .dark map roles onto primitives.
+ *      Components and UI kits must only consume the semantic tokens below.
+ */
+
+/* @group-priority: brand, background, text, icon, state-success, state-error */
+
+:root {
+  
+  /* solo-design consumption aliases: explicit prefix for fill-html-head.mjs */
+  --apple-background: var(--background, #ffffff);
+  --apple-foreground: var(--foreground, #0f172a);
+  --apple-card: var(--card, var(--background));
+  --apple-card-foreground: var(--card-foreground, var(--foreground));
+  --apple-popover: var(--popover, var(--card));
+  --apple-popover-foreground: var(--popover-foreground, var(--card-foreground, var(--foreground)));
+  --apple-primary: var(--primary, #111827);
+  --apple-primary-foreground: var(--primary-foreground, #ffffff);
+  --apple-secondary: var(--secondary, var(--muted, var(--card)));
+  --apple-secondary-foreground: var(--secondary-foreground, var(--foreground));
+  --apple-muted: var(--muted, var(--card));
+  --apple-muted-foreground: var(--muted-foreground, var(--foreground));
+  --apple-accent: var(--accent, var(--secondary, var(--muted, var(--card))));
+  --apple-accent-foreground: var(--accent-foreground, var(--foreground));
+  --apple-destructive: var(--destructive, #ef4444);
+  --apple-destructive-foreground: var(--destructive-foreground, #ffffff);
+  --apple-border: var(--border, currentColor);
+  --apple-input: var(--input, var(--border));
+  --apple-ring: var(--ring, var(--primary));
+  --apple-radius-sm: var(--radius-sm, 0.5rem);
+  --apple-radius-md: var(--radius-md, 0.75rem);
+  --apple-radius-lg: var(--radius-lg, 1.2rem);
+  --apple-chart-1: var(--chart-1, var(--primary));
+  --apple-chart-2: var(--chart-2, var(--secondary, var(--primary)));
+  --apple-chart-3: var(--chart-3, var(--accent, var(--primary)));
+  --apple-chart-4: var(--chart-4, var(--muted-foreground, var(--foreground)));
+  --apple-chart-5: var(--chart-5, var(--foreground));
+  --apple-sidebar: var(--sidebar, var(--background));
+  --apple-sidebar-foreground: var(--sidebar-foreground, var(--foreground));
+  --apple-sidebar-primary: var(--sidebar-primary, var(--primary));
+  --apple-sidebar-primary-foreground: var(--sidebar-primary-foreground, var(--primary-foreground));
+  --apple-sidebar-accent: var(--sidebar-accent, var(--accent, var(--muted, var(--card))));
+  --apple-sidebar-accent-foreground: var(--sidebar-accent-foreground, var(--accent-foreground, var(--foreground)));
+
+/* ===== PRIMITIVE PALETTE ===== */
+
+  /* brand */
+  --brand-50: #e8f2ff;
+  --brand-100: #cfe5ff;
+  --brand-200: #9fcbff;
+  --brand-300: #66abff;
+  --brand-400: #2e8dff;
+  --brand-500: #007aff; /* @primary */
+  --brand-600: #0064d6;
+  --brand-700: #004fad;
+  --brand-800: #003b82;
+  --brand-900: #00275a;
+
+  /* background */
+  --background-50: #ffffff;
+  --background-100: #f7f7fa;
+  --background-200: #f2f2f7;
+  --background-300: #e5e5ea;
+  --background-400: #d1d1d6;
+  --background-500: #aeaeb2;
+  --background-600: #8e8e93;
+  --background-700: #3a3a3c;
+  --background-800: #1c1c1e;
+  --background-900: #000000;
+
+  /* text */
+  --text-50: #f5f5f7;
+  --text-100: #e3e3e8;
+  --text-200: #c7c7cc;
+  --text-300: #aeaeb2;
+  --text-400: #8e8e93;
+  --text-500: #6e6e73;
+  --text-600: #48484a;
+  --text-700: #3c3c43;
+  --text-800: #1d1d1f;
+  --text-900: #000000;
+
+  /* icon */
+  --icon-50: #f5f5f7;
+  --icon-100: #e5e5ea;
+  --icon-200: #d1d1d6;
+  --icon-300: #c7c7cc;
+  --icon-400: #aeaeb2;
+  --icon-500: #8e8e93;
+  --icon-600: #6e6e73;
+  --icon-700: #48484a;
+  --icon-800: #2c2c2e;
+  --icon-900: #1d1d1f;
+
+  /* state-success */
+  --state-success: #34c759; /* @primary */
+  --state-success-dark: #30d158;
+  --state-success-surface: #e9f9ee;
+  --state-success-foreground: #ffffff;
+
+  /* state-error */
+  --state-error: #ff3b30; /* @primary */
+  --state-error-dark: #ff453a;
+  --state-error-surface: #ffecea;
+  --state-error-foreground: #ffffff;
+
+  /* ===== SEMANTIC ROLES ===== */
+
+  /* semantic */
+  --background: var(--background-50);
+  --foreground: var(--text-800);
+  --card: var(--background-50);
+  --card-foreground: var(--text-800);
+  --popover: var(--background-50);
+  --popover-foreground: var(--text-900);
+
+  --primary: var(--brand-500);
+  --primary-foreground: var(--background-50);
+  --secondary: var(--background-200);
+  --secondary-foreground: var(--text-800);
+  --muted: var(--background-200);
+  --muted-foreground: var(--text-400);
+  --accent: var(--background-100);
+  --accent-foreground: var(--text-800);
+  --destructive: var(--state-error);
+  --destructive-foreground: var(--state-error-foreground);
+  --success: var(--state-success);
+  --success-foreground: var(--state-success-foreground);
+  --border: var(--background-300);
+  --input: var(--background-400);
+  --ring: var(--brand-500);
+
+  --icon: var(--icon-900);
+  --icon-muted: var(--icon-500);
+
+  /* chart */
+  --chart-1: var(--state-success);
+  --chart-2: var(--brand-500);
+  --chart-3: #ff9500;
+  --chart-4: #5856d6;
+  --chart-5: #af52de;
+
+  /* sidebar */
+  --sidebar: var(--background-200);
+  --sidebar-foreground: var(--text-800);
+  --sidebar-primary: var(--brand-500);
+  --sidebar-primary-foreground: var(--background-50);
+  --sidebar-accent: var(--background-300);
+  --sidebar-accent-foreground: var(--text-800);
+  --sidebar-border: var(--background-300);
+  --sidebar-ring: var(--brand-500);
+
+  /* TYPOGRAPHY */
+  --font-sans: DM Sans, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: DM Sans, ui-sans-serif, sans-serif, system-ui;
+  --font-mono: JetBrains Mono, monospace;
+  --tracking-normal: 0em;
+
+  /* RADIUS */
+  --radius: 1.2rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.2rem;
+
+  /* SHADOWS */
+  --shadow-2xs: 0 1px 2px -1px rgba(0, 0, 0, 0.04); /* Hairline */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04); /* Subtle */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.05); /* Card */
+  --shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.05); /* Raised */
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.05); /* Card Hover */
+  --shadow-lg: 0 8px 24px -8px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.05); /* Float */
+  --shadow-xl: 0 16px 40px -10px rgba(0, 0, 0, 0.10), 0 8px 16px -8px rgba(0, 0, 0, 0.06); /* Overlay */
+  --shadow-2xl: 0 24px 64px -12px rgba(0, 0, 0, 0.12); /* Modal */
+
+  /* SPACING */
+  --spacing: 0.24rem;
+}
+
+/* ===== SEMANTIC ROLES - dark (primitive palette inherited) ===== */
+.dark {
+  --background: var(--background-900);
+  --foreground: var(--text-50);
+  --card: var(--background-800);
+  --card-foreground: var(--text-50);
+  --popover: var(--background-700);
+  --popover-foreground: var(--text-50);
+
+  --primary: var(--brand-400);
+  --primary-foreground: var(--background-900);
+  --secondary: var(--background-800);
+  --secondary-foreground: var(--text-50);
+  --muted: var(--background-800);
+  --muted-foreground: var(--text-400);
+  --accent: var(--background-700);
+  --accent-foreground: var(--text-50);
+  --destructive: var(--state-error-dark);
+  --destructive-foreground: var(--state-error-foreground);
+  --success: var(--state-success-dark);
+  --success-foreground: var(--state-success-foreground);
+  --border: var(--background-700);
+  --input: var(--background-700);
+  --ring: var(--brand-400);
+
+  --icon: var(--icon-50);
+  --icon-muted: var(--icon-500);
+
+  --chart-1: var(--state-success-dark);
+  --chart-2: var(--brand-400);
+  --chart-3: #ff9f0a;
+  --chart-4: #5e5ce6;
+  --chart-5: #bf5af2;
+
+  --sidebar: var(--background-800);
+  --sidebar-foreground: var(--text-50);
+  --sidebar-primary: var(--brand-400);
+  --sidebar-primary-foreground: var(--background-900);
+  --sidebar-accent: var(--background-700);
+  --sidebar-accent-foreground: var(--text-50);
+  --sidebar-border: var(--background-700);
+  --sidebar-ring: var(--brand-400);
+
+  --shadow-2xs: 0 1px 2px -1px rgba(0, 0, 0, 0.30);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.30);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.36), 0 1px 3px -1px rgba(0, 0, 0, 0.36);
+  --shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.40), 0 1px 2px -1px rgba(0, 0, 0, 0.36);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.44), 0 2px 4px -2px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 8px 24px -8px rgba(0, 0, 0, 0.50), 0 4px 8px -4px rgba(0, 0, 0, 0.40);
+  --shadow-xl: 0 16px 40px -10px rgba(0, 0, 0, 0.55), 0 8px 16px -8px rgba(0, 0, 0, 0.44);
+  --shadow-2xl: 0 24px 64px -12px rgba(0, 0, 0, 0.60);
+}
+
+    </style>
+    <style id="component-vars">
+/* ═══════════════════════════════════════════════════════════════
+   components.css — Design System Component Definitions
+   Auto-extracted from preview/component-*.html
+   DO NOT EDIT MANUALLY — regenerate via extract-components-css.mjs
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Button ────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Primary 56</span><button class="btn btn-primary btn-lg">Buy now</button><button class="btn btn-primary btn-lg" disabled>Buy now</button></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Secondary 48</span><button class="btn btn-secondary">Shop the latest</button><button class="btn btn-secondary" disabled>Shop the latest</button></div>
+   <div class="row"><span class="label">Text 48</span><button class="btn btn-text">Learn more ›</button><button class="btn btn-text" disabled>Learn more ›</button></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font-family:var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:center;gap:calc(var(--spacing)*3);flex-wrap:wrap;margin:0 0 calc(var(--spacing)*3)}.label{min-width:72px;color:var(--muted-foreground);font:600 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.btn{display:inline-flex;align-items:center;justify-content:center;gap:calc(var(--spacing)*1.5);height:40px;padding:0 20px;border:none;border-radius:calc(var(--radius)*2);background:transparent;color:var(--foreground);font:600 14px/1 var(--font-sans);letter-spacing:var(--tracking-normal);white-space:nowrap;box-shadow:var(--shadow-sm);cursor:pointer;transition:background-color .18s ease,color .18s ease,opacity .18s ease,filter .18s ease}.btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.btn:disabled{opacity:.42;cursor:not-allowed}.btn-primary{background:var(--primary);color:var(--primary-foreground)}.btn-primary:hover{filter:brightness(.96)}.btn-secondary{height:48px;padding:0 24px;background:var(--secondary);color:var(--secondary-foreground)}.btn-secondary:hover{background:var(--muted)}.btn-text{height:48px;padding:0 4px;box-shadow:none}.btn-text:hover{color:var(--primary)}.btn-lg{height:56px;padding:0 28px;font-size:16px}.divider{border:0;border-top:1px solid var(--border);margin:calc(var(--spacing)*4) 0}
+
+/* ── Card ──────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">Info</span>
+   <article class="card">
+   <div><div class="eyebrow">Pinguo Apple</div><h1 class="title">Built for creators</h1><p class="body-copy">A calm surface for comparing cameras, storage tiers, and bundle benefits across the ecosystem.</p></div>
+   <a class="cta" href="#">Compare models</a>
+   </article>
+   <article class="card disabled" aria-disabled="true">
+   <div><div class="eyebrow">Campus Store</div><h1 class="title">Education pricing</h1><p class="body-copy">Student bundles stay visible while unavailable purchase actions remain clearly disabled.</p></div>
+   <span class="cta">Compare models</span>
+   </article>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Media</span>
+   <article class="card media-card">
+   <div class="media"></div>
+   <div><div class="meta">Creator bundle</div><h1 class="title">Studio kit with Lens Sync</h1><div class="price">From $799 with Education pricing</div></div>
+   </article>
+   <article class="card media-card dark">
+   <div class="media"></div>
+   <div><div class="meta">Consumer imaging ecosystem</div><h1 class="title">Built for creators</h1><div class="price">Compare models across camera, app, and cloud plans</div></div>
+   </article>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 14px/1.45 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-sans);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.card{width:188px;min-height:148px;padding:calc(var(--spacing)*5);display:flex;flex-direction:column;justify-content:space-between;background:var(--card);color:var(--card-foreground);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);transition:transform .18s ease,box-shadow .18s ease}.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}.card.disabled,.card.disabled:hover{opacity:.5;transform:none;box-shadow:var(--shadow-md)}.eyebrow,.meta{color:var(--muted-foreground);font-size:11px;letter-spacing:.08em;text-transform:uppercase}.title{margin:6px 0 8px;font-size:18px;line-height:1.15}.body-copy{margin:0;color:var(--muted-foreground);font-size:13px}.cta{display:inline-flex;align-items:center;justify-content:center;width:max-content;margin-top:12px;padding:calc(var(--spacing)*2) calc(var(--spacing)*3.5);border-radius:999px;background:var(--primary);color:var(--primary-foreground);font-size:12px;font-weight:700;text-decoration:none}.media{aspect-ratio:4/3;border-radius:calc(var(--radius) - 4px);background:linear-gradient(135deg,var(--secondary),var(--accent));border:1px solid var(--border)}.media-card{min-height:212px;padding:calc(var(--spacing)*4)}.media-card .title{font-size:16px;margin:10px 0 6px}.price{font-size:12px;color:var(--muted-foreground)}.dark{background:var(--card);color:var(--card-foreground)}
+
+/* ── Comparison Table ──────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Default</span><div class="t"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span><span class="s">Pinguo Apple</span></div><div class="c h"><span class="k">Air</span><span class="s">Popular</span></div><div class="c h b"><span class="k">Pro</span><span class="s">Creator</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div></div><div class="t x" aria-disabled="true"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span><span class="s">Pinguo Apple</span></div><div class="c h"><span class="k">Air</span><span class="s">Popular</span></div><div class="c h b"><span class="k">Pro</span><span class="s">Creator</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div></div></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Compact</span><div class="t q dark"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span></div><div class="c h"><span class="k">Air</span></div><div class="c h b"><span class="k">Pro</span></div><div class="c h"><span class="k">Ultra</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c v">24h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c v">2TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div><div class="c n">Triple</div></div></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.t{display:grid;grid-template-columns:96px repeat(3,1fr);overflow:hidden;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--card-foreground);box-shadow:var(--shadow-sm)}.q{grid-template-columns:82px repeat(4,1fr)}.c{padding:10px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.t>.c:nth-child(4n),.q>.c:nth-child(5n){border-right:0}.t>.c:nth-last-child(-n+4),.q>.c:nth-last-child(-n+5){border-bottom:0}.m{background:var(--background);color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.h{background:var(--background);font-weight:700}.k{display:block;font-size:14px;line-height:1.1}.s{display:block;margin-top:4px;color:var(--chart-2);font-size:11px;font-weight:700}.b .k{color:var(--chart-2)}.v{font-weight:600}.n{color:var(--muted-foreground);font-size:12px}.x{opacity:.45}
+
+/* ── Input ─────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">Search 44</span>
+   <div class="field">
+   <span class="icon">⌕</span>
+   <input class="control" aria-label="Search products" placeholder="Search products">
+   <button class="clear" type="button" aria-label="Clear search">×</button>
+   </div>
+   <div class="field disabled">
+   <span class="icon">⌕</span>
+   <input class="control" aria-label="Search products disabled" placeholder="Search products" disabled>
+   <button class="clear" type="button" aria-label="Clear search disabled" disabled>×</button>
+   </div>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Dark 40</span>
+   <div class="surface dark">
+   <div class="field small">
+   <input class="control" aria-label="Email address" placeholder="Email address">
+   </div>
+   </div>
+   <div class="surface dark">
+   <div class="field small disabled">
+   <input class="control" aria-label="Track your order disabled" placeholder="Track your order" disabled>
+   </div>
+   </div>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans)}.row{display:flex;align-items:center;gap:calc(var(--spacing)*3);flex-wrap:wrap;margin-bottom:8px}.label{min-width:58px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)}.divider{border:0;border-top:1px solid var(--border);margin:10px 0}.surface{display:flex;gap:calc(var(--spacing)*2);padding:calc(var(--spacing)*3);border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-sm)}.dark{background:var(--background);color:var(--foreground)}.field{display:flex;align-items:center;gap:calc(var(--spacing)*2);min-width:240px;height:44px;padding:0 calc(var(--spacing)*3);border:1px solid var(--input);border-radius:var(--radius);background:var(--background);color:var(--foreground);box-shadow:var(--shadow-xs)}.field.small{height:40px}.field:focus-within{border-color:var(--ring);box-shadow:0 0 0 1px var(--ring)}.field.disabled{opacity:.55}.icon,.clear{padding:0;border:0;background:transparent;color:var(--icon-muted);font:inherit}.icon{font-size:13px}.control{flex:1;border:0;outline:0;background:transparent;color:inherit;font:inherit}.control::placeholder{color:var(--muted-foreground)}
+
+/* ── Navigation ────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Global 44</span><nav class="webbar dark" aria-label="Pinguo Apple global navigation"><span class="brand">Pinguo Apple</span><div class="rail"><a class="link" href="#">Store</a><a class="link" href="#">Explore</a><a class="link" href="#">Community</a><a class="link" href="#">Support</a></div></nav><nav class="webbar dark disabled" aria-label="Pinguo Apple global navigation disabled"><span class="brand">Pinguo Apple</span><div class="rail"><span class="link">Store</span><span class="link">Explore</span><span class="link">Community</span><span class="link">Support</span></div></nav></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Tab Bar</span><div class="mobile"><div class="screen"><nav class="tabbar" aria-label="Pinguo Apple tab bar"><a class="tab" href="#"><span class="dot"></span><span>Store</span></a><a class="tab" href="#"><span class="dot"></span><span>Explore</span></a><a class="tab" href="#"><span class="dot"></span><span>Community</span></a><a class="tab" href="#"><span class="dot"></span><span>Support</span></a></nav></div></div><div class="mobile disabled"><div class="screen"><nav class="tabbar" aria-label="Pinguo Apple tab bar disabled"><span class="tab"><span class="dot"></span><span>Store</span></span><span class="tab"><span class="dot"></span><span>Explore</span></span><span class="tab"><span class="dot"></span><span>Community</span></span><span class="tab"><span class="dot"></span><span>Support</span></span></nav></div></div></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.webbar,.mobile{border:1px solid var(--border);box-shadow:var(--shadow-sm)}.webbar{display:flex;align-items:center;gap:calc(var(--spacing)*2);min-width:320px;height:44px;padding:0 calc(var(--spacing)*3);border-radius:var(--radius);background:var(--sidebar)}.brand{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}.rail{display:flex;gap:calc(var(--spacing)*1.5);margin-left:auto}.link,.tab{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;color:inherit;text-decoration:none;white-space:nowrap;transition:background-color .18s ease,color .18s ease,opacity .18s ease}.link{height:32px;padding:0 calc(var(--spacing)*2.5)}.link:hover,.tab:hover{background:var(--secondary)}.link:focus-visible,.tab:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.dark{background:var(--sidebar);color:var(--foreground)}.disabled{opacity:.48}.disabled .link,.disabled .tab{pointer-events:none}.mobile{padding:calc(var(--spacing)*2);border-radius:calc(var(--radius)*1.1);background:var(--card)}.screen{display:flex;align-items:flex-end;justify-content:center;width:188px;height:164px;padding:calc(var(--spacing)*3);border-radius:calc(var(--radius)*.9);background:linear-gradient(180deg,var(--background),var(--secondary))}.tabbar{display:flex;gap:calc(var(--spacing)*1.5);padding:calc(var(--spacing)*1.5);border:1px solid var(--border);border-radius:999px;background:var(--card);box-shadow:var(--shadow-md)}.tab{flex-direction:column;gap:2px;min-width:56px;height:56px;padding:0 calc(var(--spacing)*1.5);font-size:11px;text-align:center}.dot{width:18px;height:18px;border-radius:999px;background:var(--secondary);box-shadow:inset 0 0 0 1px var(--border)}.tab:hover .dot{background:var(--primary)}
+
+/* ── Product Grid ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">4-up</span>
+   <div class="grid grid-4">
+   <article class="card"><div class="media"></div><span class="eyebrow">New this season</span><strong class="title">Pinguo Lens Pro</strong><span class="price">From $999</span><a class="cta" href="/">Compare all models</a></article>
+   <article class="card"><div class="media"></div><span class="eyebrow">Creator kit</span><strong class="title">Pinguo Air Cam</strong><span class="price">From $749</span><a class="cta" href="/">Build your setup</a></article>
+   <article class="card"><div class="media"></div><span class="eyebrow">Studio ready</span><strong class="title">Pinguo Dock One</strong><span class="price">From $299</span><a class="cta" href="/">See accessories</a></article>
+   <article class="card is-disabled"><div class="media"></div><span class="eyebrow">Coming soon</span><strong class="title">Pinguo Vision Mini</strong><span class="price muted">Notify me</span><span class="cta">Unavailable</span></article>
+   </div>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Story</span>
+   <div class="grid grid-2">
+   <article class="card story"><div class="media"></div><span class="eyebrow">Consumer imaging product ecosystem</span><strong class="title">Travel light with one camera, one dock, and one cloud-ready edit flow.</strong><span class="price muted">Pinguo Apple picks for weekend shoots</span><a class="cta" href="/">Shop the story</a></article>
+   <article class="card story"><div class="media"></div><span class="eyebrow">Compare lineup</span><strong class="title">Choose between compact capture, pro optics, and desktop-grade finishing tools.</strong><span class="price muted">Made for photo-first households</span><a class="cta" href="/">Compare all models</a></article>
+   </div>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 14px/1.4 var(--font-sans)}.row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}.label{width:72px;padding-top:6px;color:var(--muted-foreground);font-size:10px;letter-spacing:.12em;text-transform:uppercase;flex:0 0 auto}.grid{display:grid;gap:8px;flex:1}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.card{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--card-foreground);box-shadow:var(--shadow-xs);transition:border-color .2s ease,transform .2s ease}.card:hover{border-color:var(--primary);transform:translateY(-1px)}.media{aspect-ratio:1;border-radius:calc(var(--radius) - 4px);background:linear-gradient(135deg,var(--secondary),var(--background));border:1px solid var(--border)}.story .media{aspect-ratio:1.25;background:linear-gradient(135deg,var(--foreground),var(--secondary))}.eyebrow{color:var(--muted-foreground);font-size:10px;letter-spacing:.08em;text-transform:uppercase}.title{font-size:15px;line-height:1.25}.price{font-variant-numeric:tabular-nums}.cta{display:inline-flex;align-self:flex-start;padding:7px 10px;border-radius:999px;background:var(--primary);color:var(--primary-foreground);font-size:12px;text-decoration:none}.muted{color:var(--muted-foreground)}.is-disabled{opacity:.55}.divider{margin:10px 0;border:0;border-top:1px solid var(--border)}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-secondary { background-color: var(--secondary); }
+      .text-secondary { color: var(--secondary); }
+      .border-secondary { border-color: var(--secondary); }
+      .ring-secondary { --tw-ring-color: var(--secondary); }
+      .bg-secondary-foreground { background-color: var(--secondary-foreground); }
+      .text-secondary-foreground { color: var(--secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--secondary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-accent { background-color: var(--accent); }
+      .text-accent { color: var(--accent); }
+      .border-accent { border-color: var(--accent); }
+      .ring-accent { --tw-ring-color: var(--accent); }
+      .bg-accent-foreground { background-color: var(--accent-foreground); }
+      .text-accent-foreground { color: var(--accent-foreground); }
+      .border-accent-foreground { border-color: var(--accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--accent-foreground); }
+      .bg-destructive { background-color: var(--destructive); }
+      .text-destructive { color: var(--destructive); }
+      .border-destructive { border-color: var(--destructive); }
+      .ring-destructive { --tw-ring-color: var(--destructive); }
+      .bg-destructive-foreground { background-color: var(--destructive-foreground); }
+      .text-destructive-foreground { color: var(--destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--destructive-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+      .bg-chart-1 { background-color: var(--chart-1); }
+      .text-chart-1 { color: var(--chart-1); }
+      .border-chart-1 { border-color: var(--chart-1); }
+      .ring-chart-1 { --tw-ring-color: var(--chart-1); }
+      .bg-chart-2 { background-color: var(--chart-2); }
+      .text-chart-2 { color: var(--chart-2); }
+      .border-chart-2 { border-color: var(--chart-2); }
+      .ring-chart-2 { --tw-ring-color: var(--chart-2); }
+      .bg-chart-3 { background-color: var(--chart-3); }
+      .text-chart-3 { color: var(--chart-3); }
+      .border-chart-3 { border-color: var(--chart-3); }
+      .ring-chart-3 { --tw-ring-color: var(--chart-3); }
+      .bg-chart-4 { background-color: var(--chart-4); }
+      .text-chart-4 { color: var(--chart-4); }
+      .border-chart-4 { border-color: var(--chart-4); }
+      .ring-chart-4 { --tw-ring-color: var(--chart-4); }
+      .bg-chart-5 { background-color: var(--chart-5); }
+      .text-chart-5 { color: var(--chart-5); }
+      .border-chart-5 { border-color: var(--chart-5); }
+      .ring-chart-5 { --tw-ring-color: var(--chart-5); }
+      .bg-sidebar { background-color: var(--sidebar); }
+      .text-sidebar { color: var(--sidebar); }
+      .border-sidebar { border-color: var(--sidebar); }
+      .ring-sidebar { --tw-ring-color: var(--sidebar); }
+      .bg-sidebar-foreground { background-color: var(--sidebar-foreground); }
+      .text-sidebar-foreground { color: var(--sidebar-foreground); }
+      .border-sidebar-foreground { border-color: var(--sidebar-foreground); }
+      .ring-sidebar-foreground { --tw-ring-color: var(--sidebar-foreground); }
+      .bg-sidebar-primary { background-color: var(--sidebar-primary); }
+      .text-sidebar-primary { color: var(--sidebar-primary); }
+      .border-sidebar-primary { border-color: var(--sidebar-primary); }
+      .ring-sidebar-primary { --tw-ring-color: var(--sidebar-primary); }
+      .bg-sidebar-primary-foreground { background-color: var(--sidebar-primary-foreground); }
+      .text-sidebar-primary-foreground { color: var(--sidebar-primary-foreground); }
+      .border-sidebar-primary-foreground { border-color: var(--sidebar-primary-foreground); }
+      .ring-sidebar-primary-foreground { --tw-ring-color: var(--sidebar-primary-foreground); }
+      .bg-sidebar-accent { background-color: var(--sidebar-accent); }
+      .text-sidebar-accent { color: var(--sidebar-accent); }
+      .border-sidebar-accent { border-color: var(--sidebar-accent); }
+      .ring-sidebar-accent { --tw-ring-color: var(--sidebar-accent); }
+      .bg-sidebar-accent-foreground { background-color: var(--sidebar-accent-foreground); }
+      .text-sidebar-accent-foreground { color: var(--sidebar-accent-foreground); }
+      .border-sidebar-accent-foreground { border-color: var(--sidebar-accent-foreground); }
+      .ring-sidebar-accent-foreground { --tw-ring-color: var(--sidebar-accent-foreground); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+    
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <style id="critical-layout">
+      :root {
+        --page-max: 1200px;
+        --nav-height: 44px;
+      }
+      .globalnav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        height: var(--nav-height);
+        background: color-mix(in srgb, var(--sidebar) 84%, transparent);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+      }
+      .globalnav .link.active {
+        background: var(--secondary);
+        color: var(--foreground);
+      }
+      .page-container {
+        max-width: var(--page-max);
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .page-layout {
+        display: grid;
+        gap: 40px;
+      }
+      .course-hero {
+        display: grid;
+        gap: 32px;
+        padding: 28px 0 48px;
+      }
+      .preview-media {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--secondary), var(--accent));
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+      }
+      .play-button {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--background) 92%, transparent);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-xl);
+        transition: transform .2s ease;
+      }
+      .preview-media:hover .play-button { transform: scale(1.05); }
+      .play-button::before {
+        content: "";
+        width: 0;
+        height: 0;
+        border-top: 14px solid transparent;
+        border-bottom: 14px solid transparent;
+        border-left: 24px solid currentColor;
+        margin-left: 5px;
+      }
+      .hero-info h1 {
+        font-size: clamp(2rem, 5vw, 3.25rem);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        margin: 8px 0 14px;
+      }
+      .tagline { color: var(--muted-foreground); font-size: 1.05rem; margin: 0 0 20px; }
+      .price { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 18px; }
+      .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+      .rating-row { display: flex; align-items: center; gap: 8px; color: var(--muted-foreground); font-size: .95rem; }
+      .stars { display: inline-flex; align-items: center; gap: 2px; }
+      .cta-bar {
+        display: none;
+      }
+      .cta-bar-mobile {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 60;
+        background: color-mix(in srgb, var(--card) 92%, transparent);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        backdrop-filter: blur(20px) saturate(180%);
+        border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .curriculum { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--border); }
+      .curriculum details { border-bottom: 1px solid var(--border); }
+      .curriculum summary {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 0;
+        cursor: pointer;
+      }
+      .curriculum summary::-webkit-details-marker { display: none; }
+      .module-title { font-weight: 600; font-size: 1.05rem; }
+      .module-meta { display: flex; align-items: center; gap: 12px; color: var(--muted-foreground); font-size: .9rem; }
+      .module-play { display: inline-flex; align-items: center; justify-content: center; padding: 6px; border-radius: 999px; color: var(--primary); }
+      .module-play:hover { background: var(--secondary); }
+      .lessons { padding: 0 0 16px 24px; color: var(--muted-foreground); }
+      .lessons li { margin: 6px 0; }
+      .chevron { transition: transform .2s ease; }
+      details[open] .chevron { transform: rotate(90deg); }
+      .reviews-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+      .review-card { display: flex; flex-direction: column; gap: 12px; }
+      .learn-list { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+      .learn-item { display: flex; align-items: flex-start; gap: 12px; }
+      .section { padding: 48px 0; }
+      .section-heading { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 24px; }
+      .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted-foreground); text-decoration: none; font-size: .95rem; margin: 24px 0 4px; }
+      .back-link:hover { color: var(--foreground); }
+      .instructor-card { flex-direction: row; align-items: center; gap: 18px; }
+      .avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 700;
+        flex: 0 0 auto;
+      }
+      .instructor-title { color: var(--muted-foreground); font-size: .9rem; margin: 4px 0 10px; }
+      footer { padding: 40px 0; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: .85rem; }
+      .card { width: 100%; }
+
+      @media (min-width: 1024px) {
+        .page-layout { grid-template-columns: 1fr 340px; align-items: start; }
+        .course-hero { grid-template-columns: 1.25fr 1fr; align-items: center; }
+        .cta-bar {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          position: sticky;
+          top: calc(var(--nav-height) + 24px);
+          padding: 24px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          background: var(--card);
+          box-shadow: var(--shadow-md);
+        }
+        .cta-bar-mobile { display: none; }
+      }
+      @media (max-width: 1023px) {
+        body { padding-bottom: 88px; }
+        .page-layout { grid-template-columns: 1fr; }
+        .course-hero { grid-template-columns: 1fr; padding-top: 12px; }
+        .instructor-card { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+
+    <nav class="globalnav webbar" aria-label="IELTS 学堂 global navigation">
+      <div class="page-container" style="display:flex;align-items:center;width:100%;">
+        <span class="brand">IELTS学堂</span>
+        <div class="rail">
+          <a class="link active" href="courses.html">课程</a>
+          <a class="link" href="paths.html">学习路径</a>
+          <a class="link" href="teachers.html">名师</a>
+          <a class="link" href="pricing.html">价格</a>
+          <a class="link" href="help.html">帮助</a>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <div class="page-container">
+        <a class="back-link" href="courses.html">
+          <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/arrow-left.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/arrow-left.svg');width:16px;height:16px;"></span>
+          全部课程
+        </a>
+
+        <section class="course-hero">
+          <a href="player.html?lesson=1" class="preview-media" aria-label="播放课程介绍视频">
+            <span class="play-button" aria-hidden="true"></span>
+          </a>
+          <div class="hero-info">
+            <div class="eyebrow">IELTS 口语 · 1 对 1</div>
+            <h1>雅思口语一对一特训班</h1>
+            <p class="tagline">20小时 · 1对1 · 真题演练 · 课后反馈</p>
+            <div class="price">¥3,999</div>
+            <div class="hero-actions">
+              <a class="btn btn-primary btn-lg" href="checkout.html?course=1">立即购买</a>
+              <button class="btn btn-secondary btn-lg" type="button">免费试听</button>
+            </div>
+            <div class="rating-row">
+              <span class="stars" aria-hidden="true">
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:16px;height:16px;color:var(--chart-3);"></span>
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:16px;height:16px;color:var(--chart-3);"></span>
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:16px;height:16px;color:var(--chart-3);"></span>
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:16px;height:16px;color:var(--chart-3);"></span>
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:16px;height:16px;color:var(--chart-3);"></span>
+              </span>
+              <span><strong>4.9</strong> 分</span>
+              <span>·</span>
+              <span>1,248 位学员</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="page-layout page-container">
+        <div class="main-content">
+          <section class="section" id="learn">
+            <h2 class="section-heading">你将学到什么</h2>
+            <ul class="learn-list">
+              <li class="learn-item">
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');width:20px;height:20px;color:var(--success);flex:0 0 auto;"></span>
+                <span>掌握 Part 1-3 应答策略，建立清晰答题框架</span>
+              </li>
+              <li class="learn-item">
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');width:20px;height:20px;color:var(--success);flex:0 0 auto;"></span>
+                <span>建立高频话题素材库，覆盖人物、地点、事件与抽象议题</span>
+              </li>
+              <li class="learn-item">
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');width:20px;height:20px;color:var(--success);flex:0 0 auto;"></span>
+                <span>纠正发音与语法问题，提升表达准确性与自然度</span>
+              </li>
+              <li class="learn-item">
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');width:20px;height:20px;color:var(--success);flex:0 0 auto;"></span>
+                <span>模拟真实考试场景，熟悉考试节奏与互动方式</span>
+              </li>
+              <li class="learn-item">
+                <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/check.svg');width:20px;height:20px;color:var(--success);flex:0 0 auto;"></span>
+                <span>获得个性化反馈报告，明确弱项与提升路径</span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="section" id="curriculum">
+            <h2 class="section-heading">课程大纲</h2>
+            <ol class="curriculum">
+              <li>
+                <details open>
+                  <summary>
+                    <span class="module-title">模块一 口语基础重塑</span>
+                    <span class="module-meta">
+                      <span>4 课时</span>
+                      <a class="module-play" href="player.html?lesson=1" aria-label="播放模块一">
+                        <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');width:18px;height:18px;"></span>
+                      </a>
+                      <span data-icon class="chevron" style="mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');width:16px;height:16px;"></span>
+                    </span>
+                  </summary>
+                  <ul class="lessons">
+                    <li>口语评分标准拆解与高分画像</li>
+                    <li>流利度与连贯性专项训练</li>
+                    <li>发音基础纠正与连读练习</li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary>
+                    <span class="module-title">模块二 Part 1 高频话题</span>
+                    <span class="module-meta">
+                      <span>4 课时</span>
+                      <a class="module-play" href="player.html?lesson=2" aria-label="播放模块二">
+                        <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');width:18px;height:18px;"></span>
+                      </a>
+                      <span data-icon class="chevron" style="mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');width:16px;height:16px;"></span>
+                    </span>
+                  </summary>
+                  <ul class="lessons">
+                    <li>家乡、工作、学习等基础话题精讲</li>
+                    <li>高频问题回答模板与扩展技巧</li>
+                    <li>一分钟限时回答实战演练</li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary>
+                    <span class="module-title">模块三 Part 2 个人陈述</span>
+                    <span class="module-meta">
+                      <span>5 课时</span>
+                      <a class="module-play" href="player.html?lesson=3" aria-label="播放模块三">
+                        <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');width:18px;height:18px;"></span>
+                      </a>
+                      <span data-icon class="chevron" style="mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');width:16px;height:16px;"></span>
+                    </span>
+                  </summary>
+                  <ul class="lessons">
+                    <li> cue card 快速构思与笔记法</li>
+                    <li>故事线构建与细节填充</li>
+                    <li>时间控制与收尾技巧</li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary>
+                    <span class="module-title">模块四 Part 3 深度讨论</span>
+                    <span class="module-meta">
+                      <span>4 课时</span>
+                      <a class="module-play" href="player.html?lesson=4" aria-label="播放模块四">
+                        <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');width:18px;height:18px;"></span>
+                      </a>
+                      <span data-icon class="chevron" style="mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');width:16px;height:16px;"></span>
+                    </span>
+                  </summary>
+                  <ul class="lessons">
+                    <li>抽象话题观点拓展与论证</li>
+                    <li>对比类、预测类问题应答策略</li>
+                    <li>学术表达与衔接词运用</li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary>
+                    <span class="module-title">模块五 模考与点评</span>
+                    <span class="module-meta">
+                      <span>3 课时</span>
+                      <a class="module-play" href="player.html?lesson=5" aria-label="播放模块五">
+                        <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/play.svg');width:18px;height:18px;"></span>
+                      </a>
+                      <span data-icon class="chevron" style="mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/chevron-right.svg');width:16px;height:16px;"></span>
+                    </span>
+                  </summary>
+                  <ul class="lessons">
+                    <li>全真模拟考试与录音回放</li>
+                    <li>一对一点评与扣分点分析</li>
+                    <li>结课复习计划与冲刺建议</li>
+                  </ul>
+                </details>
+              </li>
+            </ol>
+          </section>
+
+          <section class="section" id="instructor">
+            <h2 class="section-heading">授课名师</h2>
+            <article class="card instructor-card">
+              <div class="avatar" aria-hidden="true">AC</div>
+              <div>
+                <h3 style="margin:0 0 2px;">Alex Chen</h3>
+                <p class="instructor-title">雅思前考官 / 10年教龄</p>
+                <p class="body-copy" style="margin:0;">曾任职雅思口语考官，深谙评分细节，擅长帮助学生突破发音、逻辑与临场紧张三大瓶颈。</p>
+              </div>
+            </article>
+          </section>
+
+          <section class="section" id="compare">
+            <h2 class="section-heading">权益对比</h2>
+            <div class="t" role="table" aria-label="课程权益对比">
+              <div class="c m">权益</div>
+              <div class="c h"><span class="k">本课程</span></div>
+              <div class="c h"><span class="k">全科班</span></div>
+              <div class="c h"><span class="k">1对1</span></div>
+
+              <div class="c m">价格</div>
+              <div class="c v">¥3,999</div>
+              <div class="c v">¥6,999</div>
+              <div class="c v">¥12,999</div>
+
+              <div class="c m">课时</div>
+              <div class="c v">20 小时</div>
+              <div class="c v">80 小时</div>
+              <div class="c v">40 小时</div>
+
+              <div class="c m">1对1授课</div>
+              <div class="c v">是</div>
+              <div class="c n">班课</div>
+              <div class="c v">是</div>
+
+              <div class="c m">真题演练</div>
+              <div class="c v">包含</div>
+              <div class="c v">包含</div>
+              <div class="c v">包含</div>
+
+              <div class="c m">课后反馈</div>
+              <div class="c v">包含</div>
+              <div class="c v">包含</div>
+              <div class="c v">包含</div>
+
+              <div class="c m">模考点评</div>
+              <div class="c v">2 次</div>
+              <div class="c v">4 次</div>
+              <div class="c v">8 次</div>
+
+              <div class="c m">学习周期</div>
+              <div class="c v">30 天</div>
+              <div class="c v">90 天</div>
+              <div class="c v">60 天</div>
+            </div>
+          </section>
+
+          <section class="section" id="reviews">
+            <h2 class="section-heading">学员评价</h2>
+            <div class="reviews-grid">
+              <article class="card review-card">
+                <div class="stars" aria-label="5 星">
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                </div>
+                <p class="body-copy" style="margin:0;">Alex 老师非常专业，几节课就把我的 Part 2 思路理清了，考试时完全不慌。</p>
+                <p style="margin:0;color:var(--muted-foreground);font-size:.85rem;">— 林同学，目标 7.0</p>
+              </article>
+              <article class="card review-card">
+                <div class="stars" aria-label="5 星">
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                </div>
+                <p class="body-copy" style="margin:0;">反馈报告很详细，每次课后都知道下一步该练什么，口语从 5.5 提到了 6.5。</p>
+                <p style="margin:0;color:var(--muted-foreground);font-size:.85rem;">— 王同学，已出分 6.5</p>
+              </article>
+              <article class="card review-card">
+                <div class="stars" aria-label="5 星">
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                  <span data-icon style="mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');-webkit-mask-image:url('../assets/icons/BLGE665DK5_ET3/star.svg');width:14px;height:14px;color:var(--chart-3);"></span>
+                </div>
+                <p class="body-copy" style="margin:0;">一对一模考特别真实，老师当场指出我的语法错误，结课后复习计划也很实用。</p>
+                <p style="margin:0;color:var(--muted-foreground);font-size:.85rem;">— 陈同学，目标 7.5</p>
+              </article>
+            </div>
+          </section>
+
+          <footer>
+            <p>© <span id="year">2026</span> IELTS学堂. 保留所有权利.</p>
+          </footer>
+        </div>
+
+        <aside class="cta-bar" aria-label="购买选项">
+          <div>
+            <div style="font-size:0.85rem;color:var(--muted-foreground);">雅思口语一对一特训班</div>
+            <div class="price" style="font-size:1.75rem;margin:8px 0 16px;">¥3,999</div>
+            <a class="btn btn-primary btn-lg" href="checkout.html?course=1" style="width:100%;">立即购买</a>
+          </div>
+          <button class="btn btn-secondary" type="button" style="width:100%;">免费试听</button>
+          <p style="font-size:0.8rem;color:var(--muted-foreground);margin:0;text-align:center;">7天无理由退款 · 专属学习顾问</p>
+        </aside>
+      </div>
+
+      <div class="cta-bar-mobile" aria-label="购买选项">
+        <div>
+          <div style="font-size:0.75rem;color:var(--muted-foreground);">雅思口语一对一特训班</div>
+          <div style="font-size:1.35rem;font-weight:700;">¥3,999</div>
+        </div>
+        <a class="btn btn-primary" href="checkout.html?course=1" style="min-width:140px;">立即购买</a>
+      </div>
+    </main>
+
+    <script id="interaction-script">
+      (function() {
+        var curriculum = document.querySelector('.curriculum');
+        if (curriculum) {
+          curriculum.querySelectorAll('details').forEach(function(details) {
+            details.addEventListener('toggle', function() {
+              if (!details.open) return;
+              curriculum.querySelectorAll('details').forEach(function(sibling) {
+                if (sibling !== details) sibling.open = false;
+              });
+            });
+          });
+        }
+
+        var table = document.querySelector('#compare .t');
+        if (table) {
+          var cells = Array.from(table.querySelectorAll('.c'));
+          var cols = 4;
+          cells.forEach(function(cell, index) {
+            cell.addEventListener('mouseenter', function() {
+              var col = index % cols;
+              cells.forEach(function(c, i) {
+                if (i % cols === col) c.classList.add('col-hover');
+              });
+            });
+            cell.addEventListener('mouseleave', function() {
+              cells.forEach(function(c) { c.classList.remove('col-hover'); });
+            });
+          });
+        }
+
+        var mobileBar = document.querySelector('.cta-bar-mobile');
+        if (mobileBar) {
+          var lastY = window.scrollY;
+          var ticking = false;
+          window.addEventListener('scroll', function() {
+            if (ticking) return;
+            window.requestAnimationFrame(function() {
+              var currentY = window.scrollY;
+              if (currentY > lastY && currentY > 80) {
+                mobileBar.classList.add('is-hidden');
+              } else {
+                mobileBar.classList.remove('is-hidden');
+              }
+              lastY = currentY;
+              ticking = false;
+            });
+            ticking = true;
+          }, { passive: true });
+        }
+      })();
+    </script>
+    <script id="page-script">
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.querySelectorAll('.module-play').forEach(function(link) {
+        link.addEventListener('click', function(e) { e.stopPropagation(); });
+      });
+    </script>
+    <script>lucide.createIcons();</script>
+<style id="interaction-states">
+      @media (prefers-reduced-motion: no-preference) {
+        .course-hero > * {
+          opacity: 0;
+          transform: translateY(20px);
+          animation: hero-enter .7s cubic-bezier(.2, .8, .2, 1) forwards;
+        }
+        .course-hero > *:nth-child(1) { animation-delay: .05s; }
+        .course-hero > *:nth-child(2) { animation-delay: .15s; }
+
+        .hero-info > * {
+          opacity: 0;
+          transform: translateY(16px);
+          animation: hero-enter .6s cubic-bezier(.2, .8, .2, 1) forwards;
+        }
+        .hero-info > *:nth-child(1) { animation-delay: .2s; }
+        .hero-info > *:nth-child(2) { animation-delay: .28s; }
+        .hero-info > *:nth-child(3) { animation-delay: .34s; }
+        .hero-info > *:nth-child(4) { animation-delay: .4s; }
+        .hero-info > *:nth-child(5) { animation-delay: .46s; }
+        .hero-info > *:nth-child(6) { animation-delay: .52s; }
+
+        @keyframes hero-enter {
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preview-media::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: color-mix(in srgb, var(--foreground) 0%, transparent);
+          transition: background-color .25s ease;
+          pointer-events: none;
+        }
+        .preview-media:hover::after {
+          background: color-mix(in srgb, var(--foreground) 12%, transparent);
+        }
+        .preview-media:hover .play-button {
+          transform: scale(1.08);
+        }
+
+        .btn {
+          transition: transform .15s ease, filter .15s ease, box-shadow .2s ease, background-color .18s ease, color .18s ease;
+        }
+        .btn-primary:hover {
+          filter: brightness(.96);
+          box-shadow: var(--shadow-md);
+        }
+        .btn-secondary:hover {
+          background: var(--muted);
+          box-shadow: var(--shadow);
+        }
+        .btn-primary:active,
+        .btn-secondary:active {
+          transform: scale(.97);
+        }
+
+        .curriculum details {
+          overflow: hidden;
+        }
+        .curriculum details .lessons {
+          display: grid;
+          grid-template-rows: 0fr;
+          opacity: 0;
+          transform: translateY(-6px);
+          transition: grid-template-rows .35s ease, opacity .3s ease, transform .3s ease;
+        }
+        .curriculum details[open] .lessons {
+          grid-template-rows: 1fr;
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .curriculum details .lessons > * {
+          min-height: 0;
+        }
+        .curriculum summary {
+          transition: background-color .18s ease, padding-left .2s ease;
+        }
+        .curriculum summary:hover {
+          background: color-mix(in srgb, var(--accent) 60%, transparent);
+          padding-left: 8px;
+        }
+
+        .lessons li {
+          position: relative;
+          padding-left: 28px;
+          transition: color .18s ease, transform .18s ease;
+        }
+        .lessons li::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: .45em;
+          width: 0;
+          height: 0;
+          border-top: 5px solid transparent;
+          border-bottom: 5px solid transparent;
+          border-left: 8px solid currentColor;
+          opacity: .35;
+          transform: scale(.9);
+          transition: opacity .2s ease, transform .2s ease;
+        }
+        .lessons li:hover {
+          color: var(--foreground);
+          transform: translateX(4px);
+        }
+        .lessons li:hover::before {
+          opacity: .9;
+          transform: scale(1);
+        }
+
+        .instructor-card {
+          transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .instructor-card:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .review-card {
+          transition: transform .25s ease, box-shadow .25s ease, border-color .2s ease;
+        }
+        .review-card:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
+          border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+        }
+
+        .t .c {
+          transition: background-color .18s ease;
+        }
+        .t .c.col-hover {
+          background: color-mix(in srgb, var(--primary) 8%, var(--card));
+        }
+
+        .cta-bar-mobile {
+          transition: transform .35s ease, opacity .25s ease;
+        }
+        .cta-bar-mobile.is-hidden {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .course-hero > *,
+        .hero-info > * {
+          opacity: 1;
+          transform: none;
+          animation: none;
+        }
+        .preview-media::after,
+        .btn,
+        .curriculum summary,
+        .lessons li,
+        .lessons li::before,
+        .instructor-card,
+        .review-card,
+        .t .c,
+        .cta-bar-mobile {
+          transition: none !important;
+        }
+      }
+    </style>
+</body>
+</html>

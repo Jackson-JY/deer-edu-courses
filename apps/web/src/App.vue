@@ -16,7 +16,7 @@ const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 function onKicked() {
   auth.kick()
-  ElMessage.warning('账号已在其他设备登录，请重新登录')
+  ElMessage.warning('登录已失效，请重新登录')
 }
 
 onMounted(() => {
@@ -27,7 +27,6 @@ onUnmounted(() => {
   window.removeEventListener('auth:kicked', onKicked)
 })
 
-// 路由变化时关闭移动端菜单
 watch(() => route.path, () => { mobileMenuOpen.value = false })
 
 const navs = computed(() =>
@@ -56,15 +55,14 @@ function onUserCommand(cmd: string) {
 </script>
 
 <template>
-  <header v-if="!isAdminRoute" class="topnav">
-    <div class="container topnav__inner">
+  <header v-if="!isAdminRoute" class="globalnav" aria-label="主导航">
+    <div class="globalnav__inner">
       <RouterLink to="/" class="brand">
-        <span class="brand-mark">IELTS</span>
-        <span class="brand-name">雅思学堂</span>
+        <img class="brand-logo" src="/logo.jpg" alt="Logo" />
+        <span>Deer Edu</span>
       </RouterLink>
 
-      <!-- PC端导航 -->
-      <nav class="links pc-only">
+      <nav class="rail pc-only" aria-label="主导航链接">
         <RouterLink
           v-for="n in navs"
           :key="n.to"
@@ -75,45 +73,45 @@ function onUserCommand(cmd: string) {
         </RouterLink>
       </nav>
 
-      <div class="actions">
-        <el-input
-          v-model="keyword"
-          placeholder="搜索课程"
-          class="search"
-          clearable
-          @keyup.enter="onSearch"
-        >
-          <template #prefix><el-icon><Search /></el-icon></template>
-        </el-input>
+      <div class="tools">
+        <div class="field search-field">
+          <input
+            v-model="keyword"
+            class="control"
+            placeholder="搜索课程"
+            @keyup.enter="onSearch"
+          >
+        </div>
 
         <template v-if="auth.isLoggedIn">
-          <el-dropdown @command="onUserCommand">
+          <el-dropdown @command="onUserCommand" trigger="click">
             <span class="user-trigger">
               <span class="user-avatar">{{ (auth.user?.nickname || '我')[0] }}</span>
-              <el-icon class="pc-only"><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="/my/learning"><el-icon><VideoCamera /></el-icon> 我的学习</el-dropdown-item>
-                <el-dropdown-item command="/my/orders"><el-icon><List /></el-icon> 我的订单</el-dropdown-item>
-                <el-dropdown-item command="/my/coupons"><el-icon><Ticket /></el-icon> 我的优惠券</el-dropdown-item>
-                <el-dropdown-item command="/my/settings"><el-icon><Setting /></el-icon> 账号设置</el-dropdown-item>
-                <el-dropdown-item command="logout" divided><el-icon><SwitchButton /></el-icon> 退出登录</el-dropdown-item>
+                <el-dropdown-item command="/my/learning">我的学习</el-dropdown-item>
+                <el-dropdown-item command="/my/settings">账号设置</el-dropdown-item>
+                <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </template>
-        <el-button v-else type="primary" round @click="auth.openLogin()">登录 / 注册</el-button>
+        <button v-else class="btn btn-primary" @click="auth.openLogin()">登录 / 注册</button>
 
-        <!-- 移动端汉堡按钮 -->
-        <el-icon class="mobile-menu-btn" @click="mobileMenuOpen = !mobileMenuOpen">
-          <Fold v-if="mobileMenuOpen" />
-          <Expand v-else />
-        </el-icon>
+        <button
+          class="icon-btn mobile-only"
+          @click="mobileMenuOpen = !mobileMenuOpen"
+          aria-label="菜单"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path v-if="!mobileMenuOpen" d="M3 6h18M3 12h18M3 18h18" />
+            <path v-else d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </div>
 
-    <!-- 移动端下拉导航 -->
     <div v-if="mobileMenuOpen" class="mobile-nav">
       <RouterLink
         v-for="n in navs"
@@ -124,8 +122,6 @@ function onUserCommand(cmd: string) {
         {{ n.label }}
       </RouterLink>
       <template v-if="auth.isLoggedIn">
-        <RouterLink to="/my/orders" class="mobile-nav__link">我的订单</RouterLink>
-        <RouterLink to="/my/coupons" class="mobile-nav__link">我的优惠券</RouterLink>
         <RouterLink to="/my/settings" class="mobile-nav__link">账号设置</RouterLink>
         <a class="mobile-nav__link" @click="onUserCommand('logout')">退出登录</a>
       </template>
@@ -136,222 +132,220 @@ function onUserCommand(cmd: string) {
     <RouterView />
   </main>
 
-  <footer v-if="!isAdminRoute" class="footer">
-    <div class="container footer__inner">
-      <div class="footer-col">
-        <div class="brand-name">雅思学堂</div>
+  <footer v-if="!isAdminRoute" class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-name">
+          <img class="brand-logo-sm" src="/logo.jpg" alt="Logo" />
+          Deer Edu
+        </div>
         <p>专注雅思冲分的在线课程平台</p>
       </div>
-      <div class="footer-links">
-        <a>关于我们</a><a>常见问题</a><a>联系客服</a><a>用户协议</a><a>隐私政策</a>
-      </div>
+      <nav class="footer-links" aria-label="页脚链接">
+        <a>关于我们</a>
+        <a>常见问题</a>
+        <a>联系客服</a>
+        <a>用户协议</a>
+        <a>隐私政策</a>
+      </nav>
     </div>
-    <div class="footer-copy">© 2026 雅思学堂 · 京ICP备xxxxxxxx号</div>
+    <div class="copyright">© 2026 IELTS学堂</div>
   </footer>
 
   <LoginDialog />
 </template>
 
 <style scoped>
-.topnav {
+.globalnav {
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: saturate(180%) blur(8px);
-  border-bottom: 1px solid var(--line);
-}
-.topnav__inner {
+  z-index: 50;
+  height: 44px;
   display: flex;
   align-items: center;
-  gap: 28px;
-  height: 64px;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 max(1rem, calc((100vw - 1200px) / 2));
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.globalnav__inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: min(1200px, 100%);
+  margin: 0 auto;
 }
 .brand {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--foreground);
   display: flex;
   align-items: center;
   gap: 8px;
-  white-space: nowrap;
 }
-.brand-mark {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #fff;
-  background: var(--brand-500);
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  flex-shrink: 0;
 }
-.brand-name {
-  font-size: 18px;
-  font-weight: 700;
+.brand-logo-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  margin-right: 6px;
+  vertical-align: middle;
 }
-.links {
+.rail {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 0.25rem;
 }
 .link {
-  position: relative;
-  padding: 8px 12px;
-  font-size: 15px;
-  color: var(--text-2);
-  border-radius: var(--r-sm);
-  transition: color 0.15s, background 0.15s;
-  white-space: nowrap;
-}
-.link:hover {
-  color: var(--brand-600);
-  background: var(--brand-50);
-}
-.link.active {
-  color: var(--brand-600);
-  font-weight: 600;
-}
-.link.vip {
-  color: var(--accent);
-}
-.actions {
-  margin-left: auto;
-  display: flex;
-  gap: 12px;
+  display: inline-flex;
   align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--foreground);
+  transition: background-color 0.18s ease;
 }
-.search {
+.link:hover { background: var(--secondary); }
+.link.active { color: var(--primary); }
+.link.vip { color: var(--chart-3); }
+
+.tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.search-field {
   width: 220px;
+  height: 36px;
 }
 .user-trigger {
   display: flex;
   align-items: center;
-  gap: 6px;
   cursor: pointer;
-  color: var(--text-2);
 }
 .user-avatar {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--brand-500);
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
-.mobile-menu-btn {
-  display: none;
-  font-size: 22px;
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  color: var(--text-2);
+  transition: background-color 0.18s ease;
 }
+.icon-btn:hover { background: var(--secondary); }
+.mobile-only { display: none; }
+
 .mobile-nav {
   display: none;
   flex-direction: column;
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
 }
 .mobile-nav__link {
   display: block;
   padding: 14px 20px;
   font-size: 15px;
-  color: var(--text-1);
-  border-bottom: 1px solid var(--line);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
 }
-.mobile-nav__link.active {
-  color: var(--brand-600);
-  font-weight: 600;
-}
+.mobile-nav__link.active { color: var(--primary); font-weight: 600; }
+
 .page {
-  min-height: calc(100vh - 64px - 200px);
+  min-height: calc(100vh - 44px - 120px);
 }
-.footer {
-  margin-top: 64px;
-  background: #0f1f33;
-  color: #c4cdda;
+
+/* 页脚 */
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: var(--background);
+  margin-top: 4rem;
 }
-.footer__inner {
+.footer-inner {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 40px;
-  padding-top: 40px;
-  padding-bottom: 28px;
+  gap: 1rem;
 }
-.footer .brand-name {
-  color: #fff;
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-.footer-col p {
-  margin: 0;
+.footer-brand .brand-name {
   font-size: 14px;
-  color: #8b97a8;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.footer-brand p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-foreground);
 }
 .footer-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px;
-  align-content: flex-start;
+  gap: 0.25rem;
 }
 .footer-links a {
-  font-size: 14px;
-  color: #c4cdda;
-  cursor: pointer;
-}
-.footer-links a:hover {
-  color: #fff;
-}
-.footer-copy {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 999px;
   font-size: 13px;
-  color: #6b7888;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+.footer-links a:hover { background: var(--secondary); color: var(--foreground); }
+.copyright {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  text-align: center;
   padding: 16px;
+  border-top: 1px solid var(--border);
 }
 
-/* ===== 响应式断点 ===== */
-
-/* 平板：768px 以下 */
-@media (max-width: 768px) {
-  .pc-only {
-    display: none !important;
-  }
-  .mobile-menu-btn {
-    display: flex;
-    align-items: center;
-  }
-  .mobile-nav {
-    display: flex;
-  }
-  .topnav__inner {
-    gap: 12px;
-  }
-  .search {
-    width: 120px;
-  }
-  .footer__inner {
-    flex-direction: column;
-    gap: 20px;
-    padding-top: 28px;
-  }
-  .footer {
-    margin-top: 40px;
-  }
-  .page {
-    min-height: calc(100vh - 64px - 280px);
-  }
+@media (max-width: 767px) {
+  .pc-only { display: none !important; }
+  .mobile-only { display: inline-flex; }
+  .search-field { width: 140px; }
+  .mobile-nav { display: flex; }
+  .footer-inner { flex-direction: column; align-items: flex-start; }
 }
-
-/* 手机：480px 以下 */
 @media (max-width: 480px) {
-  .brand-name {
-    display: none;
-  }
-  .search {
-    width: 100px;
-  }
-  .footer-links {
-    gap: 16px;
-  }
+  .brand { font-size: 13px; }
+  .search-field { width: 100px; }
 }
 </style>

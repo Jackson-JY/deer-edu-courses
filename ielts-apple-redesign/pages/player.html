@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>播放页</title>
+    <style id="theme-vars">
+/*
+ * Pinguo design tokens
+ * Brand: Pinguo
+ * Domain: Consumer imaging product
+ * Style: Restrained, elegant, Apple-inspired
+ * Theme mode: light-dark
+ * Source language: zh
+ * Output language: en
+ *
+ * Color architecture (two layers):
+ *   1. Primitive palette - six categories. brand / background / text / icon
+ *      are each a 10-step scale (50 lightest to 900 darkest). state-success and
+ *      state-error are functional colors anchored on Apple system colors.
+ *      Anchors follow Apple Human Interface Guidelines system colors
+ *      (System Blue #007AFF, System Green #34C759, System Red #FF3B30,
+ *      system grays / label / background colors).
+ *   2. Semantic tokens - :root (light) and .dark map roles onto primitives.
+ *      Components and UI kits must only consume the semantic tokens below.
+ */
+
+/* @group-priority: brand, background, text, icon, state-success, state-error */
+
+:root {
+  
+  /* solo-design consumption aliases: explicit prefix for fill-html-head.mjs */
+  --apple-background: var(--background, #ffffff);
+  --apple-foreground: var(--foreground, #0f172a);
+  --apple-card: var(--card, var(--background));
+  --apple-card-foreground: var(--card-foreground, var(--foreground));
+  --apple-popover: var(--popover, var(--card));
+  --apple-popover-foreground: var(--popover-foreground, var(--card-foreground, var(--foreground)));
+  --apple-primary: var(--primary, #111827);
+  --apple-primary-foreground: var(--primary-foreground, #ffffff);
+  --apple-secondary: var(--secondary, var(--muted, var(--card)));
+  --apple-secondary-foreground: var(--secondary-foreground, var(--foreground));
+  --apple-muted: var(--muted, var(--card));
+  --apple-muted-foreground: var(--muted-foreground, var(--foreground));
+  --apple-accent: var(--accent, var(--secondary, var(--muted, var(--card))));
+  --apple-accent-foreground: var(--accent-foreground, var(--foreground));
+  --apple-destructive: var(--destructive, #ef4444);
+  --apple-destructive-foreground: var(--destructive-foreground, #ffffff);
+  --apple-border: var(--border, currentColor);
+  --apple-input: var(--input, var(--border));
+  --apple-ring: var(--ring, var(--primary));
+  --apple-radius-sm: var(--radius-sm, 0.5rem);
+  --apple-radius-md: var(--radius-md, 0.75rem);
+  --apple-radius-lg: var(--radius-lg, 1.2rem);
+  --apple-chart-1: var(--chart-1, var(--primary));
+  --apple-chart-2: var(--chart-2, var(--secondary, var(--primary)));
+  --apple-chart-3: var(--chart-3, var(--accent, var(--primary)));
+  --apple-chart-4: var(--chart-4, var(--muted-foreground, var(--foreground)));
+  --apple-chart-5: var(--chart-5, var(--foreground));
+  --apple-sidebar: var(--sidebar, var(--background));
+  --apple-sidebar-foreground: var(--sidebar-foreground, var(--foreground));
+  --apple-sidebar-primary: var(--sidebar-primary, var(--primary));
+  --apple-sidebar-primary-foreground: var(--sidebar-primary-foreground, var(--primary-foreground));
+  --apple-sidebar-accent: var(--sidebar-accent, var(--accent, var(--muted, var(--card))));
+  --apple-sidebar-accent-foreground: var(--sidebar-accent-foreground, var(--accent-foreground, var(--foreground)));
+
+/* ===== PRIMITIVE PALETTE ===== */
+
+  /* brand */
+  --brand-50: #e8f2ff;
+  --brand-100: #cfe5ff;
+  --brand-200: #9fcbff;
+  --brand-300: #66abff;
+  --brand-400: #2e8dff;
+  --brand-500: #007aff; /* @primary */
+  --brand-600: #0064d6;
+  --brand-700: #004fad;
+  --brand-800: #003b82;
+  --brand-900: #00275a;
+
+  /* background */
+  --background-50: #ffffff;
+  --background-100: #f7f7fa;
+  --background-200: #f2f2f7;
+  --background-300: #e5e5ea;
+  --background-400: #d1d1d6;
+  --background-500: #aeaeb2;
+  --background-600: #8e8e93;
+  --background-700: #3a3a3c;
+  --background-800: #1c1c1e;
+  --background-900: #000000;
+
+  /* text */
+  --text-50: #f5f5f7;
+  --text-100: #e3e3e8;
+  --text-200: #c7c7cc;
+  --text-300: #aeaeb2;
+  --text-400: #8e8e93;
+  --text-500: #6e6e73;
+  --text-600: #48484a;
+  --text-700: #3c3c43;
+  --text-800: #1d1d1f;
+  --text-900: #000000;
+
+  /* icon */
+  --icon-50: #f5f5f7;
+  --icon-100: #e5e5ea;
+  --icon-200: #d1d1d6;
+  --icon-300: #c7c7cc;
+  --icon-400: #aeaeb2;
+  --icon-500: #8e8e93;
+  --icon-600: #6e6e73;
+  --icon-700: #48484a;
+  --icon-800: #2c2c2e;
+  --icon-900: #1d1d1f;
+
+  /* state-success */
+  --state-success: #34c759; /* @primary */
+  --state-success-dark: #30d158;
+  --state-success-surface: #e9f9ee;
+  --state-success-foreground: #ffffff;
+
+  /* state-error */
+  --state-error: #ff3b30; /* @primary */
+  --state-error-dark: #ff453a;
+  --state-error-surface: #ffecea;
+  --state-error-foreground: #ffffff;
+
+  /* ===== SEMANTIC ROLES ===== */
+
+  /* semantic */
+  --background: var(--background-50);
+  --foreground: var(--text-800);
+  --card: var(--background-50);
+  --card-foreground: var(--text-800);
+  --popover: var(--background-50);
+  --popover-foreground: var(--text-900);
+
+  --primary: var(--brand-500);
+  --primary-foreground: var(--background-50);
+  --secondary: var(--background-200);
+  --secondary-foreground: var(--text-800);
+  --muted: var(--background-200);
+  --muted-foreground: var(--text-400);
+  --accent: var(--background-100);
+  --accent-foreground: var(--text-800);
+  --destructive: var(--state-error);
+  --destructive-foreground: var(--state-error-foreground);
+  --success: var(--state-success);
+  --success-foreground: var(--state-success-foreground);
+  --border: var(--background-300);
+  --input: var(--background-400);
+  --ring: var(--brand-500);
+
+  --icon: var(--icon-900);
+  --icon-muted: var(--icon-500);
+
+  /* chart */
+  --chart-1: var(--state-success);
+  --chart-2: var(--brand-500);
+  --chart-3: #ff9500;
+  --chart-4: #5856d6;
+  --chart-5: #af52de;
+
+  /* sidebar */
+  --sidebar: var(--background-200);
+  --sidebar-foreground: var(--text-800);
+  --sidebar-primary: var(--brand-500);
+  --sidebar-primary-foreground: var(--background-50);
+  --sidebar-accent: var(--background-300);
+  --sidebar-accent-foreground: var(--text-800);
+  --sidebar-border: var(--background-300);
+  --sidebar-ring: var(--brand-500);
+
+  /* TYPOGRAPHY */
+  --font-sans: DM Sans, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: DM Sans, ui-sans-serif, sans-serif, system-ui;
+  --font-mono: JetBrains Mono, monospace;
+  --tracking-normal: 0em;
+
+  /* RADIUS */
+  --radius: 1.2rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.2rem;
+
+  /* SHADOWS */
+  --shadow-2xs: 0 1px 2px -1px rgba(0, 0, 0, 0.04); /* Hairline */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04); /* Subtle */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.05); /* Card */
+  --shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.05); /* Raised */
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.05); /* Card Hover */
+  --shadow-lg: 0 8px 24px -8px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.05); /* Float */
+  --shadow-xl: 0 16px 40px -10px rgba(0, 0, 0, 0.10), 0 8px 16px -8px rgba(0, 0, 0, 0.06); /* Overlay */
+  --shadow-2xl: 0 24px 64px -12px rgba(0, 0, 0, 0.12); /* Modal */
+
+  /* SPACING */
+  --spacing: 0.24rem;
+}
+
+/* ===== SEMANTIC ROLES - dark (primitive palette inherited) ===== */
+.dark {
+  --background: var(--background-900);
+  --foreground: var(--text-50);
+  --card: var(--background-800);
+  --card-foreground: var(--text-50);
+  --popover: var(--background-700);
+  --popover-foreground: var(--text-50);
+
+  --primary: var(--brand-400);
+  --primary-foreground: var(--background-900);
+  --secondary: var(--background-800);
+  --secondary-foreground: var(--text-50);
+  --muted: var(--background-800);
+  --muted-foreground: var(--text-400);
+  --accent: var(--background-700);
+  --accent-foreground: var(--text-50);
+  --destructive: var(--state-error-dark);
+  --destructive-foreground: var(--state-error-foreground);
+  --success: var(--state-success-dark);
+  --success-foreground: var(--state-success-foreground);
+  --border: var(--background-700);
+  --input: var(--background-700);
+  --ring: var(--brand-400);
+
+  --icon: var(--icon-50);
+  --icon-muted: var(--icon-500);
+
+  --chart-1: var(--state-success-dark);
+  --chart-2: var(--brand-400);
+  --chart-3: #ff9f0a;
+  --chart-4: #5e5ce6;
+  --chart-5: #bf5af2;
+
+  --sidebar: var(--background-800);
+  --sidebar-foreground: var(--text-50);
+  --sidebar-primary: var(--brand-400);
+  --sidebar-primary-foreground: var(--background-900);
+  --sidebar-accent: var(--background-700);
+  --sidebar-accent-foreground: var(--text-50);
+  --sidebar-border: var(--background-700);
+  --sidebar-ring: var(--brand-400);
+
+  --shadow-2xs: 0 1px 2px -1px rgba(0, 0, 0, 0.30);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.30);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.36), 0 1px 3px -1px rgba(0, 0, 0, 0.36);
+  --shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.40), 0 1px 2px -1px rgba(0, 0, 0, 0.36);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.44), 0 2px 4px -2px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 8px 24px -8px rgba(0, 0, 0, 0.50), 0 4px 8px -4px rgba(0, 0, 0, 0.40);
+  --shadow-xl: 0 16px 40px -10px rgba(0, 0, 0, 0.55), 0 8px 16px -8px rgba(0, 0, 0, 0.44);
+  --shadow-2xl: 0 24px 64px -12px rgba(0, 0, 0, 0.60);
+}
+
+    </style>
+    <style id="component-vars">
+/* ═══════════════════════════════════════════════════════════════
+   components.css — Design System Component Definitions
+   Auto-extracted from preview/component-*.html
+   DO NOT EDIT MANUALLY — regenerate via extract-components-css.mjs
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Button ────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Primary 56</span><button class="btn btn-primary btn-lg">Buy now</button><button class="btn btn-primary btn-lg" disabled>Buy now</button></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Secondary 48</span><button class="btn btn-secondary">Shop the latest</button><button class="btn btn-secondary" disabled>Shop the latest</button></div>
+   <div class="row"><span class="label">Text 48</span><button class="btn btn-text">Learn more ›</button><button class="btn btn-text" disabled>Learn more ›</button></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font-family:var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:center;gap:calc(var(--spacing)*3);flex-wrap:wrap;margin:0 0 calc(var(--spacing)*3)}.label{min-width:72px;color:var(--muted-foreground);font:600 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.btn{display:inline-flex;align-items:center;justify-content:center;gap:calc(var(--spacing)*1.5);height:40px;padding:0 20px;border:none;border-radius:calc(var(--radius)*2);background:transparent;color:var(--foreground);font:600 14px/1 var(--font-sans);letter-spacing:var(--tracking-normal);white-space:nowrap;box-shadow:var(--shadow-sm);cursor:pointer;transition:background-color .18s ease,color .18s ease,opacity .18s ease,filter .18s ease}.btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.btn:disabled{opacity:.42;cursor:not-allowed}.btn-primary{background:var(--primary);color:var(--primary-foreground)}.btn-primary:hover{filter:brightness(.96)}.btn-secondary{height:48px;padding:0 24px;background:var(--secondary);color:var(--secondary-foreground)}.btn-secondary:hover{background:var(--muted)}.btn-text{height:48px;padding:0 4px;box-shadow:none}.btn-text:hover{color:var(--primary)}.btn-lg{height:56px;padding:0 28px;font-size:16px}.divider{border:0;border-top:1px solid var(--border);margin:calc(var(--spacing)*4) 0}
+
+/* ── Card ──────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">Info</span>
+   <article class="card">
+   <div><div class="eyebrow">Pinguo Apple</div><h1 class="title">Built for creators</h1><p class="body-copy">A calm surface for comparing cameras, storage tiers, and bundle benefits across the ecosystem.</p></div>
+   <a class="cta" href="#">Compare models</a>
+   </article>
+   <article class="card disabled" aria-disabled="true">
+   <div><div class="eyebrow">Campus Store</div><h1 class="title">Education pricing</h1><p class="body-copy">Student bundles stay visible while unavailable purchase actions remain clearly disabled.</p></div>
+   <span class="cta">Compare models</span>
+   </article>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Media</span>
+   <article class="card media-card">
+   <div class="media"></div>
+   <div><div class="meta">Creator bundle</div><h1 class="title">Studio kit with Lens Sync</h1><div class="price">From $799 with Education pricing</div></div>
+   </article>
+   <article class="card media-card dark">
+   <div class="media"></div>
+   <div><div class="meta">Consumer imaging ecosystem</div><h1 class="title">Built for creators</h1><div class="price">Compare models across camera, app, and cloud plans</div></div>
+   </article>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 14px/1.45 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-sans);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.card{width:188px;min-height:148px;padding:calc(var(--spacing)*5);display:flex;flex-direction:column;justify-content:space-between;background:var(--card);color:var(--card-foreground);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);transition:transform .18s ease,box-shadow .18s ease}.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}.card.disabled,.card.disabled:hover{opacity:.5;transform:none;box-shadow:var(--shadow-md)}.eyebrow,.meta{color:var(--muted-foreground);font-size:11px;letter-spacing:.08em;text-transform:uppercase}.title{margin:6px 0 8px;font-size:18px;line-height:1.15}.body-copy{margin:0;color:var(--muted-foreground);font-size:13px}.cta{display:inline-flex;align-items:center;justify-content:center;width:max-content;margin-top:12px;padding:calc(var(--spacing)*2) calc(var(--spacing)*3.5);border-radius:999px;background:var(--primary);color:var(--primary-foreground);font-size:12px;font-weight:700;text-decoration:none}.media{aspect-ratio:4/3;border-radius:calc(var(--radius) - 4px);background:linear-gradient(135deg,var(--secondary),var(--accent));border:1px solid var(--border)}.media-card{min-height:212px;padding:calc(var(--spacing)*4)}.media-card .title{font-size:16px;margin:10px 0 6px}.price{font-size:12px;color:var(--muted-foreground)}.dark{background:var(--card);color:var(--card-foreground)}
+
+/* ── Comparison Table ──────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Default</span><div class="t"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span><span class="s">Pinguo Apple</span></div><div class="c h"><span class="k">Air</span><span class="s">Popular</span></div><div class="c h b"><span class="k">Pro</span><span class="s">Creator</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div></div><div class="t x" aria-disabled="true"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span><span class="s">Pinguo Apple</span></div><div class="c h"><span class="k">Air</span><span class="s">Popular</span></div><div class="c h b"><span class="k">Pro</span><span class="s">Creator</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div></div></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Compact</span><div class="t q dark"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span></div><div class="c h"><span class="k">Air</span></div><div class="c h b"><span class="k">Pro</span></div><div class="c h"><span class="k">Ultra</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c v">24h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c v">2TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div><div class="c n">Triple</div></div></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.t{display:grid;grid-template-columns:96px repeat(3,1fr);overflow:hidden;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--card-foreground);box-shadow:var(--shadow-sm)}.q{grid-template-columns:82px repeat(4,1fr)}.c{padding:10px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.t>.c:nth-child(4n),.q>.c:nth-child(5n){border-right:0}.t>.c:nth-last-child(-n+4),.q>.c:nth-last-child(-n+5){border-bottom:0}.m{background:var(--background);color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.h{background:var(--background);font-weight:700}.k{display:block;font-size:14px;line-height:1.1}.s{display:block;margin-top:4px;color:var(--chart-2);font-size:11px;font-weight:700}.b .k{color:var(--chart-2)}.v{font-weight:600}.n{color:var(--muted-foreground);font-size:12px}.x{opacity:.45}
+
+/* ── Input ─────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">Search 44</span>
+   <div class="field">
+   <span class="icon">⌕</span>
+   <input class="control" aria-label="Search products" placeholder="Search products">
+   <button class="clear" type="button" aria-label="Clear search">×</button>
+   </div>
+   <div class="field disabled">
+   <span class="icon">⌕</span>
+   <input class="control" aria-label="Search products disabled" placeholder="Search products" disabled>
+   <button class="clear" type="button" aria-label="Clear search disabled" disabled>×</button>
+   </div>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Dark 40</span>
+   <div class="surface dark">
+   <div class="field small">
+   <input class="control" aria-label="Email address" placeholder="Email address">
+   </div>
+   </div>
+   <div class="surface dark">
+   <div class="field small disabled">
+   <input class="control" aria-label="Track your order disabled" placeholder="Track your order" disabled>
+   </div>
+   </div>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans)}.row{display:flex;align-items:center;gap:calc(var(--spacing)*3);flex-wrap:wrap;margin-bottom:8px}.label{min-width:58px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)}.divider{border:0;border-top:1px solid var(--border);margin:10px 0}.surface{display:flex;gap:calc(var(--spacing)*2);padding:calc(var(--spacing)*3);border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-sm)}.dark{background:var(--background);color:var(--foreground)}.field{display:flex;align-items:center;gap:calc(var(--spacing)*2);min-width:240px;height:44px;padding:0 calc(var(--spacing)*3);border:1px solid var(--input);border-radius:var(--radius);background:var(--background);color:var(--foreground);box-shadow:var(--shadow-xs)}.field.small{height:40px}.field:focus-within{border-color:var(--ring);box-shadow:0 0 0 1px var(--ring)}.field.disabled{opacity:.55}.icon,.clear{padding:0;border:0;background:transparent;color:var(--icon-muted);font:inherit}.icon{font-size:13px}.control{flex:1;border:0;outline:0;background:transparent;color:inherit;font:inherit}.control::placeholder{color:var(--muted-foreground)}
+
+/* ── Navigation ────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Global 44</span><nav class="webbar dark" aria-label="Pinguo Apple global navigation"><span class="brand">Pinguo Apple</span><div class="rail"><a class="link" href="#">Store</a><a class="link" href="#">Explore</a><a class="link" href="#">Community</a><a class="link" href="#">Support</a></div></nav><nav class="webbar dark disabled" aria-label="Pinguo Apple global navigation disabled"><span class="brand">Pinguo Apple</span><div class="rail"><span class="link">Store</span><span class="link">Explore</span><span class="link">Community</span><span class="link">Support</span></div></nav></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Tab Bar</span><div class="mobile"><div class="screen"><nav class="tabbar" aria-label="Pinguo Apple tab bar"><a class="tab" href="#"><span class="dot"></span><span>Store</span></a><a class="tab" href="#"><span class="dot"></span><span>Explore</span></a><a class="tab" href="#"><span class="dot"></span><span>Community</span></a><a class="tab" href="#"><span class="dot"></span><span>Support</span></a></nav></div></div><div class="mobile disabled"><div class="screen"><nav class="tabbar" aria-label="Pinguo Apple tab bar disabled"><span class="tab"><span class="dot"></span><span>Store</span></span><span class="tab"><span class="dot"></span><span>Explore</span></span><span class="tab"><span class="dot"></span><span>Community</span></span><span class="tab"><span class="dot"></span><span>Support</span></span></nav></div></div></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.webbar,.mobile{border:1px solid var(--border);box-shadow:var(--shadow-sm)}.webbar{display:flex;align-items:center;gap:calc(var(--spacing)*2);min-width:320px;height:44px;padding:0 calc(var(--spacing)*3);border-radius:var(--radius);background:var(--sidebar)}.brand{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}.rail{display:flex;gap:calc(var(--spacing)*1.5);margin-left:auto}.link,.tab{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;color:inherit;text-decoration:none;white-space:nowrap;transition:background-color .18s ease,color .18s ease,opacity .18s ease}.link{height:32px;padding:0 calc(var(--spacing)*2.5)}.link:hover,.tab:hover{background:var(--secondary)}.link:focus-visible,.tab:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.dark{background:var(--sidebar);color:var(--foreground)}.disabled{opacity:.48}.disabled .link,.disabled .tab{pointer-events:none}.mobile{padding:calc(var(--spacing)*2);border-radius:calc(var(--radius)*1.1);background:var(--card)}.screen{display:flex;align-items:flex-end;justify-content:center;width:188px;height:164px;padding:calc(var(--spacing)*3);border-radius:calc(var(--radius)*.9);background:linear-gradient(180deg,var(--background),var(--secondary))}.tabbar{display:flex;gap:calc(var(--spacing)*1.5);padding:calc(var(--spacing)*1.5);border:1px solid var(--border);border-radius:999px;background:var(--card);box-shadow:var(--shadow-md)}.tab{flex-direction:column;gap:2px;min-width:56px;height:56px;padding:0 calc(var(--spacing)*1.5);font-size:11px;text-align:center}.dot{width:18px;height:18px;border-radius:999px;background:var(--secondary);box-shadow:inset 0 0 0 1px var(--border)}.tab:hover .dot{background:var(--primary)}
+
+/* ── Product Grid ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">4-up</span>
+   <div class="grid grid-4">
+   <article class="card"><div class="media"></div><span class="eyebrow">New this season</span><strong class="title">Pinguo Lens Pro</strong><span class="price">From $999</span><a class="cta" href="/">Compare all models</a></article>
+   <article class="card"><div class="media"></div><span class="eyebrow">Creator kit</span><strong class="title">Pinguo Air Cam</strong><span class="price">From $749</span><a class="cta" href="/">Build your setup</a></article>
+   <article class="card"><div class="media"></div><span class="eyebrow">Studio ready</span><strong class="title">Pinguo Dock One</strong><span class="price">From $299</span><a class="cta" href="/">See accessories</a></article>
+   <article class="card is-disabled"><div class="media"></div><span class="eyebrow">Coming soon</span><strong class="title">Pinguo Vision Mini</strong><span class="price muted">Notify me</span><span class="cta">Unavailable</span></article>
+   </div>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Story</span>
+   <div class="grid grid-2">
+   <article class="card story"><div class="media"></div><span class="eyebrow">Consumer imaging product ecosystem</span><strong class="title">Travel light with one camera, one dock, and one cloud-ready edit flow.</strong><span class="price muted">Pinguo Apple picks for weekend shoots</span><a class="cta" href="/">Shop the story</a></article>
+   <article class="card story"><div class="media"></div><span class="eyebrow">Compare lineup</span><strong class="title">Choose between compact capture, pro optics, and desktop-grade finishing tools.</strong><span class="price muted">Made for photo-first households</span><a class="cta" href="/">Compare all models</a></article>
+   </div>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 14px/1.4 var(--font-sans)}.row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}.label{width:72px;padding-top:6px;color:var(--muted-foreground);font-size:10px;letter-spacing:.12em;text-transform:uppercase;flex:0 0 auto}.grid{display:grid;gap:8px;flex:1}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.card{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--card-foreground);box-shadow:var(--shadow-xs);transition:border-color .2s ease,transform .2s ease}.card:hover{border-color:var(--primary);transform:translateY(-1px)}.media{aspect-ratio:1;border-radius:calc(var(--radius) - 4px);background:linear-gradient(135deg,var(--secondary),var(--background));border:1px solid var(--border)}.story .media{aspect-ratio:1.25;background:linear-gradient(135deg,var(--foreground),var(--secondary))}.eyebrow{color:var(--muted-foreground);font-size:10px;letter-spacing:.08em;text-transform:uppercase}.title{font-size:15px;line-height:1.25}.price{font-variant-numeric:tabular-nums}.cta{display:inline-flex;align-self:flex-start;padding:7px 10px;border-radius:999px;background:var(--primary);color:var(--primary-foreground);font-size:12px;text-decoration:none}.muted{color:var(--muted-foreground)}.is-disabled{opacity:.55}.divider{margin:10px 0;border:0;border-top:1px solid var(--border)}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-secondary { background-color: var(--secondary); }
+      .text-secondary { color: var(--secondary); }
+      .border-secondary { border-color: var(--secondary); }
+      .ring-secondary { --tw-ring-color: var(--secondary); }
+      .bg-secondary-foreground { background-color: var(--secondary-foreground); }
+      .text-secondary-foreground { color: var(--secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--secondary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-accent { background-color: var(--accent); }
+      .text-accent { color: var(--accent); }
+      .border-accent { border-color: var(--accent); }
+      .ring-accent { --tw-ring-color: var(--accent); }
+      .bg-accent-foreground { background-color: var(--accent-foreground); }
+      .text-accent-foreground { color: var(--accent-foreground); }
+      .border-accent-foreground { border-color: var(--accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--accent-foreground); }
+      .bg-destructive { background-color: var(--destructive); }
+      .text-destructive { color: var(--destructive); }
+      .border-destructive { border-color: var(--destructive); }
+      .ring-destructive { --tw-ring-color: var(--destructive); }
+      .bg-destructive-foreground { background-color: var(--destructive-foreground); }
+      .text-destructive-foreground { color: var(--destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--destructive-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+      .bg-chart-1 { background-color: var(--chart-1); }
+      .text-chart-1 { color: var(--chart-1); }
+      .border-chart-1 { border-color: var(--chart-1); }
+      .ring-chart-1 { --tw-ring-color: var(--chart-1); }
+      .bg-chart-2 { background-color: var(--chart-2); }
+      .text-chart-2 { color: var(--chart-2); }
+      .border-chart-2 { border-color: var(--chart-2); }
+      .ring-chart-2 { --tw-ring-color: var(--chart-2); }
+      .bg-chart-3 { background-color: var(--chart-3); }
+      .text-chart-3 { color: var(--chart-3); }
+      .border-chart-3 { border-color: var(--chart-3); }
+      .ring-chart-3 { --tw-ring-color: var(--chart-3); }
+      .bg-chart-4 { background-color: var(--chart-4); }
+      .text-chart-4 { color: var(--chart-4); }
+      .border-chart-4 { border-color: var(--chart-4); }
+      .ring-chart-4 { --tw-ring-color: var(--chart-4); }
+      .bg-chart-5 { background-color: var(--chart-5); }
+      .text-chart-5 { color: var(--chart-5); }
+      .border-chart-5 { border-color: var(--chart-5); }
+      .ring-chart-5 { --tw-ring-color: var(--chart-5); }
+      .bg-sidebar { background-color: var(--sidebar); }
+      .text-sidebar { color: var(--sidebar); }
+      .border-sidebar { border-color: var(--sidebar); }
+      .ring-sidebar { --tw-ring-color: var(--sidebar); }
+      .bg-sidebar-foreground { background-color: var(--sidebar-foreground); }
+      .text-sidebar-foreground { color: var(--sidebar-foreground); }
+      .border-sidebar-foreground { border-color: var(--sidebar-foreground); }
+      .ring-sidebar-foreground { --tw-ring-color: var(--sidebar-foreground); }
+      .bg-sidebar-primary { background-color: var(--sidebar-primary); }
+      .text-sidebar-primary { color: var(--sidebar-primary); }
+      .border-sidebar-primary { border-color: var(--sidebar-primary); }
+      .ring-sidebar-primary { --tw-ring-color: var(--sidebar-primary); }
+      .bg-sidebar-primary-foreground { background-color: var(--sidebar-primary-foreground); }
+      .text-sidebar-primary-foreground { color: var(--sidebar-primary-foreground); }
+      .border-sidebar-primary-foreground { border-color: var(--sidebar-primary-foreground); }
+      .ring-sidebar-primary-foreground { --tw-ring-color: var(--sidebar-primary-foreground); }
+      .bg-sidebar-accent { background-color: var(--sidebar-accent); }
+      .text-sidebar-accent { color: var(--sidebar-accent); }
+      .border-sidebar-accent { border-color: var(--sidebar-accent); }
+      .ring-sidebar-accent { --tw-ring-color: var(--sidebar-accent); }
+      .bg-sidebar-accent-foreground { background-color: var(--sidebar-accent-foreground); }
+      .text-sidebar-accent-foreground { color: var(--sidebar-accent-foreground); }
+      .border-sidebar-accent-foreground { border-color: var(--sidebar-accent-foreground); }
+      .ring-sidebar-accent-foreground { --tw-ring-color: var(--sidebar-accent-foreground); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+<style id="critical-layout">
+  body { margin: 0; padding: 0; }
+  :root { --player-topbar-height: 56px; }
+  .player-shell { display: flex; flex-direction: column; min-height: 100vh; background: var(--background); color: var(--foreground); }
+  .player-topbar.webbar { position: sticky; top: 0; z-index: 50; width: 100%; min-width: auto; height: var(--player-topbar-height); border-radius: 0; border-width: 0 0 1px 0; justify-content: space-between; padding: 0 16px; box-sizing: border-box; }
+  .tb-left, .tb-right { display: flex; align-items: center; gap: 8px; }
+  .tb-title { flex: 1; text-align: center; font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 12px; }
+  .topbar-link { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; border-radius: 999px; color: var(--foreground); text-decoration: none; font-size: 14px; transition: background .18s ease; }
+  .topbar-link:hover { background: var(--accent); }
+  .player-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; flex: 1; width: 100%; max-width: 1480px; margin: 0 auto; padding: 24px; box-sizing: border-box; }
+  .player-main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .lesson-sidebar.card { width: auto; min-height: auto; padding: 16px; max-height: calc(100vh - var(--player-topbar-height) - 32px); position: sticky; top: calc(var(--player-topbar-height) + 16px); overflow-y: auto; }
+  .sidebar-toggle { display: none; align-items: center; justify-content: center; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); font-size: 13px; font-weight: 600; cursor: pointer; }
+  @media (max-width: 1100px) {
+    .player-layout { grid-template-columns: 1fr; }
+    .lesson-sidebar.card { position: static; max-height: none; }
+  }
+  @media (max-width: 768px) {
+    .player-layout { padding: 16px; gap: 16px; }
+    .tb-title { font-size: 13px; }
+    .sidebar-toggle { display: inline-flex; }
+    .lesson-sidebar.card { display: none; }
+    .lesson-sidebar.card.is-open { display: block; }
+  }
+</style>
+<style id="player-local">
+  [data-icon] { -webkit-mask-image: var(--svg); mask-image: var(--svg); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; display: inline-flex; }
+  .icon-16 { width: 16px; height: 16px; }
+  .icon-20 { width: 20px; height: 20px; }
+  .icon-24 { width: 24px; height: 24px; }
+  .icon-28 { width: 28px; height: 28px; }
+  .icon-32 { width: 32px; height: 32px; }
+  .icon-muted { color: var(--icon-muted); }
+  .video-stage { position: relative; aspect-ratio: 16 / 9; background: linear-gradient(145deg, var(--background-900), var(--background-800)); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--background-50); box-shadow: var(--shadow-md); cursor: pointer; }
+  .play-overlay-btn { position: relative; width: 84px; height: 84px; border-radius: 50%; background: color-mix(in srgb, var(--background-50) 12%, transparent); backdrop-filter: blur(10px); border: 1px solid color-mix(in srgb, var(--background-50) 18%, transparent); color: var(--background-50); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 250ms cubic-bezier(0.32, 0.72, 0, 1), background 250ms cubic-bezier(0.32, 0.72, 0, 1), opacity 250ms cubic-bezier(0.32, 0.72, 0, 1), visibility 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .play-overlay-btn:hover { background: color-mix(in srgb, var(--background-50) 22%, transparent); transform: scale(1.06); }
+  .play-overlay-btn:active { transform: scale(0.95); }
+  .play-overlay-btn .stage-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 1; visibility: visible; transition: opacity 250ms cubic-bezier(0.32, 0.72, 0, 1), visibility 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .play-overlay-btn .stage-icon.is-hidden { opacity: 0; visibility: hidden; }
+  .video-stage.is-playing .play-overlay-btn { opacity: 0; visibility: hidden; }
+  .video-stage:hover .play-overlay-btn, .video-stage.is-paused .play-overlay-btn { opacity: 1; visibility: visible; }
+  .video-time { position: absolute; bottom: 36px; right: 16px; font-size: 13px; font-weight: 500; color: color-mix(in srgb, var(--background-50) 85%, transparent); font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px color-mix(in srgb, var(--background-900) 40%, transparent); }
+  .video-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: color-mix(in srgb, var(--background-50) 14%, transparent); transition: height 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .video-stage:hover .video-progress { height: 8px; }
+  .video-progress-bar { height: 100%; width: 0%; background: var(--primary); transition: width 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .player-controls { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); flex-wrap: wrap; }
+  .ctrl-btn { flex: none; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 0; background: transparent; color: var(--foreground); cursor: pointer; }
+  .ctrl-btn svg { width: 22px; height: 22px; }
+  .ctrl-play { position: relative; width: 52px; height: 52px; background: var(--primary); color: var(--primary-foreground); }
+  .ctrl-play .play-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 1; visibility: visible; transition: opacity 250ms cubic-bezier(0.32, 0.72, 0, 1), visibility 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .ctrl-play .play-icon.is-hidden { opacity: 0; visibility: hidden; }
+  .ctrl-time { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--muted-foreground); margin: 0 8px; white-space: nowrap; }
+  .ctrl-scrubber { -webkit-appearance: none; appearance: none; flex: 1 1 120px; min-width: 80px; height: 44px; margin: 0 4px; cursor: pointer; background: transparent; }
+  .ctrl-scrubber::-webkit-slider-runnable-track { height: 4px; border-radius: 999px; background: linear-gradient(to right, var(--primary) var(--scrubber-progress, 0%), var(--border) var(--scrubber-progress, 0%)); transition: height 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .ctrl-scrubber::-moz-range-track { height: 4px; border-radius: 999px; background: linear-gradient(to right, var(--primary) var(--scrubber-progress, 0%), var(--border) var(--scrubber-progress, 0%)); transition: height 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .ctrl-scrubber::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 0; height: 0; border-radius: 50%; background: var(--primary); margin-top: -6px; opacity: 0; transition: width 250ms cubic-bezier(0.32, 0.72, 0, 1), height 250ms cubic-bezier(0.32, 0.72, 0, 1), opacity 250ms cubic-bezier(0.32, 0.72, 0, 1), margin 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .ctrl-scrubber::-moz-range-thumb { width: 0; height: 0; border-radius: 50%; background: var(--primary); border: 0; opacity: 0; transition: width 250ms cubic-bezier(0.32, 0.72, 0, 1), height 250ms cubic-bezier(0.32, 0.72, 0, 1), opacity 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .speed-btn { width: auto; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .player-tabs { display: flex; flex-direction: column; gap: 12px; }
+  .tabbar { position: relative; display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); width: max-content; max-width: 100%; flex-wrap: wrap; }
+  .tab { position: relative; z-index: 1; height: 40px; padding: 0 18px; border-radius: 999px; border: 0; background: transparent; color: var(--muted-foreground); font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .tab.is-active { color: var(--primary-foreground); }
+  .tab-indicator { position: absolute; top: 4px; bottom: 4px; border-radius: 999px; background: var(--primary); z-index: 0; transition: left 350ms cubic-bezier(0.32, 0.72, 0, 1), width 350ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .tab-panels { position: relative; }
+  .tab-panel { display: none; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); opacity: 0; transform: translateY(8px); animation: tabPanelOut 250ms cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+  .tab-panel.is-active { display: block; opacity: 1; transform: translateY(0); animation: tabPanelIn 350ms cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+  @keyframes tabPanelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes tabPanelOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(8px); } }
+  .lesson-sidebar h2 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+  .lesson-sidebar .meta { font-size: 12px; color: var(--muted-foreground); }
+  .module { margin-bottom: 16px; }
+  .module-title { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); padding: 8px 0; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .lesson-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .lesson-item { position: relative; display: grid; grid-template-columns: 36px 1fr auto auto; align-items: center; gap: 8px; padding: 10px; border-radius: var(--radius-md); color: var(--foreground); text-decoration: none; cursor: pointer; }
+  .lesson-item:hover { background: var(--accent); }
+  .lesson-item.active { background: color-mix(in srgb, var(--primary) 10%, var(--accent)); color: var(--foreground); border-left: 3px solid var(--primary); }
+  .lesson-item.active:hover { background: color-mix(in srgb, var(--primary) 14%, var(--accent)); }
+  .lesson-item.active .li-duration, .lesson-item.active .li-number { color: var(--muted-foreground); opacity: 1; }
+  .lesson-item.completed .li-title { color: var(--success); }
+  .lesson-item.active.completed .li-title { color: var(--foreground); opacity: .9; }
+  .li-number { font-size: 12px; font-weight: 700; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+  .li-title { font-size: 14px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .li-duration { font-size: 12px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+  .handout-list, .note-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .handout-list li { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-md); background: var(--background); }
+  .handout-list a { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 14px; }
+  .notes-area { width: 100%; min-height: 140px; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--background); color: var(--foreground); font-family: inherit; font-size: 14px; line-height: 1.5; resize: vertical; box-sizing: border-box; }
+  .notes-area:focus { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .panel-hint { margin: 0 0 12px; font-size: 13px; color: var(--muted-foreground); }
+  @media (max-width: 768px) {
+    .player-controls { gap: 4px; padding: 8px 10px; }
+    .ctrl-time { order: 3; width: 100%; text-align: center; margin: 0; }
+    .ctrl-scrubber { order: 2; width: 100%; flex: none; }
+    .video-time { bottom: 28px; right: 10px; font-size: 12px; }
+    .tabbar { width: 100%; }
+    .tab { flex: 1; padding: 0 12px; }
+  }
+</style>
+<style id="interaction-states">
+  /* Play/pause button */
+  .ctrl-play { transition: transform 250ms cubic-bezier(0.32, 0.72, 0, 1), filter 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .ctrl-play:hover { transform: scale(1.08); filter: brightness(1.04); }
+  .ctrl-play:active { transform: scale(0.95); }
+
+  /* Control buttons */
+  .ctrl-btn:not(.ctrl-play) { opacity: 0.92; transition: opacity 250ms cubic-bezier(0.32, 0.72, 0, 1), transform 250ms cubic-bezier(0.32, 0.72, 0, 1), background 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .ctrl-btn:not(.ctrl-play):hover { opacity: 1; transform: scale(1.08); background: var(--accent); }
+  .ctrl-btn:not(.ctrl-play):active { transform: scale(0.93); }
+
+  /* Scrubber thumb appears/grows and track fill on hover/focus */
+  .player-controls:hover .ctrl-scrubber::-webkit-slider-thumb,
+  .ctrl-scrubber:focus::-webkit-slider-thumb { width: 12px; height: 12px; opacity: 1; margin-top: -4px; }
+  .player-controls:hover .ctrl-scrubber::-moz-range-thumb,
+  .ctrl-scrubber:focus::-moz-range-thumb { width: 12px; height: 12px; opacity: 1; }
+  .player-controls:hover .ctrl-scrubber::-webkit-slider-runnable-track,
+  .ctrl-scrubber:focus::-webkit-slider-runnable-track { height: 6px; }
+  .player-controls:hover .ctrl-scrubber::-moz-range-track,
+  .ctrl-scrubber:focus::-moz-range-track { height: 6px; }
+
+  /* Controls overlay auto-hide */
+  .player-controls { transition: opacity 350ms cubic-bezier(0.32, 0.72, 0, 1), transform 350ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .player-controls.is-hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
+
+  /* Lesson sidebar items */
+  .lesson-item { transition: background 250ms cubic-bezier(0.32, 0.72, 0, 1), transform 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .lesson-item:hover { transform: translateX(2px); }
+  .lesson-item .li-check { opacity: 0; transform: scale(0.8); transition: opacity 250ms cubic-bezier(0.32, 0.72, 0, 1), transform 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .lesson-item.completed .li-check { opacity: 1; transform: scale(1); }
+
+  /* Tabs */
+  .tab { transition: color 250ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .tab:hover { color: var(--foreground); }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+<div class="player-shell">
+  <header class="player-topbar webbar" aria-label="播放器顶部导航">
+    <div class="tb-left">
+      <a class="topbar-link" href="course-detail.html">
+        <span data-icon class="icon-20" style="--svg:url(../assets/icons/BLGE665DK5_ET3/arrow-left.svg)"></span>
+        返回课程
+      </a>
+    </div>
+    <div class="tb-title" title="1.2 口语 Part 1 高频话题： hometown">1.2 口语 Part 1 高频话题： hometown</div>
+    <div class="tb-right">
+      <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="lessonSidebar">课程目录</button>
+      <a class="topbar-link" href="my-learning.html" aria-label="个人中心">
+        <span data-icon class="icon-20" style="--svg:url(../assets/icons/BLGE665DK5_ET3/user.svg)"></span>
+      </a>
+    </div>
+  </header>
+  <div class="player-layout">
+    <div class="player-main">
+      <div class="video-stage" id="videoStage">
+        <button class="play-overlay-btn" id="stagePlayBtn" type="button" aria-label="播放">
+          <span class="stage-icon" id="stagePlayIconWrap"><span data-icon class="icon-32" style="--svg:url(../assets/icons/BLGE665DK5_ET3/circle-play.svg)"></span></span>
+          <span class="stage-icon is-hidden" id="stagePauseIconWrap"><span data-icon class="icon-32" style="--svg:url(../assets/icons/BLGE665DK5_ET3/circle-pause.svg)"></span></span>
+        </button>
+        <div class="video-time">00:00 / 12:45</div>
+        <div class="video-progress"><div class="video-progress-bar" style="width:0%"></div></div>
+      </div>
+      <div class="player-controls" role="toolbar" aria-label="视频播放控制">
+        <button class="ctrl-btn" type="button" aria-label="上一节">
+          <span data-icon class="icon-24" style="--svg:url(../assets/icons/BLGE665DK5_ET3/chevron-left.svg)"></span>
+        </button>
+        <button class="ctrl-btn ctrl-play" id="playPauseBtn" type="button" aria-label="播放">
+          <span class="play-icon" id="playIconWrap"><span data-icon class="icon-28" style="--svg:url(../assets/icons/BLGE665DK5_ET3/circle-play.svg)"></span></span>
+          <span class="play-icon is-hidden" id="pauseIconWrap"><span data-icon class="icon-28" style="--svg:url(../assets/icons/BLGE665DK5_ET3/circle-pause.svg)"></span></span>
+        </button>
+        <button class="ctrl-btn" type="button" aria-label="下一节">
+          <span data-icon class="icon-24" style="--svg:url(../assets/icons/BLGE665DK5_ET3/chevron-right.svg)"></span>
+        </button>
+        <span class="ctrl-time">00:00 / 12:45</span>
+        <button class="ctrl-btn" type="button" aria-label="静音">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+        <input class="ctrl-scrubber" type="range" min="0" max="100" value="0" aria-label="播放进度">
+        <button class="ctrl-btn speed-btn" type="button" aria-label="播放速度">1x</button>
+        <button class="ctrl-btn" type="button" aria-label="全屏">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+        </button>
+      </div>
+      <div class="player-tabs">
+        <div class="tabbar" role="tablist" aria-label="课程内容">
+          <span class="tab-indicator" id="tabIndicator"></span>
+          <button class="tab is-active" id="tab-catalog-btn" role="tab" aria-selected="true" type="button" data-tab="tab-catalog">课程目录</button>
+          <button class="tab" id="tab-handout-btn" role="tab" aria-selected="false" type="button" data-tab="tab-handout">讲义资料</button>
+          <button class="tab" id="tab-notes-btn" role="tab" aria-selected="false" type="button" data-tab="tab-notes">学习笔记</button>
+        </div>
+        <div class="tab-panels">
+          <section id="tab-catalog" class="tab-panel is-active" role="tabpanel" aria-labelledby="tab-catalog-btn">
+            <p class="panel-hint">共 12 节课，当前学习至第 1.2 节。</p>
+            <ul class="lesson-list">
+              <li class="lesson-item completed">
+                <span class="li-number">1.1</span>
+                <span class="li-title">口语评分标准与答题结构</span>
+                <span class="li-duration">08:20</span>
+                <span data-icon class="icon-16 li-check" style="--svg:url(../assets/icons/BLGE665DK5_ET3/check.svg); color:var(--success)"></span>
+              </li>
+              <li class="lesson-item active" aria-current="true">
+                <span class="li-number">1.2</span>
+                <span class="li-title">口语 Part 1 高频话题：hometown</span>
+                <span class="li-duration">12:45</span>
+              </li>
+              <li class="lesson-item">
+                <span class="li-number">1.3</span>
+                <span class="li-title">口语 Part 1 高频话题：study / work</span>
+                <span class="li-duration">10:30</span>
+              </li>
+              <li class="lesson-item">
+                <span class="li-number">2.1</span>
+                <span class="li-title">人物类话题：describe a friend</span>
+                <span class="li-duration">14:15</span>
+              </li>
+            </ul>
+          </section>
+          <section id="tab-handout" class="tab-panel" role="tabpanel" aria-labelledby="tab-handout-btn">
+            <p class="panel-hint">本节课配套讲义与参考资料。</p>
+            <ul class="handout-list">
+              <li><span data-icon class="icon-20" style="--svg:url(../assets/icons/BLGE665DK5_ET3/file.svg)"></span><a href="#"> hometown 话题词汇表.pdf</a></li>
+              <li><span data-icon class="icon-20" style="--svg:url(../assets/icons/BLGE665DK5_ET3/file.svg)"></span><a href="#"> Part 1 答题模板.pdf</a></li>
+              <li><span data-icon class="icon-20" style="--svg:url(../assets/icons/BLGE665DK5_ET3/folder-open.svg)"></span><a href="#"> 口语练习音频.zip</a></li>
+            </ul>
+          </section>
+          <section id="tab-notes" class="tab-panel" role="tabpanel" aria-labelledby="tab-notes-btn">
+            <p class="panel-hint">记录本节重点，自动保存至学习档案。</p>
+            <textarea class="notes-area" placeholder="例如：描述家乡时使用的高级形容词、时态变化点..."></textarea>
+          </section>
+        </div>
+      </div>
+    </div>
+    <aside class="lesson-sidebar card" id="lessonSidebar" aria-label="课程目录">
+      <div class="sidebar-header">
+        <div>
+          <h2>雅思口语冲刺班</h2>
+          <span class="meta">模块 1-4 · 12 节课 · 3 小时 20 分</span>
+        </div>
+      </div>
+      <div class="module">
+        <div class="module-title">模块一：口语 Part 1 基础</div>
+        <ul class="lesson-list">
+          <li class="lesson-item completed">
+            <span class="li-number">1.1</span>
+            <span class="li-title">口语评分标准与答题结构</span>
+            <span class="li-duration">08:20</span>
+            <span data-icon class="icon-16 li-check" style="--svg:url(../assets/icons/BLGE665DK5_ET3/check.svg); color:var(--success)"></span>
+          </li>
+          <li class="lesson-item active" aria-current="true">
+            <span class="li-number">1.2</span>
+            <span class="li-title">口语 Part 1 高频话题：hometown</span>
+            <span class="li-duration">12:45</span>
+          </li>
+          <li class="lesson-item">
+            <span class="li-number">1.3</span>
+            <span class="li-title">口语 Part 1 高频话题：study / work</span>
+            <span class="li-duration">10:30</span>
+          </li>
+        </ul>
+      </div>
+      <div class="module">
+        <div class="module-title">模块二：口语 Part 2 叙事</div>
+        <ul class="lesson-list">
+          <li class="lesson-item">
+            <span class="li-number">2.1</span>
+            <span class="li-title">人物类话题：describe a friend</span>
+            <span class="li-duration">14:15</span>
+          </li>
+          <li class="lesson-item">
+            <span class="li-number">2.2</span>
+            <span class="li-title">地点类话题：describe a city</span>
+            <span class="li-duration">11:50</span>
+          </li>
+          <li class="lesson-item">
+            <span class="li-number">2.3</span>
+            <span class="li-title">事件类话题：an unforgettable trip</span>
+            <span class="li-duration">13:05</span>
+          </li>
+        </ul>
+      </div>
+      <div class="module">
+        <div class="module-title">模块三：口语 Part 3 深度讨论</div>
+        <ul class="lesson-list">
+          <li class="lesson-item">
+            <span class="li-number">3.1</span>
+            <span class="li-title">观点表达：advantages &amp; disadvantages</span>
+            <span class="li-duration">15:00</span>
+          </li>
+          <li class="lesson-item">
+            <span class="li-number">3.2</span>
+            <span class="li-title">社会话题：technology &amp; lifestyle</span>
+            <span class="li-duration">12:40</span>
+          </li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>
+<script>
+(function () {
+  let playing = false;
+  const playIconWrap = document.getElementById('playIconWrap');
+  const pauseIconWrap = document.getElementById('pauseIconWrap');
+  const stagePlayIconWrap = document.getElementById('stagePlayIconWrap');
+  const stagePauseIconWrap = document.getElementById('stagePauseIconWrap');
+  const mainBtn = document.getElementById('playPauseBtn');
+  const stageBtn = document.getElementById('stagePlayBtn');
+  const videoStage = document.getElementById('videoStage');
+  const playerControls = document.querySelector('.player-controls');
+  const scrubber = document.querySelector('.ctrl-scrubber');
+
+  function setPlayState(state) {
+    playing = state;
+    if (playIconWrap) playIconWrap.classList.toggle('is-hidden', playing);
+    if (pauseIconWrap) pauseIconWrap.classList.toggle('is-hidden', !playing);
+    if (stagePlayIconWrap) stagePlayIconWrap.classList.toggle('is-hidden', playing);
+    if (stagePauseIconWrap) stagePauseIconWrap.classList.toggle('is-hidden', !playing);
+    if (mainBtn) mainBtn.setAttribute('aria-label', playing ? '暂停' : '播放');
+    if (stageBtn) stageBtn.setAttribute('aria-label', playing ? '暂停' : '播放');
+    if (videoStage) {
+      videoStage.classList.toggle('is-playing', playing);
+      videoStage.classList.toggle('is-paused', !playing);
+    }
+  }
+
+  if (mainBtn) mainBtn.addEventListener('click', function () { setPlayState(!playing); });
+  if (stageBtn) stageBtn.addEventListener('click', function () { setPlayState(!playing); });
+
+  // Controls auto-hide after 2s of mouse inactivity over video stage
+  let controlsHideTimer = null;
+  function showControls() {
+    if (playerControls) playerControls.classList.remove('is-hidden');
+    if (controlsHideTimer) clearTimeout(controlsHideTimer);
+    controlsHideTimer = setTimeout(function () {
+      if (playing && playerControls) playerControls.classList.add('is-hidden');
+    }, 2000);
+  }
+  if (videoStage) {
+    videoStage.addEventListener('mouseenter', showControls);
+    videoStage.addEventListener('mousemove', showControls);
+    videoStage.addEventListener('mouseleave', function () {
+      if (controlsHideTimer) clearTimeout(controlsHideTimer);
+      if (playerControls) playerControls.classList.remove('is-hidden');
+    });
+  }
+
+  // Scrubber track fill
+  function updateScrubberProgress() {
+    if (!scrubber) return;
+    const min = scrubber.min ? parseFloat(scrubber.min) : 0;
+    const max = scrubber.max ? parseFloat(scrubber.max) : 100;
+    const val = parseFloat(scrubber.value) || 0;
+    const pct = max === min ? 0 : ((val - min) / (max - min)) * 100;
+    scrubber.style.setProperty('--scrubber-progress', pct + '%');
+  }
+  if (scrubber) {
+    scrubber.addEventListener('input', updateScrubberProgress);
+    updateScrubberProgress();
+  }
+
+  // Tabs with sliding indicator and content fade
+  const tabIndicator = document.getElementById('tabIndicator');
+  const tabbar = document.querySelector('.tabbar');
+  function updateTabIndicator(activeTab) {
+    if (!tabIndicator || !tabbar || !activeTab) return;
+    const tabbarRect = tabbar.getBoundingClientRect();
+    const tabRect = activeTab.getBoundingClientRect();
+    tabIndicator.style.left = (tabRect.left - tabbarRect.left) + 'px';
+    tabIndicator.style.width = tabRect.width + 'px';
+  }
+  function setActiveTab(tab) {
+    const target = tab.dataset.tab;
+    document.querySelectorAll('.tab[data-tab]').forEach(function (t) {
+      t.classList.toggle('is-active', t === tab);
+      t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+    });
+    document.querySelectorAll('.tab-panel').forEach(function (panel) {
+      panel.classList.toggle('is-active', panel.id === target);
+    });
+    updateTabIndicator(tab);
+  }
+  document.querySelectorAll('.tab[data-tab]').forEach(function (tab) {
+    tab.addEventListener('click', function () { setActiveTab(tab); });
+  });
+  const initialTab = document.querySelector('.tab.is-active');
+  if (initialTab) {
+    window.requestAnimationFrame(function () { updateTabIndicator(initialTab); });
+  }
+  window.addEventListener('resize', function () {
+    const activeTab = document.querySelector('.tab.is-active');
+    if (activeTab) updateTabIndicator(activeTab);
+  });
+
+  const sidebar = document.getElementById('lessonSidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  if (sidebar && sidebarToggle) {
+    sidebarToggle.addEventListener('click', function () {
+      const open = sidebar.classList.toggle('is-open');
+      sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      sidebarToggle.textContent = open ? '收起目录' : '课程目录';
+    });
+  }
+})();
+</script>
+</main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

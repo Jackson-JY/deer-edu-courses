@@ -48,7 +48,7 @@ onMounted(load)
 </template>
 
 <style scoped>
-.page-title { font-size: 22px; margin-bottom: 20px; }
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.01em; }
 .form { max-width: 560px; }
-.hint { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+.hint { font-size: 12px; color: var(--muted-foreground); margin-top: 4px; }
 </style>

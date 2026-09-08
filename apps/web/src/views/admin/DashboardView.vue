@@ -19,12 +19,20 @@ const stats = [
 </template>
 
 <style scoped>
-.page-title { font-size: 22px; margin-bottom: 20px; }
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.01em; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.stat-card {
-  background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
-  padding: 24px; box-shadow: var(--shadow-sm);
+@media (max-width: 640px) {
+  .stats { grid-template-columns: 1fr; }
 }
-.stat-value { font-size: 32px; font-weight: 700; color: var(--brand-600); }
-.stat-label { font-size: 14px; color: var(--text-3); margin-top: 6px; }
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.18s ease;
+}
+.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); line-height: 1.1; }
+.stat-label { font-size: 13px; color: var(--muted-foreground); margin-top: 6px; }
 </style>

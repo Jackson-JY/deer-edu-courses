@@ -1,0 +1,149 @@
+{
+  "data": [
+    {
+      "type": "page",
+      "id": "page-index",
+      "title": "首页",
+      "version": 1,
+      "createdAt": 1788797114,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 2525,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-4b8492ad",
+          "measuredAt": 1788798037668
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/index.html"
+      }
+    },
+    {
+      "type": "page",
+      "id": "page-courses",
+      "title": "课程列表",
+      "version": 1,
+      "createdAt": 1788797114,
+      "canvasData": {
+        "x": 480,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1880,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-33faa979",
+          "measuredAt": 1788797198217
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/courses.html"
+      }
+    },
+    {
+      "type": "page",
+      "id": "page-course-detail",
+      "title": "课程详情",
+      "version": 1,
+      "createdAt": 1788797114,
+      "canvasData": {
+        "x": 960,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 2599,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-e49afa06",
+          "measuredAt": 1788797198217
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/course-detail.html"
+      }
+    },
+    {
+      "type": "page",
+      "id": "page-player",
+      "title": "播放页",
+      "version": 1,
+      "createdAt": 1788797114,
+      "canvasData": {
+        "x": 1440,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1070,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-663ca52e",
+          "measuredAt": 1788798037668
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/player.html"
+      }
+    },
+    {
+      "type": "page",
+      "id": "page-checkout",
+      "title": "收银台",
+      "version": 1,
+      "createdAt": 1788797114,
+      "canvasData": {
+        "x": 1920,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1683,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-015bb418",
+          "measuredAt": 1788798685789
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/checkout.html"
+      }
+    },
+    {
+      "type": "page",
+      "id": "page-my-learning",
+      "title": "我的学习",
+      "version": 1,
+      "createdAt": 1788797114,
+      "canvasData": {
+        "x": 2400,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1452,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-1151c415",
+          "measuredAt": 1788797198217
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/my-learning.html"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "designLibrary": {
+      "name": "苹果",
+      "id": "BLGE665DK5_ET3",
+      "version": 1,
+      "scope": "custom-global",
+      "path": "/Users/jackson/.trae-cn/design_libraries/苹果",
+      "versionSource": "metadata.json"
+    },
+    "visualEditorEnabled": false
+  }
+}

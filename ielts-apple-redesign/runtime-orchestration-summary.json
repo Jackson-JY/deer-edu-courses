@@ -1,0 +1,460 @@
+{
+  "project": {
+    "name": "雅思学堂 · 苹果风格重构",
+    "resolvedLane": "existing_edit_add_comparison",
+    "mutationMode": "in-place-state-enhancement",
+    "inPlaceEditAllowed": true,
+    "designSource": {
+      "libraryIdentity": {
+        "name": "苹果",
+        "id": "BLGE665DK5_ET3",
+        "version": 1,
+        "scope": "custom-global",
+        "path": "/Users/jackson/.trae-cn/design_libraries/苹果",
+        "versionSource": "metadata.json"
+      },
+      "brandPrefix": "apple",
+      "cssPath": "/Users/jackson/deer/courses/ielts-apple-redesign/library-override/colors_and_type.css",
+      "actualTokenNameReference": [
+        "--apple-background",
+        "--apple-foreground",
+        "--apple-card",
+        "--apple-card-foreground",
+        "--apple-primary",
+        "--apple-primary-foreground",
+        "--apple-secondary",
+        "--apple-secondary-foreground",
+        "--apple-muted",
+        "--apple-muted-foreground",
+        "--apple-accent",
+        "--apple-accent-foreground",
+        "--apple-destructive",
+        "--apple-destructive-foreground",
+        "--apple-border",
+        "--apple-input",
+        "--apple-ring",
+        "--background",
+        "--foreground",
+        "--card",
+        "--card-foreground",
+        "--primary",
+        "--primary-foreground",
+        "--secondary",
+        "--secondary-foreground",
+        "--muted",
+        "--muted-foreground",
+        "--accent",
+        "--accent-foreground",
+        "--destructive",
+        "--destructive-foreground",
+        "--border",
+        "--input",
+        "--ring",
+        "--font-sans",
+        "--font-mono",
+        "--radius",
+        "--shadow-sm",
+        "--shadow-md",
+        "--shadow-lg"
+      ],
+      "componentPlan": [
+        {
+          "slug": "button",
+          "previewFile": "/Users/jackson/.trae-cn/design_libraries/苹果/preview/component-button.html",
+          "contractFile": "/Users/jackson/.trae-cn/design_libraries/苹果/components/button.json"
+        },
+        {
+          "slug": "card",
+          "previewFile": "/Users/jackson/.trae-cn/design_libraries/苹果/preview/component-card.html",
+          "contractFile": "/Users/jackson/.trae-cn/design_libraries/苹果/components/card.json"
+        },
+        {
+          "slug": "input",
+          "previewFile": "/Users/jackson/.trae-cn/design_libraries/苹果/preview/component-input.html",
+          "contractFile": "/Users/jackson/.trae-cn/design_libraries/苹果/components/input.json"
+        },
+        {
+          "slug": "navigation",
+          "previewFile": "/Users/jackson/.trae-cn/design_libraries/苹果/preview/component-navigation.html",
+          "contractFile": "/Users/jackson/.trae-cn/design_libraries/苹果/components/navigation.json"
+        },
+        {
+          "slug": "product-grid",
+          "previewFile": "/Users/jackson/.trae-cn/design_libraries/苹果/preview/component-product-grid.html",
+          "contractFile": "/Users/jackson/.trae-cn/design_libraries/苹果/components/product-grid.json"
+        },
+        {
+          "slug": "comparison-table",
+          "previewFile": "/Users/jackson/.trae-cn/design_libraries/苹果/preview/component-comparison-table.html",
+          "contractFile": "/Users/jackson/.trae-cn/design_libraries/苹果/components/comparison-table.json"
+        }
+      ],
+      "tokenFidelity": "strict",
+      "uiKitPath": "/Users/jackson/.trae-cn/design_libraries/苹果/ui_kits/website/index.html",
+      "forbiddenInventedComponents": [],
+      "allowedComponents": [
+        "button",
+        "card",
+        "input",
+        "navigation",
+        "product-grid",
+        "comparison-table"
+      ]
+    },
+    "designDecisionSummary": "Strict Apple retail style for IELTS course platform: neutral Silver Mist / Space Black palette, Pinguo Blue #0066cc accents, DM Sans typography, 1.2rem radius, pill buttons, whisper-light shadows, content-first whitespace, restrained merchandising copy.",
+    "productContext": {
+      "kitType": "website",
+      "productType": "IELTS online course consumer platform"
+    },
+    "iconAssets": {
+      "source": "assets/icons",
+      "projectIconDir": "assets/icons/BLGE665DK5_ET3",
+      "libraryKey": "BLGE665DK5_ET3",
+      "renderMethod": "css-mask",
+      "pathTemplate": "../assets/icons/BLGE665DK5_ET3/{name}.svg",
+      "availableNames": [
+        "arrow-down",
+        "arrow-left",
+        "arrow-right",
+        "arrow-up",
+        "box",
+        "check",
+        "chevron-down",
+        "chevron-left",
+        "chevron-right",
+        "chevron-up",
+        "chevrons-down-up",
+        "chevrons-up-down",
+        "circle-alert",
+        "circle-check",
+        "circle-minus",
+        "circle-pause",
+        "circle-play",
+        "circle-plus",
+        "circle-question-mark",
+        "external-link",
+        "file",
+        "folder-open",
+        "folder",
+        "funnel",
+        "grip",
+        "heart",
+        "house",
+        "mail",
+        "map-pin",
+        "message-circle-more",
+        "mouse-pointer-click",
+        "pen-line",
+        "send-horizontal",
+        "star",
+        "tag",
+        "thumbs-down",
+        "thumbs-up",
+        "trash-2",
+        "triangle-alert",
+        "user"
+      ],
+      "totalCount": 40,
+      "coloringRule": "currentColor by default; override with Library token when needed"
+    },
+    "selectedIntentWorkflowRead": true,
+    "contextRequirementsLoaded": [
+      {
+        "path": "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/agent-dispatch-runtime/shared-page-rendering-kernel.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/page-rendering-quality-gate.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/design-artifact-validation.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/delivery-evidence-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "visual-experience/visual-experience-guidelines.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-library-bound/INTENT_WORKFLOW.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-library-bound/library-bound-page-runtime.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-library-bound/dispatch-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-library-bound/design-library-ingestion.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-library-bound/design-token-fidelity-rules.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-library-bound/component-conformance-rules.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      { "path": "intent-workflows/intent-page-library-bound/icon-source-priority-rules.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-project-mutation/INTENT_WORKFLOW.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-project-mutation/edit-existing-project.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-project-mutation/existing-edit-dispatch-contract.md", "readStatus": "loaded", "bodyRead": true },
+      { "path": "intent-workflows/intent-project-mutation/comparison-page-contract.md", "readStatus": "loaded", "bodyRead": true }
+    ],
+    "dispatchPreflightManifest": [
+      {
+        "nodeId": "page-home",
+        "htmlSrc": "pages/index.html",
+        "title": "首页",
+        "allowedWritePaths": [
+          "pages/index.html"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false
+        }
+      },
+      {
+        "nodeId": "page-courses",
+        "htmlSrc": "pages/courses.html",
+        "title": "课程列表",
+        "allowedWritePaths": [
+          "pages/courses.html"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false
+        }
+      },
+      {
+        "nodeId": "page-course-detail",
+        "htmlSrc": "pages/course-detail.html",
+        "title": "课程详情",
+        "allowedWritePaths": [
+          "pages/course-detail.html"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false
+        }
+      },
+      {
+        "nodeId": "page-player",
+        "htmlSrc": "pages/player.html",
+        "title": "播放页",
+        "allowedWritePaths": [
+          "pages/player.html"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false
+        }
+      },
+      {
+        "nodeId": "page-checkout",
+        "htmlSrc": "pages/checkout.html",
+        "title": "收银台",
+        "allowedWritePaths": [
+          "pages/checkout.html"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false
+        }
+      },
+      {
+        "nodeId": "page-my-learning",
+        "htmlSrc": "pages/my-learning.html",
+        "title": "我的学习",
+        "allowedWritePaths": [
+          "pages/my-learning.html"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false
+        }
+      }
+    ],
+    "expectedDispatches": [
+      {
+        "nodeId": "page-home",
+        "pageId": "page-home",
+        "targetPageId": "page-home",
+        "htmlSrc": "pages/index.html",
+        "status": "completed",
+        "changedFiles": [
+          "pages/index.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "11a8dd948f57d5c9ba687676a35c8ae9",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-09-07T16:05:30.747Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-courses",
+        "pageId": "page-courses",
+        "targetPageId": "page-courses",
+        "htmlSrc": "pages/courses.html",
+        "status": "completed",
+        "changedFiles": [
+          "pages/courses.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "6f351542bba5887d38341ba5ce5626ff",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-09-07T16:05:24.968Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-course-detail",
+        "pageId": "page-course-detail",
+        "targetPageId": "page-course-detail",
+        "htmlSrc": "pages/course-detail.html",
+        "status": "completed",
+        "changedFiles": [
+          "pages/course-detail.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "4f8f8bed5607497ebb7041c4d5d5a8b6",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-09-07T16:05:25.077Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-player",
+        "pageId": "page-player",
+        "targetPageId": "page-player",
+        "htmlSrc": "pages/player.html",
+        "status": "completed",
+        "changedFiles": [
+          "pages/player.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "b3000752a332833330b71e913909b839",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-09-07T16:05:25.179Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-checkout",
+        "pageId": "page-checkout",
+        "targetPageId": "page-checkout",
+        "htmlSrc": "pages/checkout.html",
+        "status": "completed",
+        "changedFiles": [
+          "pages/checkout.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "146dfa35b3e2a95581650622946e394a",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-09-07T16:05:25.277Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-my-learning",
+        "pageId": "page-my-learning",
+        "targetPageId": "page-my-learning",
+        "htmlSrc": "pages/my-learning.html",
+        "status": "completed",
+        "changedFiles": [
+          "pages/my-learning.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "5b43198a870eeae8f01e5e0900718706",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-09-07T16:05:25.380Z",
+        "source": "record-dispatch-completion.mjs"
+      }
+    ],
+    "validationRunDiscipline": {
+      "maxFullValidationRuns": 2,
+      "softWarningsTriggerRepair": false,
+      "blockingRepairMode": "targeted-once",
+      "forbiddenRepairTriggers": [
+        "soft-warning-only",
+        "provenance-warning-only",
+        "style-warning-only"
+      ]
+    },
+    "mainAgentPostDispatchMutations": []
+  }
+}

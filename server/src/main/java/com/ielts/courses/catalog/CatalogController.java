@@ -3,6 +3,7 @@ package com.ielts.courses.catalog;
 import com.ielts.courses.auth.LoginUser;
 import com.ielts.courses.common.ApiResult;
 import com.ielts.courses.common.CurrentUser;
+import com.ielts.courses.play.Entitlement;
 import com.ielts.courses.play.EntitlementRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,6 +74,29 @@ public class CatalogController {
         result.put("chapters", detail.chapters().stream().map(this::toChapterMap).collect(Collectors.toList()));
         result.put("materials", detail.materials().stream().map(this::toMaterialMap).collect(Collectors.toList()));
         return ApiResult.ok(result);
+    }
+
+    @GetMapping("/my/courses")
+    public ApiResult<List<Map<String, Object>>> myCourses(@CurrentUser LoginUser user) {
+        if (user == null) return ApiResult.ok(List.of());
+        List<Entitlement> entitlements = entitlementRepository.findAllActive(user.userId());
+        List<Map<String, Object>> list = entitlements.stream()
+                .map(e -> {
+                    Course course = catalogService.findById(e.getCourseId());
+                    if (course == null) return null;
+                    long lessonCount = lessonRepository.countByCourseId(course.getId());
+                    return Map.<String, Object>of(
+                            "id", course.getId(),
+                            "title", course.getTitle() == null ? "" : course.getTitle(),
+                            "cover", course.getCover() == null ? "" : course.getCover(),
+                            "targetScore", course.getTargetScore() == null ? "" : course.getTargetScore(),
+                            "lessonCount", (int) lessonCount,
+                            "expireAt", e.getExpireAt() == null ? "" : e.getExpireAt().toString()
+                    );
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+        return ApiResult.ok(list);
     }
 
     private String resolveCtaState(LoginUser user, long courseId) {

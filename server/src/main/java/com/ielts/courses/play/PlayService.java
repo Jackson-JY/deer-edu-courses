@@ -70,6 +70,10 @@ public class PlayService {
         );
     }
 
+    public java.util.List<WatchRecord> getUserProgress(long userId) {
+        return watchRecordRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+    }
+
     public HeartbeatResult heartbeat(LoginUser user, long lessonId, int progressSeconds, int totalSeconds) {
         verifyActiveSession(user);
 

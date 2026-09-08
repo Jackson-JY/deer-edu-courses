@@ -14,11 +14,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/PlayerView.vue'),
     meta: { requiresAuth: true },
   },
-  { path: '/checkout', name: 'checkout', component: () => import('@/views/CheckoutView.vue'), meta: { requiresAuth: true } },
-  { path: '/pay/result', name: 'pay-result', component: () => import('@/views/PayResultView.vue'), meta: { requiresAuth: true } },
   { path: '/my/learning', name: 'my-learning', component: () => import('@/views/MyLearningView.vue'), meta: { requiresAuth: true } },
-  { path: '/my/orders', name: 'my-orders', component: () => import('@/views/MyOrdersView.vue'), meta: { requiresAuth: true } },
-  { path: '/my/coupons', name: 'my-coupons', component: () => import('@/views/MyCouponsView.vue'), meta: { requiresAuth: true } },
   { path: '/my/settings', name: 'my-settings', component: () => import('@/views/AccountSettingsView.vue'), meta: { requiresAuth: true } },
 
   // 管理后台

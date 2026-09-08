@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收银台</title>
+    <style id="theme-vars">
+/*
+ * Pinguo design tokens
+ * Brand: Pinguo
+ * Domain: Consumer imaging product
+ * Style: Restrained, elegant, Apple-inspired
+ * Theme mode: light-dark
+ * Source language: zh
+ * Output language: en
+ *
+ * Color architecture (two layers):
+ *   1. Primitive palette - six categories. brand / background / text / icon
+ *      are each a 10-step scale (50 lightest to 900 darkest). state-success and
+ *      state-error are functional colors anchored on Apple system colors.
+ *      Anchors follow Apple Human Interface Guidelines system colors
+ *      (System Blue #007AFF, System Green #34C759, System Red #FF3B30,
+ *      system grays / label / background colors).
+ *   2. Semantic tokens - :root (light) and .dark map roles onto primitives.
+ *      Components and UI kits must only consume the semantic tokens below.
+ */
+
+/* @group-priority: brand, background, text, icon, state-success, state-error */
+
+:root {
+  
+  /* solo-design consumption aliases: explicit prefix for fill-html-head.mjs */
+  --apple-background: var(--background, #ffffff);
+  --apple-foreground: var(--foreground, #0f172a);
+  --apple-card: var(--card, var(--background));
+  --apple-card-foreground: var(--card-foreground, var(--foreground));
+  --apple-popover: var(--popover, var(--card));
+  --apple-popover-foreground: var(--popover-foreground, var(--card-foreground, var(--foreground)));
+  --apple-primary: var(--primary, #111827);
+  --apple-primary-foreground: var(--primary-foreground, #ffffff);
+  --apple-secondary: var(--secondary, var(--muted, var(--card)));
+  --apple-secondary-foreground: var(--secondary-foreground, var(--foreground));
+  --apple-muted: var(--muted, var(--card));
+  --apple-muted-foreground: var(--muted-foreground, var(--foreground));
+  --apple-accent: var(--accent, var(--secondary, var(--muted, var(--card))));
+  --apple-accent-foreground: var(--accent-foreground, var(--foreground));
+  --apple-destructive: var(--destructive, #ef4444);
+  --apple-destructive-foreground: var(--destructive-foreground, #ffffff);
+  --apple-border: var(--border, currentColor);
+  --apple-input: var(--input, var(--border));
+  --apple-ring: var(--ring, var(--primary));
+  --apple-radius-sm: var(--radius-sm, 0.5rem);
+  --apple-radius-md: var(--radius-md, 0.75rem);
+  --apple-radius-lg: var(--radius-lg, 1.2rem);
+  --apple-chart-1: var(--chart-1, var(--primary));
+  --apple-chart-2: var(--chart-2, var(--secondary, var(--primary)));
+  --apple-chart-3: var(--chart-3, var(--accent, var(--primary)));
+  --apple-chart-4: var(--chart-4, var(--muted-foreground, var(--foreground)));
+  --apple-chart-5: var(--chart-5, var(--foreground));
+  --apple-sidebar: var(--sidebar, var(--background));
+  --apple-sidebar-foreground: var(--sidebar-foreground, var(--foreground));
+  --apple-sidebar-primary: var(--sidebar-primary, var(--primary));
+  --apple-sidebar-primary-foreground: var(--sidebar-primary-foreground, var(--primary-foreground));
+  --apple-sidebar-accent: var(--sidebar-accent, var(--accent, var(--muted, var(--card))));
+  --apple-sidebar-accent-foreground: var(--sidebar-accent-foreground, var(--accent-foreground, var(--foreground)));
+
+/* ===== PRIMITIVE PALETTE ===== */
+
+  /* brand */
+  --brand-50: #e8f2ff;
+  --brand-100: #cfe5ff;
+  --brand-200: #9fcbff;
+  --brand-300: #66abff;
+  --brand-400: #2e8dff;
+  --brand-500: #007aff; /* @primary */
+  --brand-600: #0064d6;
+  --brand-700: #004fad;
+  --brand-800: #003b82;
+  --brand-900: #00275a;
+
+  /* background */
+  --background-50: #ffffff;
+  --background-100: #f7f7fa;
+  --background-200: #f2f2f7;
+  --background-300: #e5e5ea;
+  --background-400: #d1d1d6;
+  --background-500: #aeaeb2;
+  --background-600: #8e8e93;
+  --background-700: #3a3a3c;
+  --background-800: #1c1c1e;
+  --background-900: #000000;
+
+  /* text */
+  --text-50: #f5f5f7;
+  --text-100: #e3e3e8;
+  --text-200: #c7c7cc;
+  --text-300: #aeaeb2;
+  --text-400: #8e8e93;
+  --text-500: #6e6e73;
+  --text-600: #48484a;
+  --text-700: #3c3c43;
+  --text-800: #1d1d1f;
+  --text-900: #000000;
+
+  /* icon */
+  --icon-50: #f5f5f7;
+  --icon-100: #e5e5ea;
+  --icon-200: #d1d1d6;
+  --icon-300: #c7c7cc;
+  --icon-400: #aeaeb2;
+  --icon-500: #8e8e93;
+  --icon-600: #6e6e73;
+  --icon-700: #48484a;
+  --icon-800: #2c2c2e;
+  --icon-900: #1d1d1f;
+
+  /* state-success */
+  --state-success: #34c759; /* @primary */
+  --state-success-dark: #30d158;
+  --state-success-surface: #e9f9ee;
+  --state-success-foreground: #ffffff;
+
+  /* state-error */
+  --state-error: #ff3b30; /* @primary */
+  --state-error-dark: #ff453a;
+  --state-error-surface: #ffecea;
+  --state-error-foreground: #ffffff;
+
+  /* ===== SEMANTIC ROLES ===== */
+
+  /* semantic */
+  --background: var(--background-50);
+  --foreground: var(--text-800);
+  --card: var(--background-50);
+  --card-foreground: var(--text-800);
+  --popover: var(--background-50);
+  --popover-foreground: var(--text-900);
+
+  --primary: var(--brand-500);
+  --primary-foreground: var(--background-50);
+  --secondary: var(--background-200);
+  --secondary-foreground: var(--text-800);
+  --muted: var(--background-200);
+  --muted-foreground: var(--text-400);
+  --accent: var(--background-100);
+  --accent-foreground: var(--text-800);
+  --destructive: var(--state-error);
+  --destructive-foreground: var(--state-error-foreground);
+  --success: var(--state-success);
+  --success-foreground: var(--state-success-foreground);
+  --border: var(--background-300);
+  --input: var(--background-400);
+  --ring: var(--brand-500);
+
+  --icon: var(--icon-900);
+  --icon-muted: var(--icon-500);
+
+  /* chart */
+  --chart-1: var(--state-success);
+  --chart-2: var(--brand-500);
+  --chart-3: #ff9500;
+  --chart-4: #5856d6;
+  --chart-5: #af52de;
+
+  /* sidebar */
+  --sidebar: var(--background-200);
+  --sidebar-foreground: var(--text-800);
+  --sidebar-primary: var(--brand-500);
+  --sidebar-primary-foreground: var(--background-50);
+  --sidebar-accent: var(--background-300);
+  --sidebar-accent-foreground: var(--text-800);
+  --sidebar-border: var(--background-300);
+  --sidebar-ring: var(--brand-500);
+
+  /* TYPOGRAPHY */
+  --font-sans: DM Sans, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: DM Sans, ui-sans-serif, sans-serif, system-ui;
+  --font-mono: JetBrains Mono, monospace;
+  --tracking-normal: 0em;
+
+  /* RADIUS */
+  --radius: 1.2rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.2rem;
+
+  /* SHADOWS */
+  --shadow-2xs: 0 1px 2px -1px rgba(0, 0, 0, 0.04); /* Hairline */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04); /* Subtle */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.05); /* Card */
+  --shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.05); /* Raised */
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.05); /* Card Hover */
+  --shadow-lg: 0 8px 24px -8px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.05); /* Float */
+  --shadow-xl: 0 16px 40px -10px rgba(0, 0, 0, 0.10), 0 8px 16px -8px rgba(0, 0, 0, 0.06); /* Overlay */
+  --shadow-2xl: 0 24px 64px -12px rgba(0, 0, 0, 0.12); /* Modal */
+
+  /* SPACING */
+  --spacing: 0.24rem;
+}
+
+/* ===== SEMANTIC ROLES - dark (primitive palette inherited) ===== */
+.dark {
+  --background: var(--background-900);
+  --foreground: var(--text-50);
+  --card: var(--background-800);
+  --card-foreground: var(--text-50);
+  --popover: var(--background-700);
+  --popover-foreground: var(--text-50);
+
+  --primary: var(--brand-400);
+  --primary-foreground: var(--background-900);
+  --secondary: var(--background-800);
+  --secondary-foreground: var(--text-50);
+  --muted: var(--background-800);
+  --muted-foreground: var(--text-400);
+  --accent: var(--background-700);
+  --accent-foreground: var(--text-50);
+  --destructive: var(--state-error-dark);
+  --destructive-foreground: var(--state-error-foreground);
+  --success: var(--state-success-dark);
+  --success-foreground: var(--state-success-foreground);
+  --border: var(--background-700);
+  --input: var(--background-700);
+  --ring: var(--brand-400);
+
+  --icon: var(--icon-50);
+  --icon-muted: var(--icon-500);
+
+  --chart-1: var(--state-success-dark);
+  --chart-2: var(--brand-400);
+  --chart-3: #ff9f0a;
+  --chart-4: #5e5ce6;
+  --chart-5: #bf5af2;
+
+  --sidebar: var(--background-800);
+  --sidebar-foreground: var(--text-50);
+  --sidebar-primary: var(--brand-400);
+  --sidebar-primary-foreground: var(--background-900);
+  --sidebar-accent: var(--background-700);
+  --sidebar-accent-foreground: var(--text-50);
+  --sidebar-border: var(--background-700);
+  --sidebar-ring: var(--brand-400);
+
+  --shadow-2xs: 0 1px 2px -1px rgba(0, 0, 0, 0.30);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.30);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.36), 0 1px 3px -1px rgba(0, 0, 0, 0.36);
+  --shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.40), 0 1px 2px -1px rgba(0, 0, 0, 0.36);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.44), 0 2px 4px -2px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 8px 24px -8px rgba(0, 0, 0, 0.50), 0 4px 8px -4px rgba(0, 0, 0, 0.40);
+  --shadow-xl: 0 16px 40px -10px rgba(0, 0, 0, 0.55), 0 8px 16px -8px rgba(0, 0, 0, 0.44);
+  --shadow-2xl: 0 24px 64px -12px rgba(0, 0, 0, 0.60);
+}
+
+    </style>
+    <style id="component-vars">
+/* ═══════════════════════════════════════════════════════════════
+   components.css — Design System Component Definitions
+   Auto-extracted from preview/component-*.html
+   DO NOT EDIT MANUALLY — regenerate via extract-components-css.mjs
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Button ────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Primary 56</span><button class="btn btn-primary btn-lg">Buy now</button><button class="btn btn-primary btn-lg" disabled>Buy now</button></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Secondary 48</span><button class="btn btn-secondary">Shop the latest</button><button class="btn btn-secondary" disabled>Shop the latest</button></div>
+   <div class="row"><span class="label">Text 48</span><button class="btn btn-text">Learn more ›</button><button class="btn btn-text" disabled>Learn more ›</button></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font-family:var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:center;gap:calc(var(--spacing)*3);flex-wrap:wrap;margin:0 0 calc(var(--spacing)*3)}.label{min-width:72px;color:var(--muted-foreground);font:600 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.btn{display:inline-flex;align-items:center;justify-content:center;gap:calc(var(--spacing)*1.5);height:40px;padding:0 20px;border:none;border-radius:calc(var(--radius)*2);background:transparent;color:var(--foreground);font:600 14px/1 var(--font-sans);letter-spacing:var(--tracking-normal);white-space:nowrap;box-shadow:var(--shadow-sm);cursor:pointer;transition:background-color .18s ease,color .18s ease,opacity .18s ease,filter .18s ease}.btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.btn:disabled{opacity:.42;cursor:not-allowed}.btn-primary{background:var(--primary);color:var(--primary-foreground)}.btn-primary:hover{filter:brightness(.96)}.btn-secondary{height:48px;padding:0 24px;background:var(--secondary);color:var(--secondary-foreground)}.btn-secondary:hover{background:var(--muted)}.btn-text{height:48px;padding:0 4px;box-shadow:none}.btn-text:hover{color:var(--primary)}.btn-lg{height:56px;padding:0 28px;font-size:16px}.divider{border:0;border-top:1px solid var(--border);margin:calc(var(--spacing)*4) 0}
+
+/* ── Card ──────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">Info</span>
+   <article class="card">
+   <div><div class="eyebrow">Pinguo Apple</div><h1 class="title">Built for creators</h1><p class="body-copy">A calm surface for comparing cameras, storage tiers, and bundle benefits across the ecosystem.</p></div>
+   <a class="cta" href="#">Compare models</a>
+   </article>
+   <article class="card disabled" aria-disabled="true">
+   <div><div class="eyebrow">Campus Store</div><h1 class="title">Education pricing</h1><p class="body-copy">Student bundles stay visible while unavailable purchase actions remain clearly disabled.</p></div>
+   <span class="cta">Compare models</span>
+   </article>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Media</span>
+   <article class="card media-card">
+   <div class="media"></div>
+   <div><div class="meta">Creator bundle</div><h1 class="title">Studio kit with Lens Sync</h1><div class="price">From $799 with Education pricing</div></div>
+   </article>
+   <article class="card media-card dark">
+   <div class="media"></div>
+   <div><div class="meta">Consumer imaging ecosystem</div><h1 class="title">Built for creators</h1><div class="price">Compare models across camera, app, and cloud plans</div></div>
+   </article>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 14px/1.45 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-sans);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.card{width:188px;min-height:148px;padding:calc(var(--spacing)*5);display:flex;flex-direction:column;justify-content:space-between;background:var(--card);color:var(--card-foreground);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);transition:transform .18s ease,box-shadow .18s ease}.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}.card.disabled,.card.disabled:hover{opacity:.5;transform:none;box-shadow:var(--shadow-md)}.eyebrow,.meta{color:var(--muted-foreground);font-size:11px;letter-spacing:.08em;text-transform:uppercase}.title{margin:6px 0 8px;font-size:18px;line-height:1.15}.body-copy{margin:0;color:var(--muted-foreground);font-size:13px}.cta{display:inline-flex;align-items:center;justify-content:center;width:max-content;margin-top:12px;padding:calc(var(--spacing)*2) calc(var(--spacing)*3.5);border-radius:999px;background:var(--primary);color:var(--primary-foreground);font-size:12px;font-weight:700;text-decoration:none}.media{aspect-ratio:4/3;border-radius:calc(var(--radius) - 4px);background:linear-gradient(135deg,var(--secondary),var(--accent));border:1px solid var(--border)}.media-card{min-height:212px;padding:calc(var(--spacing)*4)}.media-card .title{font-size:16px;margin:10px 0 6px}.price{font-size:12px;color:var(--muted-foreground)}.dark{background:var(--card);color:var(--card-foreground)}
+
+/* ── Comparison Table ──────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Default</span><div class="t"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span><span class="s">Pinguo Apple</span></div><div class="c h"><span class="k">Air</span><span class="s">Popular</span></div><div class="c h b"><span class="k">Pro</span><span class="s">Creator</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div></div><div class="t x" aria-disabled="true"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span><span class="s">Pinguo Apple</span></div><div class="c h"><span class="k">Air</span><span class="s">Popular</span></div><div class="c h b"><span class="k">Pro</span><span class="s">Creator</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div></div></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Compact</span><div class="t q dark"><div class="c m">Compare models</div><div class="c h"><span class="k">Mini</span></div><div class="c h"><span class="k">Air</span></div><div class="c h b"><span class="k">Pro</span></div><div class="c h"><span class="k">Ultra</span></div><div class="c m">Battery life</div><div class="c v">12h</div><div class="c v">16h</div><div class="c v">20h</div><div class="c v">24h</div><div class="c m">Storage</div><div class="c v">256GB</div><div class="c v">512GB</div><div class="c v">1TB</div><div class="c v">2TB</div><div class="c m">Camera system</div><div class="c n">Dual</div><div class="c n">48MP</div><div class="c n">48MP+T</div><div class="c n">Triple</div></div></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.t{display:grid;grid-template-columns:96px repeat(3,1fr);overflow:hidden;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--card-foreground);box-shadow:var(--shadow-sm)}.q{grid-template-columns:82px repeat(4,1fr)}.c{padding:10px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.t>.c:nth-child(4n),.q>.c:nth-child(5n){border-right:0}.t>.c:nth-last-child(-n+4),.q>.c:nth-last-child(-n+5){border-bottom:0}.m{background:var(--background);color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.h{background:var(--background);font-weight:700}.k{display:block;font-size:14px;line-height:1.1}.s{display:block;margin-top:4px;color:var(--chart-2);font-size:11px;font-weight:700}.b .k{color:var(--chart-2)}.v{font-weight:600}.n{color:var(--muted-foreground);font-size:12px}.x{opacity:.45}
+
+/* ── Input ─────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">Search 44</span>
+   <div class="field">
+   <span class="icon">⌕</span>
+   <input class="control" aria-label="Search products" placeholder="Search products">
+   <button class="clear" type="button" aria-label="Clear search">×</button>
+   </div>
+   <div class="field disabled">
+   <span class="icon">⌕</span>
+   <input class="control" aria-label="Search products disabled" placeholder="Search products" disabled>
+   <button class="clear" type="button" aria-label="Clear search disabled" disabled>×</button>
+   </div>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Dark 40</span>
+   <div class="surface dark">
+   <div class="field small">
+   <input class="control" aria-label="Email address" placeholder="Email address">
+   </div>
+   </div>
+   <div class="surface dark">
+   <div class="field small disabled">
+   <input class="control" aria-label="Track your order disabled" placeholder="Track your order" disabled>
+   </div>
+   </div>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans)}.row{display:flex;align-items:center;gap:calc(var(--spacing)*3);flex-wrap:wrap;margin-bottom:8px}.label{min-width:58px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)}.divider{border:0;border-top:1px solid var(--border);margin:10px 0}.surface{display:flex;gap:calc(var(--spacing)*2);padding:calc(var(--spacing)*3);border:1px solid var(--border);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-sm)}.dark{background:var(--background);color:var(--foreground)}.field{display:flex;align-items:center;gap:calc(var(--spacing)*2);min-width:240px;height:44px;padding:0 calc(var(--spacing)*3);border:1px solid var(--input);border-radius:var(--radius);background:var(--background);color:var(--foreground);box-shadow:var(--shadow-xs)}.field.small{height:40px}.field:focus-within{border-color:var(--ring);box-shadow:0 0 0 1px var(--ring)}.field.disabled{opacity:.55}.icon,.clear{padding:0;border:0;background:transparent;color:var(--icon-muted);font:inherit}.icon{font-size:13px}.control{flex:1;border:0;outline:0;background:transparent;color:inherit;font:inherit}.control::placeholder{color:var(--muted-foreground)}
+
+/* ── Navigation ────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"><span class="label">Global 44</span><nav class="webbar dark" aria-label="Pinguo Apple global navigation"><span class="brand">Pinguo Apple</span><div class="rail"><a class="link" href="#">Store</a><a class="link" href="#">Explore</a><a class="link" href="#">Community</a><a class="link" href="#">Support</a></div></nav><nav class="webbar dark disabled" aria-label="Pinguo Apple global navigation disabled"><span class="brand">Pinguo Apple</span><div class="rail"><span class="link">Store</span><span class="link">Explore</span><span class="link">Community</span><span class="link">Support</span></div></nav></div>
+   <hr class="divider">
+   <div class="row"><span class="label">Tab Bar</span><div class="mobile"><div class="screen"><nav class="tabbar" aria-label="Pinguo Apple tab bar"><a class="tab" href="#"><span class="dot"></span><span>Store</span></a><a class="tab" href="#"><span class="dot"></span><span>Explore</span></a><a class="tab" href="#"><span class="dot"></span><span>Community</span></a><a class="tab" href="#"><span class="dot"></span><span>Support</span></a></nav></div></div><div class="mobile disabled"><div class="screen"><nav class="tabbar" aria-label="Pinguo Apple tab bar disabled"><span class="tab"><span class="dot"></span><span>Store</span></span><span class="tab"><span class="dot"></span><span>Explore</span></span><span class="tab"><span class="dot"></span><span>Community</span></span><span class="tab"><span class="dot"></span><span>Support</span></span></nav></div></div></div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 13px/1.4 var(--font-sans);letter-spacing:var(--tracking-normal)}.row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}.label{width:72px;padding-top:10px;color:var(--muted-foreground);font:700 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.divider{margin:12px 0;border:0;border-top:1px solid var(--border)}.webbar,.mobile{border:1px solid var(--border);box-shadow:var(--shadow-sm)}.webbar{display:flex;align-items:center;gap:calc(var(--spacing)*2);min-width:320px;height:44px;padding:0 calc(var(--spacing)*3);border-radius:var(--radius);background:var(--sidebar)}.brand{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}.rail{display:flex;gap:calc(var(--spacing)*1.5);margin-left:auto}.link,.tab{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;color:inherit;text-decoration:none;white-space:nowrap;transition:background-color .18s ease,color .18s ease,opacity .18s ease}.link{height:32px;padding:0 calc(var(--spacing)*2.5)}.link:hover,.tab:hover{background:var(--secondary)}.link:focus-visible,.tab:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.dark{background:var(--sidebar);color:var(--foreground)}.disabled{opacity:.48}.disabled .link,.disabled .tab{pointer-events:none}.mobile{padding:calc(var(--spacing)*2);border-radius:calc(var(--radius)*1.1);background:var(--card)}.screen{display:flex;align-items:flex-end;justify-content:center;width:188px;height:164px;padding:calc(var(--spacing)*3);border-radius:calc(var(--radius)*.9);background:linear-gradient(180deg,var(--background),var(--secondary))}.tabbar{display:flex;gap:calc(var(--spacing)*1.5);padding:calc(var(--spacing)*1.5);border:1px solid var(--border);border-radius:999px;background:var(--card);box-shadow:var(--shadow-md)}.tab{flex-direction:column;gap:2px;min-width:56px;height:56px;padding:0 calc(var(--spacing)*1.5);font-size:11px;text-align:center}.dot{width:18px;height:18px;border-radius:999px;background:var(--secondary);box-shadow:inset 0 0 0 1px var(--border)}.tab:hover .dot{background:var(--primary)}
+
+/* ── Product Grid ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="row">
+   <span class="label">4-up</span>
+   <div class="grid grid-4">
+   <article class="card"><div class="media"></div><span class="eyebrow">New this season</span><strong class="title">Pinguo Lens Pro</strong><span class="price">From $999</span><a class="cta" href="/">Compare all models</a></article>
+   <article class="card"><div class="media"></div><span class="eyebrow">Creator kit</span><strong class="title">Pinguo Air Cam</strong><span class="price">From $749</span><a class="cta" href="/">Build your setup</a></article>
+   <article class="card"><div class="media"></div><span class="eyebrow">Studio ready</span><strong class="title">Pinguo Dock One</strong><span class="price">From $299</span><a class="cta" href="/">See accessories</a></article>
+   <article class="card is-disabled"><div class="media"></div><span class="eyebrow">Coming soon</span><strong class="title">Pinguo Vision Mini</strong><span class="price muted">Notify me</span><span class="cta">Unavailable</span></article>
+   </div>
+   </div>
+   <hr class="divider">
+   <div class="row">
+   <span class="label">Story</span>
+   <div class="grid grid-2">
+   <article class="card story"><div class="media"></div><span class="eyebrow">Consumer imaging product ecosystem</span><strong class="title">Travel light with one camera, one dock, and one cloud-ready edit flow.</strong><span class="price muted">Pinguo Apple picks for weekend shoots</span><a class="cta" href="/">Shop the story</a></article>
+   <article class="card story"><div class="media"></div><span class="eyebrow">Compare lineup</span><strong class="title">Choose between compact capture, pro optics, and desktop-grade finishing tools.</strong><span class="price muted">Made for photo-first households</span><a class="cta" href="/">Compare all models</a></article>
+   </div>
+   </div>
+*/
+body{margin:0;padding:12px;background:var(--background);color:var(--foreground);font:500 14px/1.4 var(--font-sans)}.row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}.label{width:72px;padding-top:6px;color:var(--muted-foreground);font-size:10px;letter-spacing:.12em;text-transform:uppercase;flex:0 0 auto}.grid{display:grid;gap:8px;flex:1}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.card{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--card-foreground);box-shadow:var(--shadow-xs);transition:border-color .2s ease,transform .2s ease}.card:hover{border-color:var(--primary);transform:translateY(-1px)}.media{aspect-ratio:1;border-radius:calc(var(--radius) - 4px);background:linear-gradient(135deg,var(--secondary),var(--background));border:1px solid var(--border)}.story .media{aspect-ratio:1.25;background:linear-gradient(135deg,var(--foreground),var(--secondary))}.eyebrow{color:var(--muted-foreground);font-size:10px;letter-spacing:.08em;text-transform:uppercase}.title{font-size:15px;line-height:1.25}.price{font-variant-numeric:tabular-nums}.cta{display:inline-flex;align-self:flex-start;padding:7px 10px;border-radius:999px;background:var(--primary);color:var(--primary-foreground);font-size:12px;text-decoration:none}.muted{color:var(--muted-foreground)}.is-disabled{opacity:.55}.divider{margin:10px 0;border:0;border-top:1px solid var(--border)}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-secondary { background-color: var(--secondary); }
+      .text-secondary { color: var(--secondary); }
+      .border-secondary { border-color: var(--secondary); }
+      .ring-secondary { --tw-ring-color: var(--secondary); }
+      .bg-secondary-foreground { background-color: var(--secondary-foreground); }
+      .text-secondary-foreground { color: var(--secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--secondary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-accent { background-color: var(--accent); }
+      .text-accent { color: var(--accent); }
+      .border-accent { border-color: var(--accent); }
+      .ring-accent { --tw-ring-color: var(--accent); }
+      .bg-accent-foreground { background-color: var(--accent-foreground); }
+      .text-accent-foreground { color: var(--accent-foreground); }
+      .border-accent-foreground { border-color: var(--accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--accent-foreground); }
+      .bg-destructive { background-color: var(--destructive); }
+      .text-destructive { color: var(--destructive); }
+      .border-destructive { border-color: var(--destructive); }
+      .ring-destructive { --tw-ring-color: var(--destructive); }
+      .bg-destructive-foreground { background-color: var(--destructive-foreground); }
+      .text-destructive-foreground { color: var(--destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--destructive-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+      .bg-chart-1 { background-color: var(--chart-1); }
+      .text-chart-1 { color: var(--chart-1); }
+      .border-chart-1 { border-color: var(--chart-1); }
+      .ring-chart-1 { --tw-ring-color: var(--chart-1); }
+      .bg-chart-2 { background-color: var(--chart-2); }
+      .text-chart-2 { color: var(--chart-2); }
+      .border-chart-2 { border-color: var(--chart-2); }
+      .ring-chart-2 { --tw-ring-color: var(--chart-2); }
+      .bg-chart-3 { background-color: var(--chart-3); }
+      .text-chart-3 { color: var(--chart-3); }
+      .border-chart-3 { border-color: var(--chart-3); }
+      .ring-chart-3 { --tw-ring-color: var(--chart-3); }
+      .bg-chart-4 { background-color: var(--chart-4); }
+      .text-chart-4 { color: var(--chart-4); }
+      .border-chart-4 { border-color: var(--chart-4); }
+      .ring-chart-4 { --tw-ring-color: var(--chart-4); }
+      .bg-chart-5 { background-color: var(--chart-5); }
+      .text-chart-5 { color: var(--chart-5); }
+      .border-chart-5 { border-color: var(--chart-5); }
+      .ring-chart-5 { --tw-ring-color: var(--chart-5); }
+      .bg-sidebar { background-color: var(--sidebar); }
+      .text-sidebar { color: var(--sidebar); }
+      .border-sidebar { border-color: var(--sidebar); }
+      .ring-sidebar { --tw-ring-color: var(--sidebar); }
+      .bg-sidebar-foreground { background-color: var(--sidebar-foreground); }
+      .text-sidebar-foreground { color: var(--sidebar-foreground); }
+      .border-sidebar-foreground { border-color: var(--sidebar-foreground); }
+      .ring-sidebar-foreground { --tw-ring-color: var(--sidebar-foreground); }
+      .bg-sidebar-primary { background-color: var(--sidebar-primary); }
+      .text-sidebar-primary { color: var(--sidebar-primary); }
+      .border-sidebar-primary { border-color: var(--sidebar-primary); }
+      .ring-sidebar-primary { --tw-ring-color: var(--sidebar-primary); }
+      .bg-sidebar-primary-foreground { background-color: var(--sidebar-primary-foreground); }
+      .text-sidebar-primary-foreground { color: var(--sidebar-primary-foreground); }
+      .border-sidebar-primary-foreground { border-color: var(--sidebar-primary-foreground); }
+      .ring-sidebar-primary-foreground { --tw-ring-color: var(--sidebar-primary-foreground); }
+      .bg-sidebar-accent { background-color: var(--sidebar-accent); }
+      .text-sidebar-accent { color: var(--sidebar-accent); }
+      .border-sidebar-accent { border-color: var(--sidebar-accent); }
+      .ring-sidebar-accent { --tw-ring-color: var(--sidebar-accent); }
+      .bg-sidebar-accent-foreground { background-color: var(--sidebar-accent-foreground); }
+      .text-sidebar-accent-foreground { color: var(--sidebar-accent-foreground); }
+      .border-sidebar-accent-foreground { border-color: var(--sidebar-accent-foreground); }
+      .ring-sidebar-accent-foreground { --tw-ring-color: var(--sidebar-accent-foreground); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+        <style id="critical-layout">
+            body {
+                margin: 0;
+                padding: 0;
+                background: var(--background);
+                color: var(--foreground);
+                font-family: var(--font-sans);
+            }
+
+            .globalnav {
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                width: 100%;
+                height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 24px;
+                box-sizing: border-box;
+                background: color-mix(in srgb, var(--card) 72%, transparent);
+                backdrop-filter: saturate(180%) blur(20px);
+                -webkit-backdrop-filter: saturate(180%) blur(20px);
+                border-bottom: 1px solid var(--border);
+            }
+
+            .globalnav .brand {
+                font-size: 14px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--foreground);
+                text-decoration: none;
+            }
+
+            .globalnav .rail {
+                display: flex;
+                gap: 4px;
+            }
+
+            .globalnav .rail a {
+                display: inline-flex;
+                align-items: center;
+                min-height: 44px;
+                padding: 0 14px;
+                border-radius: 999px;
+                color: var(--foreground);
+                text-decoration: none;
+                font-size: 13px;
+                transition: background-color 0.18s ease;
+            }
+
+            .globalnav .rail a:hover {
+                background: var(--secondary);
+            }
+
+            .checkout-wrap {
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 40px 24px 120px;
+            }
+
+            .step-indicator {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 24px;
+                font-size: 13px;
+            }
+
+            .step {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                color: var(--muted-foreground);
+            }
+
+            .step.current {
+                color: var(--foreground);
+                font-weight: 600;
+            }
+
+            .step.completed {
+                color: var(--state-success);
+            }
+
+            .step:not(:last-child)::after {
+                content: "";
+                width: 16px;
+                height: 1px;
+                background: var(--border);
+                margin-left: 8px;
+            }
+
+            .page-title {
+                font-size: 32px;
+                font-weight: 700;
+                text-align: center;
+                margin: 0 0 40px;
+                letter-spacing: -0.02em;
+            }
+
+            .checkout-grid {
+                display: grid;
+                grid-template-columns: 1fr 320px;
+                gap: 24px;
+                align-items: start;
+            }
+
+            .checkout-main {
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .checkout-sidebar {
+                position: sticky;
+                top: 68px;
+            }
+
+            .checkout-card {
+                width: auto;
+                min-height: auto;
+                padding: 24px;
+                border-radius: var(--radius);
+                background: var(--card);
+                border: 1px solid var(--border);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .checkout-card:hover {
+                transform: none;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .order-summary {
+                display: flex;
+                gap: 20px;
+            }
+
+            .course-thumb {
+                width: 120px;
+                height: 90px;
+                border-radius: calc(var(--radius) - 4px);
+                background: linear-gradient(135deg, var(--secondary), var(--accent));
+                border: 1px solid var(--border);
+                flex-shrink: 0;
+            }
+
+            .course-info {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .course-name {
+                font-size: 18px;
+                font-weight: 700;
+                margin: 0 0 6px;
+            }
+
+            .course-meta {
+                color: var(--muted-foreground);
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+
+            .price-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+                border-bottom: 1px solid var(--border);
+                font-size: 14px;
+            }
+
+            .price-row:last-child {
+                border-bottom: none;
+            }
+
+            .price-row .value {
+                font-variant-numeric: tabular-nums;
+            }
+
+            .price-row.final {
+                font-size: 18px;
+                font-weight: 700;
+                padding-top: 12px;
+            }
+
+            .price-row.discount .value {
+                color: var(--state-error);
+            }
+
+            .note-field {
+                margin-top: 16px;
+            }
+
+            .note-field label {
+                display: block;
+                font-size: 12px;
+                color: var(--muted-foreground);
+                margin-bottom: 6px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+            }
+
+            .note-field textarea {
+                width: 100%;
+                min-height: 80px;
+                padding: 12px;
+                border: 1px solid var(--input);
+                border-radius: var(--radius-sm);
+                background: var(--background);
+                color: var(--foreground);
+                font-family: inherit;
+                font-size: 14px;
+                resize: vertical;
+                box-sizing: border-box;
+            }
+
+            .note-field textarea:focus {
+                outline: 2px solid var(--ring);
+                outline-offset: 2px;
+            }
+
+            .section-title {
+                font-size: 18px;
+                font-weight: 700;
+                margin: 0 0 20px;
+            }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .field-group.full {
+                grid-column: 1 / -1;
+            }
+
+            .field-label {
+                display: block;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--muted-foreground);
+                margin-bottom: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+            }
+
+            .customer-form .field {
+                width: 100%;
+                min-width: auto;
+                height: 48px;
+                padding: 0 14px;
+                border-radius: var(--radius-sm);
+                background: var(--background);
+                box-sizing: border-box;
+            }
+
+            .customer-form .field:focus-within {
+                border-color: var(--ring);
+                box-shadow: 0 0 0 1px var(--ring);
+            }
+
+            .field-icon {
+                width: 18px;
+                height: 18px;
+                flex-shrink: 0;
+            }
+
+            .payment-options {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+
+            .payment-option {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-height: 56px;
+                padding: 14px 16px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                background: var(--background);
+                cursor: pointer;
+                transition: border-color 0.18s ease, background-color 0.18s ease;
+                box-sizing: border-box;
+            }
+
+            .payment-option:hover {
+                border-color: var(--primary);
+            }
+
+            .payment-option.selected {
+                border-color: var(--primary);
+                background: color-mix(in srgb, var(--primary) 6%, var(--background));
+            }
+
+            .payment-option input {
+                position: absolute;
+                opacity: 0;
+                width: 100%;
+                height: 100%;
+                cursor: pointer;
+            }
+
+            .payment-icon {
+                width: 22px;
+                height: 22px;
+                flex-shrink: 0;
+                color: var(--icon);
+            }
+
+            .payment-name {
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .payment-check {
+                margin-left: auto;
+                width: 18px;
+                height: 18px;
+                color: var(--primary);
+                opacity: 0;
+                flex-shrink: 0;
+            }
+
+            .payment-option.selected .payment-check {
+                opacity: 1;
+            }
+
+            .comparison-section .t {
+                width: 100%;
+                grid-template-columns: 1fr 120px 120px;
+            }
+
+            .comparison-section .c {
+                padding: 14px;
+            }
+
+            .comparison-section .t>.c:nth-child(4n) {
+                border-right: 1px solid var(--border);
+            }
+
+            .comparison-section .t>.c:nth-child(3n) {
+                border-right: 0;
+            }
+
+            .comparison-section .t>.c:nth-last-child(-n+4) {
+                border-bottom: 1px solid var(--border);
+            }
+
+            .comparison-section .t>.c:nth-last-child(-n+3) {
+                border-bottom: 0;
+            }
+
+            .comparison-section .c.h.b .k {
+                color: var(--primary);
+            }
+
+            .sticky-sidebar .checkout-card {
+                padding: 24px;
+            }
+
+            .sidebar-title {
+                font-size: 16px;
+                font-weight: 700;
+                margin: 0 0 20px;
+            }
+
+            .sidebar-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 0;
+                border-bottom: 1px solid var(--border);
+                font-size: 14px;
+            }
+
+            .sidebar-row.total {
+                font-size: 22px;
+                font-weight: 700;
+                border-bottom: none;
+                padding-top: 16px;
+            }
+
+            .sidebar-row .amount {
+                font-variant-numeric: tabular-nums;
+            }
+
+            .pay-btn {
+                width: 100%;
+                margin-top: 20px;
+            }
+
+            .secure-note {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                margin-top: 14px;
+                font-size: 12px;
+                color: var(--muted-foreground);
+            }
+
+            .secure-note svg,
+            .secure-note [data-icon] {
+                width: 14px;
+                height: 14px;
+                flex-shrink: 0;
+            }
+
+            .checkout-footer {
+                max-width: 980px;
+                margin: 40px auto 0;
+                padding: 24px;
+                text-align: center;
+                color: var(--muted-foreground);
+                font-size: 12px;
+                border-top: 1px solid var(--border);
+            }
+
+            .payment-bar {
+                display: none;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 40;
+                padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+                background: color-mix(in srgb, var(--card) 92%, transparent);
+                backdrop-filter: saturate(180%) blur(20px);
+                -webkit-backdrop-filter: saturate(180%) blur(20px);
+                border-top: 1px solid var(--border);
+                box-sizing: border-box;
+            }
+
+            .payment-bar-inner {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                max-width: 980px;
+                margin: 0 auto;
+            }
+
+            .payment-bar .price-label {
+                font-size: 12px;
+                color: var(--muted-foreground);
+            }
+
+            .payment-bar .price {
+                font-size: 20px;
+                font-weight: 700;
+            }
+
+            .payment-bar .pay-btn {
+                width: auto;
+                margin-top: 0;
+                padding: 0 28px;
+            }
+
+            [data-icon] {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                -webkit-mask-size: contain;
+                mask-size: contain;
+                -webkit-mask-repeat: no-repeat;
+                mask-repeat: no-repeat;
+                -webkit-mask-position: center;
+                mask-position: center;
+                background-color: currentColor;
+            }
+
+            @media (max-width: 768px) {
+                .globalnav {
+                    padding: 0 16px;
+                }
+
+                .globalnav .rail {
+                    display: none;
+                }
+
+                .checkout-wrap {
+                    padding: 24px 16px 140px;
+                }
+
+                .checkout-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .checkout-sidebar {
+                    display: none;
+                }
+
+                .payment-bar {
+                    display: block;
+                }
+
+                .order-summary {
+                    flex-direction: column;
+                }
+
+                .course-thumb {
+                    width: 100%;
+                    height: 140px;
+                }
+
+                .page-title {
+                    font-size: 26px;
+                    margin-bottom: 28px;
+                }
+
+                .form-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .payment-options {
+                    grid-template-columns: 1fr;
+                }
+
+                .comparison-section .t {
+                    grid-template-columns: 1fr 80px 80px;
+                    font-size: 12px;
+                }
+
+                .comparison-section .c {
+                    padding: 10px;
+                }
+            }
+        </style>
+        <style id="interaction-states">
+            :root {
+                --motion-apple: cubic-bezier(0.32, 0.72, 0, 1);
+            }
+
+            /* Step indicator */
+            .step {
+                transition: color 250ms var(--motion-apple), transform 250ms var(--motion-apple);
+            }
+            .step.current {
+                transform: scale(1.04);
+                animation: step-pulse 2.5s var(--motion-apple) infinite;
+            }
+            @keyframes step-pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.72; }
+            }
+            .step.completed .step-check {
+                transition: transform 250ms var(--motion-apple);
+            }
+            .step.completed:hover .step-check {
+                transform: scale(1.12);
+            }
+
+            /* Form inputs */
+            .field {
+                transition: border-color 200ms var(--motion-apple), box-shadow 200ms var(--motion-apple);
+            }
+            .field:focus-within {
+                border-color: var(--ring);
+                box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+            }
+            .field-label,
+            .note-field label {
+                transition: color 200ms var(--motion-apple);
+            }
+            .field-group:focus-within .field-label,
+            .note-field:focus-within label {
+                color: var(--ring);
+            }
+            .control {
+                transition: transform 150ms var(--motion-apple);
+            }
+
+            /* Payment method cards */
+            .payment-option {
+                transition: border-color 200ms var(--motion-apple), background-color 200ms var(--motion-apple), box-shadow 200ms var(--motion-apple), transform 150ms var(--motion-apple);
+            }
+            .payment-option:hover {
+                background: color-mix(in srgb, var(--primary) 4%, var(--background));
+            }
+            .payment-option.selected {
+                border-color: var(--primary);
+                background: color-mix(in srgb, var(--primary) 6%, var(--background));
+                box-shadow: 0 0 0 1px var(--primary), var(--shadow-sm);
+            }
+            .payment-option:active {
+                transform: scale(0.98);
+            }
+            .payment-check {
+                transition: opacity 200ms var(--motion-apple), transform 250ms var(--motion-apple);
+            }
+            .payment-option.selected .payment-check {
+                transform: scale(1);
+            }
+            .payment-option:not(.selected) .payment-check {
+                transform: scale(0.8);
+            }
+
+            /* Order summary card */
+            .order-summary.checkout-card {
+                transition: box-shadow 250ms var(--motion-apple);
+            }
+            .order-summary.checkout-card:hover {
+                box-shadow: var(--shadow-md);
+            }
+            .order-summary .price-row {
+                opacity: 0;
+                animation: line-fade-in 350ms var(--motion-apple) forwards;
+            }
+            .order-summary .price-row:nth-child(1) { animation-delay: 0ms; }
+            .order-summary .price-row:nth-child(2) { animation-delay: 80ms; }
+            .order-summary .price-row:nth-child(3) { animation-delay: 160ms; }
+            @keyframes line-fade-in {
+                from { opacity: 0; transform: translateY(6px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            /* Pay button */
+            .pay-btn {
+                transition: filter 200ms var(--motion-apple), transform 150ms var(--motion-apple), box-shadow 200ms var(--motion-apple);
+            }
+            .pay-btn:hover:not(:disabled) {
+                filter: brightness(1.06);
+            }
+            .pay-btn:active:not(:disabled) {
+                transform: scale(0.97);
+            }
+            .pay-btn.is-loading {
+                position: relative;
+                color: transparent;
+                pointer-events: none;
+            }
+            .pay-btn.is-loading .pay-btn-text {
+                color: transparent;
+            }
+            .pay-btn.is-loading::after {
+                content: "";
+                position: absolute;
+                width: 18px;
+                height: 18px;
+                border: 2px solid color-mix(in srgb, var(--primary-foreground) 30%, transparent);
+                border-top-color: var(--primary-foreground);
+                border-radius: 999px;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+
+            /* Success state */
+            .success-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 100;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                background: color-mix(in srgb, var(--background) 85%, transparent);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+            }
+            .success-overlay.is-visible {
+                display: flex;
+                animation: overlay-fade 250ms var(--motion-apple);
+            }
+            @keyframes overlay-fade {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .success-card {
+                padding: 40px;
+                border-radius: var(--radius);
+                background: var(--card);
+                border: 1px solid var(--border);
+                box-shadow: var(--shadow-xl);
+                text-align: center;
+                transform: scale(0.92);
+                opacity: 0;
+                animation: success-pop 350ms var(--motion-apple) forwards;
+            }
+            @keyframes success-pop {
+                to { transform: scale(1); opacity: 1; }
+            }
+            .success-check {
+                width: 64px;
+                height: 64px;
+                margin: 0 auto 20px;
+                color: var(--state-success);
+                transform: scale(0);
+                animation: check-scale 350ms var(--motion-apple) 120ms forwards;
+            }
+            @keyframes check-scale {
+                to { transform: scale(1); }
+            }
+            .success-title {
+                font-size: 22px;
+                font-weight: 700;
+                margin: 0 0 8px;
+            }
+            .success-body {
+                margin: 0;
+                color: var(--muted-foreground);
+                font-size: 14px;
+            }
+
+            /* Nav links */
+            .globalnav .rail a {
+                transition: background-color 200ms var(--motion-apple), color 200ms var(--motion-apple), transform 150ms var(--motion-apple);
+            }
+            .globalnav .rail a:hover {
+                background: var(--secondary);
+            }
+            .globalnav .rail a:focus-visible {
+                outline: 2px solid var(--ring);
+                outline-offset: 2px;
+            }
+            .globalnav .rail a:active {
+                transform: scale(0.96);
+            }
+
+            /* Reduced motion */
+            @media (prefers-reduced-motion: reduce) {
+                .step,
+                .field,
+                .control,
+                .field-label,
+                .note-field label,
+                .payment-option,
+                .payment-check,
+                .order-summary.checkout-card,
+                .order-summary .price-row,
+                .pay-btn,
+                .globalnav .rail a,
+                .success-card,
+                .success-check,
+                .success-overlay.is-visible {
+                    animation: none !important;
+                    transition: none !important;
+                }
+                .step.current,
+                .payment-option,
+                .pay-btn,
+                .globalnav .rail a,
+                .order-summary .price-row,
+                .success-overlay.is-visible,
+                .success-card,
+                .success-check {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+        </style>
+
+        <nav class="globalnav webbar" aria-label="IELTS学堂 主导航">
+            <a class="brand" href="../index.html">IELTS学堂</a>
+            <div class="rail">
+                <a href="../courses.html">课程</a>
+                <a href="../paths.html">学习路径</a>
+                <a href="../teachers.html">名师</a>
+                <a href="../pricing.html">价格</a>
+                <a href="../help.html">帮助</a>
+            </div>
+        </nav>
+
+        <div class="checkout-wrap">
+            <div class="step-indicator" aria-label="订单步骤">
+                <div class="step completed">
+                    <span data-icon class="step-check" style="--icon-url: url('../assets/icons/BLGE665DK5_ET3/circle-check.svg'); width: 16px; height: 16px;" aria-hidden="true"></span>
+                    填写信息
+                </div>
+                <div class="step current" aria-current="step">确认订单</div>
+                <div class="step">支付</div>
+            </div>
+
+            <h1 class="page-title">确认订单</h1>
+
+            <div class="checkout-grid">
+                <div class="checkout-main">
+                    <section class="card checkout-card order-summary" aria-labelledby="order-summary-title">
+                        <div class="course-thumb" aria-hidden="true"></div>
+                        <div class="course-info">
+                            <h2 id="order-summary-title" class="course-name">雅思口语一对一特训班</h2>
+                            <p class="course-meta">讲师：Sarah Chen · 有效期 180 天</p>
+                            <div class="price-row">
+                                <span>原价</span>
+                                <span class="value">¥4,999</span>
+                            </div>
+                            <div class="price-row discount">
+                                <span>限时优惠</span>
+                                <span class="value">-¥1,000</span>
+                            </div>
+                            <div class="price-row final">
+                                <span>应付总额</span>
+                                <span class="value">¥3,999</span>
+                            </div>
+                            <div class="note-field">
+                                <label for="order-note">订单备注</label>
+                                <textarea id="order-note" placeholder="如有特殊需求，请在此填写（选填）"></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card checkout-card customer-form" aria-labelledby="customer-info-title">
+                        <h2 id="customer-info-title" class="section-title">联系人信息</h2>
+                        <div class="form-grid">
+                            <div class="field-group full">
+                                <label class="field-label" for="customer-name">姓名</label>
+                                <div class="field">
+                                    <span data-icon class="field-icon user-icon" style="--icon-url: url('../assets/icons/BLGE665DK5_ET3/user.svg');" aria-hidden="true"></span>
+                                    <input type="text" id="customer-name" class="control" placeholder="请输入您的姓名" required>
+                                </div>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="customer-phone">手机号</label>
+                                <div class="field">
+                                    <input type="tel" id="customer-phone" class="control" placeholder="请输入手机号" required>
+                                </div>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="customer-email">邮箱</label>
+                                <div class="field">
+                                    <span data-icon class="field-icon mail-icon" style="--icon-url: url('../assets/icons/BLGE665DK5_ET3/mail.svg');" aria-hidden="true"></span>
+                                    <input type="email" id="customer-email" class="control" placeholder="请输入邮箱" required>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card checkout-card payment-section" aria-labelledby="payment-title">
+                        <h2 id="payment-title" class="section-title">支付方式</h2>
+                        <div class="payment-options" role="radiogroup" aria-label="选择支付方式">
+                            <label class="payment-option selected">
+                                <input type="radio" name="payment" value="wechat" checked>
+                                <svg class="payment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M17 11.5c0 2.5-2.6 4.5-5.8 4.5-.6 0-1.2-.1-1.8-.2l-1.6 1-.4-1.4c-1.3-.9-2.1-2.2-2.1-3.7 0-2.5 2.6-4.5 5.8-4.5s5.9 2 5.9 4.5z"></path>
+                                    <circle cx="10.2" cy="12.3" r=".5" fill="currentColor" stroke="none"></circle>
+                                    <circle cx="13.7" cy="12.3" r=".5" fill="currentColor" stroke="none"></circle>
+                                </svg>
+                                <span class="payment-name">微信支付</span>
+                                <span data-icon class="payment-check" style="--icon-url: url('../assets/icons/BLGE665DK5_ET3/check.svg');" aria-hidden="true"></span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment" value="alipay">
+                                <svg class="payment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M8 15h8M9 12h6M10 9h4"></path>
+                                </svg>
+                                <span class="payment-name">支付宝</span>
+                                <span data-icon class="payment-check" style="--icon-url: url('../assets/icons/BLGE665DK5_ET3/check.svg');" aria-hidden="true"></span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment" value="unionpay">
+                                <svg class="payment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                                    <path d="M6 14h.01M18 14h.01"></path>
+                                </svg>
+                                <span class="payment-name">银联</span>
+                                <span data-icon class="payment-check" style="--icon-url: url('../assets/icons/BLGE665DK5_ET3/check.svg');" aria-hidden="true"></span>
+                            </label>
+                        </div>
+                    </section>
+
+                    <section class="comparison-section" aria-labelledby="compare-title">
+                        <h2 id="compare-title" class="section-title">方案对比</h2>
+                        <div class="t" role="table" aria-label="当前选择与升级套餐对比">
+                            <div class="c m" role="columnheader">项目</div>
+                            <div class="c h" role="columnheader"><span class="k">当前选择</span></div>
+                            <div class="c h b" role="columnheader"><span class="k">升级套餐</span></div>
+                            <div class="c m" role="rowheader">课程时长</div>
+                            <div class="c v" role="cell">10 课时</div>
+                            <div class="c v" role="cell">30 课时</div>
+                            <div class="c m" role="rowheader">有效期</div>
+                            <div class="c v" role="cell">180 天</div>
+                            <div class="c v" role="cell">365 天</div>
+                            <div class="c m" role="rowheader">模考次数</div>
+                            <div class="c v" role="cell">2 次</div>
+                            <div class="c v" role="cell">8 次</div>
+                            <div class="c m" role="rowheader">价格</div>
+                            <div class="c v" role="cell">¥3,999</div>
+                            <div class="c v" role="cell">¥9,999</div>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="checkout-sidebar" aria-label="订单摘要">
+                    <div class="sticky-sidebar">
+                        <div class="card checkout-card">
+                            <h2 class="sidebar-title">订单合计</h2>
+                            <div class="sidebar-row">
+                                <span>课程原价</span>
+                                <span class="amount">¥4,999</span>
+                            </div>
+                            <div class="sidebar-row">
+                                <span>优惠金额</span>
+                                <span class="amount" style="color: var(--state-error);">-¥1,000</span>
+                            </div>
+                            <div class="sidebar-row total">
+                                <span>应付总额</span>
+                                <span class="amount">¥3,999</span>
+                            </div>
+                            <button class="btn btn-primary btn-lg pay-btn" type="button"><span class="pay-btn-text">立即支付</span></button>
+                            <p class="secure-note">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                安全加密支付，支持开票
+                            </p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <footer class="checkout-footer">
+            <p>&copy; 2026 IELTS学堂. 保留所有权利。</p>
+        </footer>
+
+        <div class="payment-bar" role="toolbar" aria-label="移动端支付栏">
+            <div class="payment-bar-inner">
+                <div>
+                    <div class="price-label">应付总额</div>
+                    <div class="price">¥3,999</div>
+                </div>
+                <button class="btn btn-primary btn-lg pay-btn" type="button"><span class="pay-btn-text">立即支付</span></button>
+            </div>
+        </div>
+    </main>
+    <div class="success-overlay" id="success-overlay" role="dialog" aria-modal="true" aria-labelledby="success-title" aria-live="polite" aria-atomic="true">
+        <div class="success-card">
+            <svg class="success-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <h2 id="success-title" class="success-title">支付成功</h2>
+            <p class="success-body">订单已确认，即将进入学习页面</p>
+        </div>
+    </div>
+    <script id="checkout-script">
+        (function () {
+            const options = document.querySelectorAll('.payment-option');
+            function updateSelection() {
+                options.forEach(function (option) {
+                    const input = option.querySelector('input[type="radio"]');
+                    option.classList.toggle('selected', input && input.checked);
+                });
+            }
+            options.forEach(function (option) {
+                const input = option.querySelector('input[type="radio"]');
+                if (!input) return;
+                input.addEventListener('change', updateSelection);
+                option.addEventListener('click', function (e) {
+                    if (e.target !== input) {
+                        input.checked = true;
+                        updateSelection();
+                    }
+                });
+            });
+            updateSelection();
+
+            const payButtons = document.querySelectorAll('.pay-btn');
+            const successOverlay = document.getElementById('success-overlay');
+            payButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    if (button.classList.contains('is-loading') || button.classList.contains('is-success')) return;
+                    const textSpan = button.querySelector('.pay-btn-text');
+                    const originalText = textSpan ? textSpan.textContent : button.textContent;
+                    button.classList.add('is-loading');
+                    button.disabled = true;
+                    if (textSpan) textSpan.textContent = '支付中...';
+                    window.setTimeout(function () {
+                        button.classList.remove('is-loading');
+                        button.classList.add('is-success');
+                        if (textSpan) textSpan.textContent = originalText;
+                        if (successOverlay) successOverlay.classList.add('is-visible');
+                    }, 1800);
+                });
+            });
+        })();
+    </script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

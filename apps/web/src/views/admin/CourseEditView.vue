@@ -6,9 +6,10 @@ import {
   getAdminCourse, createAdminCourse, updateAdminCourse,
   createChapter, updateChapter, deleteChapter,
   createLesson, updateLesson, deleteLesson,
-  createMaterial, deleteMaterial, getVodUploadSign,
+  createMaterial, deleteMaterial,
   type AdminCourse, type AdminChapter, type AdminLesson,
 } from '@/api/admin'
+import { uploadVideoToVod } from '@/utils/vod-upload'
 
 const route = useRoute()
 const router = useRouter()
@@ -34,6 +35,13 @@ const lessonForm = ref<AdminLesson>({ title: '', freeTrial: false })
 const editingChapterId = ref<number | null>(null)
 const editingLessonId = ref<number | null>(null)
 const activeChapterId = ref<number | null>(null)
+
+// 视频上传状态
+const uploading = ref(false)
+const uploadProgress = ref(0)
+const uploadLessonId = ref<number | null>(null)
+const videoFileRef = ref<HTMLInputElement | null>(null)
+const pendingUploadLesson = ref<AdminLesson | null>(null)
 
 // 课件管理
 const materials = ref<any[]>([])
@@ -121,19 +129,56 @@ async function removeLesson(l: AdminLesson) {
   load()
 }
 
-async function uploadVideo(chapterId: number, lesson: AdminLesson) {
-  // chapterId 和 lesson 预留，后续接入 VOD 上传时使用
-  void chapterId; void lesson
+// 触发文件选择
+function triggerUpload(l: AdminLesson) {
+  pendingUploadLesson.value = l
+  videoFileRef.value?.click()
+}
+
+// 文件选择后上传到 VOD
+async function onVideoFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = '' // 重置，允许重复选择
+  if (!file || !pendingUploadLesson.value || !courseId) return
+
+  const lesson = pendingUploadLesson.value
+  pendingUploadLesson.value = null
+
+  // 验证文件类型
+  const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska']
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  if (!validTypes.includes(file.type) && !['mp4', 'mov', 'avi', 'mkv', 'flv'].includes(ext || '')) {
+    ElMessage.warning('仅支持 MP4/MOV/AVI/MKV 视频格式')
+    return
+  }
+
+  uploading.value = true
+  uploadProgress.value = 0
+  uploadLessonId.value = lesson.id!
+
   try {
-    const sign = await getVodUploadSign()
-    if (!sign.configured) {
-      ElMessage.warning('腾讯云 VOD 尚未配置，请在 application.yml 中填写 VOD 相关密钥')
-      return
-    }
-    // TODO: 接入腾讯云 VOD 客户端上传 SDK，上传后获取 fileId 并回写 lesson.vodFileId
-    ElMessage.info('VOD 上传功能需接入腾讯云 SDK 后启用')
-  } catch {
-    ElMessage.warning('无法获取 VOD 上传签名')
+    ElMessage.info(`正在上传「${file.name}」...`)
+    const result = await uploadVideoToVod(file, {
+      onProgress: (p) => {
+        uploadProgress.value = p
+      },
+    })
+
+    // 回写 fileId 到课时
+    await updateLesson(courseId, lesson.id!, {
+      ...lesson,
+      vodFileId: result.fileId,
+    })
+
+    ElMessage.success(`视频上传成功（fileId: ${result.fileId}）`)
+    load()
+  } catch (err: any) {
+    ElMessage.error('视频上传失败：' + (err?.message || '未知错误'))
+  } finally {
+    uploading.value = false
+    uploadProgress.value = 0
+    uploadLessonId.value = null
   }
 }
 
@@ -212,12 +257,29 @@ onMounted(load)
         </div>
         <div class="lessons">
           <div v-for="l in c.lessons" :key="l.id" class="lesson-row">
-            <span>{{ l.title }} <el-tag v-if="l.freeTrial" size="small" type="success">试看</el-tag></span>
             <span>
+              {{ l.title }}
+              <el-tag v-if="l.freeTrial" size="small" type="success">试看</el-tag>
+              <el-tag v-if="l.vodFileId" size="small" type="info" style="margin-left: 4px">已传</el-tag>
+            </span>
+            <span class="lesson-actions">
               <el-button link type="primary" @click="editLesson(l, c.id!)">编辑</el-button>
-              <el-button link type="primary" @click="uploadVideo(c.id!, l)">上传视频</el-button>
+              <el-button
+                link
+                type="primary"
+                :loading="uploading && uploadLessonId === l.id"
+                @click="triggerUpload(l)"
+              >
+                {{ l.vodFileId ? '重新上传' : '上传视频' }}
+              </el-button>
               <el-button link type="danger" @click="removeLesson(l)">删除</el-button>
             </span>
+            <el-progress
+              v-if="uploading && uploadLessonId === l.id"
+              :percentage="uploadProgress"
+              :stroke-width="6"
+              style="margin-top: 4px"
+            />
           </div>
           <div v-if="activeChapterId === c.id" class="lesson-form">
             <el-input v-model="lessonForm.title" placeholder="课时标题" />
@@ -258,27 +320,42 @@ onMounted(load)
         </el-table-column>
       </el-table>
     </div>
+
+    <!-- 隐藏的视频文件选择 -->
+    <input
+      ref="videoFileRef"
+      type="file"
+      accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.mov,.avi,.mkv,.flv"
+      style="display: none"
+      @change="onVideoFileChange"
+    >
   </div>
 </template>
 
 <style scoped>
 .course-form { max-width: 640px; }
 .section { margin-top: 32px; }
-.section-title { font-size: 18px; margin-bottom: 16px; }
+.section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
 .chapter-form { display: flex; gap: 10px; margin-bottom: 16px; max-width: 480px; }
 .chapter-card {
-  background: #fff; border: 1px solid var(--line); border-radius: var(--r-md);
-  padding: 16px; margin-bottom: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
 }
 .chapter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .lessons { padding-left: 16px; }
 .lesson-row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid var(--line);
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
+.lesson-actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .lesson-form { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
 .lesson-form .el-input { flex: 1; }
-.section-tip { font-size: 12px; color: var(--text-3); margin: 0 0 12px; }
+.section-tip { font-size: 12px; color: var(--muted-foreground); margin: 0 0 12px; }
 .material-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 @media (max-width: 768px) {
   .course-form { max-width: 100%; }

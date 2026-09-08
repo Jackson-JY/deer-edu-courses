@@ -23,7 +23,6 @@ function logout() {
 }
 
 function onMenuClick() {
-  // 移动端点击菜单后收起侧边栏
   if (window.innerWidth <= 768) {
     sidebarOpen.value = false
   }
@@ -36,10 +35,13 @@ function onMenuClick() {
     <div v-if="sidebarOpen" class="sidebar-overlay" @click="sidebarOpen = false" />
 
     <aside :class="['admin-sidebar', { open: sidebarOpen }]">
-      <div class="admin-brand">
-        <span class="mark">IELTS</span>
-        <span>管理后台</span>
-      </div>
+      <RouterLink to="/admin" class="admin-brand">
+        <img class="admin-brand-logo" src="/logo.jpg" alt="Logo" />
+        <span>
+          <strong>Deer Edu</strong>
+          <em>管理后台</em>
+        </span>
+      </RouterLink>
       <nav class="admin-menu">
         <RouterLink
           v-for="m in menus"
@@ -57,15 +59,17 @@ function onMenuClick() {
     <main class="admin-main">
       <header class="admin-header">
         <div class="admin-header-left">
-          <el-icon class="sidebar-toggle" @click="sidebarOpen = !sidebarOpen">
-            <Fold v-if="sidebarOpen" />
-            <Expand v-else />
-          </el-icon>
+          <button class="sidebar-toggle" @click="sidebarOpen = !sidebarOpen" aria-label="菜单">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path v-if="!sidebarOpen" d="M3 6h18M3 12h18M3 18h18" />
+              <path v-else d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
           <span class="admin-header-title">{{ route.meta.title || '管理后台' }}</span>
         </div>
         <div class="admin-header-user">
           <span class="admin-phone">{{ auth.user?.phone }}</span>
-          <el-button text @click="logout">退出</el-button>
+          <button class="btn btn-ghost btn-sm" @click="logout">退出</button>
         </div>
       </header>
       <div class="admin-body">
@@ -79,49 +83,73 @@ function onMenuClick() {
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background: var(--bg-soft, #f6f7f9);
+  background: var(--background-100);
 }
 .admin-sidebar {
   width: 220px;
-  background: #0f1f33;
-  color: #c4cdda;
+  background: var(--background);
+  color: var(--foreground);
   flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
 }
 .admin-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   height: 64px;
   padding: 0 20px;
-  font-weight: 700;
-  font-size: 16px;
-  color: #fff;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
 }
-.admin-brand .mark {
-  font-size: 12px;
-  color: #fff;
-  background: var(--brand-500);
-  padding: 3px 7px;
-  border-radius: var(--r-sm);
+.admin-brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+.admin-brand strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.admin-brand em {
+  display: block;
+  font-size: 11px;
+  font-style: normal;
+  color: var(--muted-foreground);
+  font-weight: 500;
 }
 .admin-menu {
-  padding: 12px 0;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .admin-menu-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 13px 20px;
-  color: #c4cdda;
+  padding: 10px 14px;
+  color: var(--muted-foreground);
   text-decoration: none;
   font-size: 14px;
-  transition: all 0.15s;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: background 0.18s ease, color 0.18s ease;
 }
-.admin-menu-item:hover,
+.admin-menu-item:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+}
 .admin-menu-item.active {
-  background: rgba(255,255,255,0.06);
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 .admin-main {
   flex: 1;
@@ -131,12 +159,17 @@ function onMenuClick() {
 }
 .admin-header {
   height: 64px;
-  background: #fff;
-  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .admin-header-left {
   display: flex;
@@ -149,16 +182,24 @@ function onMenuClick() {
 }
 .sidebar-toggle {
   display: none;
-  font-size: 20px;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  color: var(--text-2);
+  color: var(--foreground);
+  transition: background 0.18s ease;
 }
+.sidebar-toggle:hover { background: var(--secondary); }
 .admin-header-user {
   display: flex;
   align-items: center;
   gap: 16px;
   font-size: 14px;
-  color: var(--text-2);
+  color: var(--muted-foreground);
 }
 .admin-body {
   flex: 1;
@@ -175,7 +216,6 @@ function onMenuClick() {
 @media (max-width: 768px) {
   .sidebar-toggle {
     display: flex;
-    align-items: center;
   }
   .admin-sidebar {
     position: fixed;
@@ -185,6 +225,7 @@ function onMenuClick() {
     z-index: 200;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
+    box-shadow: var(--shadow-lg);
   }
   .admin-sidebar.open {
     transform: translateX(0);
