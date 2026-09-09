@@ -40,4 +40,12 @@ public interface EntitlementRepository extends JpaRepository<Entitlement, Long> 
             "and (e.expireAt is null or e.expireAt > :now) " +
             "group by e.courseId")
     List<Object[]> countActiveStudentsBatch(@Param("courseIds") List<Long> courseIds, @Param("now") LocalDateTime now);
+
+    /** 有效权益总数 */
+    long countByStatus(String status);
+
+    /** 拥有有效权益的去重学员数 */
+    @Query("select count(distinct e.userId) from Entitlement e where e.status = :status " +
+            "and (e.expireAt is null or e.expireAt > :now)")
+    long countDistinctActiveUsers(@Param("status") String status, @Param("now") LocalDateTime now);
 }

@@ -11,4 +11,6 @@ import java.util.List;
 public interface CourseRepository extends JpaRepository<Course, Long> {
 
     Page<Course> findByStatusIn(List<String> statuses, Pageable pageable);
+
+    long countByStatus(String status);
 }

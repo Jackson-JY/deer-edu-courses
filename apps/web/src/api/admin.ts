@@ -119,6 +119,25 @@ export function getSecurityConfig() {
   return get<{ watermarkTemplate: string; credentialTtl: number; previewTtl: number }>('/api/admin/security')
 }
 
+export function saveSecurityConfig(data: { watermarkTemplate: string; credentialTtl: number; previewTtl: number }) {
+  return put<{ watermarkTemplate: string; credentialTtl: number; previewTtl: number }>('/api/admin/security', data)
+}
+
+export function getDashboardStats() {
+  return get<{
+    courseCount: number
+    onlineCourseCount: number
+    lessonCount: number
+    userCount: number
+    activeEntitlementCount: number
+    activeUserCount: number
+    totalWatchMinutes: number
+    finishedLessonCount: number
+    activeLearnerCount: number
+    courseRanking: { courseId: number; title: string; learners: number; watchMinutes: number }[]
+  }>('/api/admin/dashboard')
+}
+
 export function getVodUploadSign() {
   return get<{ appId: number; subAppId: number; secretId: string; signature: string; expireTime: number; configured: boolean }>('/api/admin/vod/upload-sign')
 }

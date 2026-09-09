@@ -3,6 +3,7 @@ package com.ielts.courses.play;
 import com.ielts.courses.auth.LoginUser;
 import com.ielts.courses.catalog.Lesson;
 import com.ielts.courses.catalog.LessonRepository;
+import com.ielts.courses.admin.AdminSecurityController;
 import com.ielts.courses.common.ApiException;
 import com.ielts.courses.common.BizCode;
 import com.ielts.courses.user.User;
@@ -32,21 +33,19 @@ public class PlayService {
     @Value("${app.tencent.vod.play-key:}")
     private String vodPlayKey;
 
-    @Value("${app.play.credential-ttl-seconds:300}")
-    private long credentialTtl;
-
-    @Value("${app.play.watermark-template:{nickname} · {phoneTail} · UID{uid} · {time}}")
-    private String watermarkTemplate;
+    private final AdminSecurityController securityConfig;
 
     public PlayService(LessonRepository lessonRepository, EntitlementService entitlementService,
                        WatchRecordRepository watchRecordRepository, VodPsignGenerator psignGenerator,
-                       StringRedisTemplate redisTemplate, UserRepository userRepository) {
+                       StringRedisTemplate redisTemplate, UserRepository userRepository,
+                       AdminSecurityController securityConfig) {
         this.lessonRepository = lessonRepository;
         this.entitlementService = entitlementService;
         this.watchRecordRepository = watchRecordRepository;
         this.psignGenerator = psignGenerator;
         this.redisTemplate = redisTemplate;
         this.userRepository = userRepository;
+        this.securityConfig = securityConfig;
     }
 
     public PlayCredential issueCredential(LoginUser user, long lessonId) {
@@ -59,6 +58,7 @@ public class PlayService {
 
         verifyActiveSession(user);
 
+        long credentialTtl = securityConfig.getCredentialTtl();
         String watermarkText = buildWatermarkText(user, lesson.getTitle());
         String psign = null;
         if (vodAppId > 0 && vodPlayKey != null && !vodPlayKey.isEmpty()) {
@@ -151,7 +151,7 @@ public class PlayService {
                 ? truncate(u.getNickname().trim(), 8) : "学员";
         String lesson = lessonTitle == null ? "" : truncate(lessonTitle.trim(), 12);
 
-        return watermarkTemplate
+        return securityConfig.getWatermarkTemplate()
                 .replace("{nickname}", nickname)
                 .replace("{phone}", maskedPhone)
                 .replace("{phoneTail}", phoneTail)
