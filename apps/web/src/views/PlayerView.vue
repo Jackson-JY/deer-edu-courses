@@ -313,7 +313,7 @@ function startHeartbeat(lessonId: number) {
 
         <p class="wm-note">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          视频含动态水印（UID + 时间），加密播放、禁止下载与转发。
+          视频含动态水印（昵称 + 手机尾号 + UID + 时间），加密播放、禁止下载与转发。
         </p>
       </div>
     </div>
@@ -386,7 +386,7 @@ function startHeartbeat(lessonId: number) {
    白色文字 + 深色描边阴影，在明暗画面上都清晰可辨，又不遮挡视频主体 */
 .player-watermark {
   position: absolute;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.02em;
   color: rgba(255, 255, 255, 0.82);
@@ -398,12 +398,17 @@ function startHeartbeat(lessonId: number) {
   white-space: nowrap;
   z-index: 10;
 }
-.wm-1 { top: 5%; left: 4%; animation: drift-x 9s ease-in-out infinite alternate; }
-.wm-2 { top: 13%; left: 36%; animation: drift-x 11s ease-in-out infinite alternate-reverse; }
-.wm-3 { top: 6%; left: 66%; animation: drift-x 13s ease-in-out infinite alternate; }
+/* wm-1/wm-2 左锚定（文字向右生长），wm-3 右锚定（文字向左生长，永不溢出右边缘） */
+.wm-1 { top: 4%; left: 2%; animation: drift-x 9s ease-in-out infinite alternate; }
+.wm-2 { top: 13%; left: 24%; animation: drift-x 11s ease-in-out infinite alternate-reverse; }
+.wm-3 { top: 5%; right: 2%; animation: drift-x-l 13s ease-in-out infinite alternate; }
 @keyframes drift-x {
   from { transform: translateX(0); }
-  to { transform: translateX(36px); }
+  to { transform: translateX(24px); }
+}
+@keyframes drift-x-l {
+  from { transform: translateX(0); }
+  to { transform: translateX(-24px); }
 }
 .below { padding-top: 1rem; }
 .lesson-head {
@@ -503,15 +508,15 @@ function startHeartbeat(lessonId: number) {
 @media (max-width: 991px) {
   .player-wrap { grid-template-columns: 1fr; }
 }
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .player-wrap { gap: 12px; padding: 12px; }
   .stage { min-height: 200px; }
   .toc { max-height: 360px; }
   .toc-body { max-height: 320px; }
-  /* 小屏水印缩小并收紧位置，避免文字被裁切 */
-  .player-watermark { font-size: 11px; }
-  .wm-1 { top: 4%; left: 3%; }
-  .wm-2 { top: 12%; left: 24%; }
-  .wm-3 { top: 5%; left: 46%; }
+  /* 窄屏水印缩小、靠左两行排列，隐藏第 3 条，避免长文案溢出或相互重叠 */
+  .player-watermark { font-size: 10.5px; }
+  .wm-1 { top: 4%; left: 2%; }
+  .wm-2 { top: 13%; left: 2%; }
+  .wm-3 { display: none; }
 }
 </style>

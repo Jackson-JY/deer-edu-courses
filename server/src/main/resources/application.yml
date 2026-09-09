@@ -37,7 +37,8 @@ app:
   play:
     credential-ttl-seconds: 300
     preview-ttl-seconds: 300
-    watermark-template: '{phoneTail} · UID{uid} · {time}'
+    # 水印占位符：{nickname} 昵称 {phone} 脱敏手机号 {phoneTail} 手机尾号 {uid} 用户ID {time} 时间 {lesson} 课时名
+    watermark-template: '{nickname} · {phoneTail} · UID{uid} · {time}'
   wechat:
     open:
       app-id: ${WX_OPEN_APP_ID:}

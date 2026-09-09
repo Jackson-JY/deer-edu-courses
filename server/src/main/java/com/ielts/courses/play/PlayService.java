@@ -35,7 +35,7 @@ public class PlayService {
     @Value("${app.play.credential-ttl-seconds:300}")
     private long credentialTtl;
 
-    @Value("${app.play.watermark-template:{phoneTail} · UID{uid} · {time}}")
+    @Value("${app.play.watermark-template:{nickname} · {phoneTail} · UID{uid} · {time}}")
     private String watermarkTemplate;
 
     public PlayService(LessonRepository lessonRepository, EntitlementService entitlementService,
@@ -59,7 +59,7 @@ public class PlayService {
 
         verifyActiveSession(user);
 
-        String watermarkText = buildWatermarkText(user);
+        String watermarkText = buildWatermarkText(user, lesson.getTitle());
         String psign = null;
         if (vodAppId > 0 && vodPlayKey != null && !vodPlayKey.isEmpty()) {
             psign = psignGenerator.generate(vodAppId, lesson.getVodFileId(), vodPlayKey, credentialTtl, watermarkText);
@@ -119,17 +119,39 @@ public class PlayService {
         }
     }
 
-    private String buildWatermarkText(LoginUser user) {
-        // 手机尾号：取手机号后 4 位；取不到时回退为 UID
-        String phoneTail = userRepository.findById(user.userId())
-                .map(User::getPhone)
-                .filter(p -> p != null && p.length() >= 4)
-                .map(p -> p.substring(p.length() - 4))
-                .orElse("UID" + user.userId());
+    /**
+     * 构建动态水印文案，支持以下占位符（在 app.play.watermark-template 中配置）：
+     *   {nickname}  用户昵称/用户名（缺省回退“学员”，超长截断）
+     *   {phone}     脱敏完整手机号，如 138****8000
+     *   {phoneTail} 手机号后 4 位
+     *   {uid}       用户 ID
+     *   {time}      当前时间 yyyy-MM-dd HH:mm
+     *   {lesson}    当前课时名称
+     */
+    private String buildWatermarkText(LoginUser user, String lessonTitle) {
+        User u = userRepository.findById(user.userId()).orElse(null);
+        String phone = u != null ? u.getPhone() : null;
+
+        String phoneTail = (phone != null && phone.length() >= 4)
+                ? phone.substring(phone.length() - 4) : "****";
+        String maskedPhone = (phone != null && phone.length() >= 7)
+                ? phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4)
+                : phoneTail;
+        String nickname = (u != null && u.getNickname() != null && !u.getNickname().isBlank())
+                ? truncate(u.getNickname().trim(), 8) : "学员";
+        String lesson = lessonTitle == null ? "" : truncate(lessonTitle.trim(), 12);
+
         return watermarkTemplate
+                .replace("{nickname}", nickname)
+                .replace("{phone}", maskedPhone)
                 .replace("{phoneTail}", phoneTail)
+                .replace("{lesson}", lesson)
                 .replace("{uid}", String.valueOf(user.userId()))
                 .replace("{time}", LocalDateTime.now().format(WM_TIME_FMT));
+    }
+
+    private static String truncate(String s, int max) {
+        return s.length() <= max ? s : s.substring(0, max) + "…";
     }
 
     private int findLastPosition(long userId, long lessonId) {
