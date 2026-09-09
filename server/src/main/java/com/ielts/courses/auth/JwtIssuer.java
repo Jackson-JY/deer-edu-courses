@@ -24,6 +24,9 @@ public class JwtIssuer {
         if (secret == null || secret.length() < 32) {
             throw new IllegalStateException("app.jwt.secret 必须不少于 32 个字符");
         }
+        if (secret.startsWith("change-me")) {
+            throw new IllegalStateException("app.jwt.secret 不能使用默认值，请在 .env 中配置随机密钥");
+        }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

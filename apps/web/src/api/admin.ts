@@ -1,4 +1,4 @@
-import { get, post, put, del } from './client'
+import { get, post, postUpload, put, del } from './client'
 
 export interface AdminCourse {
   id?: number
@@ -33,6 +33,16 @@ export interface AdminLesson {
   sort?: number
 }
 
+export interface AdminMaterial {
+  id: number
+  courseId: number
+  lessonId?: number
+  name: string
+  type: string
+  cosKey: string
+  previewOnly: boolean
+}
+
 export function listAdminCourses() {
   return get<AdminCourse[]>('/api/admin/courses')
 }
@@ -46,7 +56,7 @@ export function updateAdminCourse(id: number, data: AdminCourse) {
 }
 
 export function getAdminCourse(id: number) {
-  return get<AdminCourse & { chapters: AdminChapter[]; materials: any[] }>(`/api/admin/courses/${id}`)
+  return get<AdminCourse & { chapters: AdminChapter[]; materials: AdminMaterial[] }>(`/api/admin/courses/${id}`)
 }
 
 export function deleteAdminCourse(id: number) {
@@ -102,7 +112,7 @@ export function assignUserRole(userId: number, role: 'STUDENT' | 'TEACHER' | 'AD
 }
 
 export function grantEntitlement(userId: number, data: { courseId: number; source?: string; expireAt?: string }) {
-  return post<any>(`/api/admin/users/${userId}/entitlements`, data)
+  return post<{ id: number; userId: number; courseId: number; status: string }>(`/api/admin/users/${userId}/entitlements`, data)
 }
 
 export function getSecurityConfig() {
@@ -114,11 +124,11 @@ export function getVodUploadSign() {
 }
 
 export function listMaterials(courseId: number) {
-  return get<any[]>(`/api/admin/courses/${courseId}/materials`)
+  return get<AdminMaterial[]>(`/api/admin/courses/${courseId}/materials`)
 }
 
 export function createMaterial(courseId: number, data: { name: string; type: string; cosKey: string; lessonId?: number; previewOnly?: boolean }) {
-  return post<any>(`/api/admin/courses/${courseId}/materials`, data)
+  return post<AdminMaterial>(`/api/admin/courses/${courseId}/materials`, data)
 }
 
 export function deleteMaterial(courseId: number, id: number) {
@@ -129,7 +139,7 @@ export function deleteMaterial(courseId: number, id: number) {
 export function uploadCover(file: File) {
   const fd = new FormData()
   fd.append('file', file)
-  return post<{ url: string; key: string }>('/api/admin/upload/cover', fd)
+  return postUpload<{ url: string; key: string }>('/api/admin/upload/cover', fd)
 }
 
 /** 上传课件文件到 COS 并自动登记为课程课件 */
@@ -137,5 +147,5 @@ export function uploadMaterialFile(courseId: number, file: File, lessonId?: numb
   const fd = new FormData()
   fd.append('file', file)
   if (lessonId) fd.append('lessonId', String(lessonId))
-  return post<any>(`/api/admin/courses/${courseId}/materials/upload`, fd)
+  return postUpload<AdminMaterial>(`/api/admin/courses/${courseId}/materials/upload`, fd)
 }

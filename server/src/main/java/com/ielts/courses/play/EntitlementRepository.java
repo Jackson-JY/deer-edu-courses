@@ -33,4 +33,11 @@ public interface EntitlementRepository extends JpaRepository<Entitlement, Long> 
                 .filter(e -> e.getExpireAt() == null || e.getExpireAt().isAfter(LocalDateTime.now()))
                 .collect(Collectors.toList());
     }
+
+    /** 批量查询多门课程的活跃学员数，返回 [courseId, count] 列表 */
+    @Query("select e.courseId, count(distinct e.userId) from Entitlement e " +
+            "where e.courseId in :courseIds and e.status = 'ACTIVE' " +
+            "and (e.expireAt is null or e.expireAt > :now) " +
+            "group by e.courseId")
+    List<Object[]> countActiveStudentsBatch(@Param("courseIds") List<Long> courseIds, @Param("now") LocalDateTime now);
 }

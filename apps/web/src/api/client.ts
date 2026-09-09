@@ -78,6 +78,12 @@ export async function post<T>(url: string, data?: unknown, headers?: Record<stri
   const resp = await http.post<ApiResult<T>>(url, data, { headers })
   return resp.data.data
 }
+
+/** 上传文件专用：不限超时（大文件上传可能很久） */
+export async function postUpload<T>(url: string, formData: FormData): Promise<T> {
+  const resp = await http.post<ApiResult<T>>(url, formData, { timeout: 0 })
+  return resp.data.data
+}
 export async function put<T>(url: string, data?: unknown): Promise<T> {
   const resp = await http.put<ApiResult<T>>(url, data)
   return resp.data.data

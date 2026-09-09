@@ -7,7 +7,7 @@ import {
   createChapter, updateChapter, deleteChapter,
   createLesson, updateLesson, deleteLesson,
   deleteMaterial, uploadCover, uploadMaterialFile,
-  type AdminCourse, type AdminChapter, type AdminLesson,
+  type AdminCourse, type AdminChapter, type AdminLesson, type AdminMaterial,
 } from '@/api/admin'
 import { uploadVideoToVod } from '@/utils/vod-upload'
 
@@ -48,7 +48,7 @@ const uploadingCover = ref(false)
 const coverFileRef = ref<HTMLInputElement | null>(null)
 
 // 课件管理
-const materials = ref<any[]>([])
+const materials = ref<AdminMaterial[]>([])
 const uploadingMaterial = ref(false)
 const materialFileRef = ref<HTMLInputElement | null>(null)
 
@@ -76,6 +76,8 @@ async function saveCourse() {
       await updateAdminCourse(courseId!, course.value)
       ElMessage.success('保存成功')
     }
+  } catch (err: any) {
+    ElMessage.error('保存课程失败：' + (err?.message || '未知错误'))
   } finally {
     saving.value = false
   }
@@ -87,14 +89,18 @@ async function saveChapter() {
     ElMessage.warning('请先保存课程')
     return
   }
-  if (editingChapterId.value) {
-    await updateChapter(courseId, editingChapterId.value, chapterForm.value)
-  } else {
-    await createChapter(courseId, chapterForm.value)
+  try {
+    if (editingChapterId.value) {
+      await updateChapter(courseId, editingChapterId.value, chapterForm.value)
+    } else {
+      await createChapter(courseId, chapterForm.value)
+    }
+    chapterForm.value = { title: '' }
+    editingChapterId.value = null
+    await load()
+  } catch (err: any) {
+    ElMessage.error('保存章节失败：' + (err?.message || '未知错误'))
   }
-  chapterForm.value = { title: '' }
-  editingChapterId.value = null
-  load()
 }
 
 function editChapter(c: AdminChapter) {
@@ -104,22 +110,30 @@ function editChapter(c: AdminChapter) {
 
 async function removeChapter(c: AdminChapter) {
   if (!courseId) return
-  await deleteChapter(courseId, c.id!)
-  load()
+  try {
+    await deleteChapter(courseId, c.id!)
+    await load()
+  } catch (err: any) {
+    ElMessage.error('删除章节失败：' + (err?.message || '未知错误'))
+  }
 }
 
 async function saveLesson() {
   if (!lessonForm.value.title || activeChapterId.value == null) return
   if (!courseId) return
-  if (editingLessonId.value) {
-    await updateLesson(courseId, editingLessonId.value, lessonForm.value)
-  } else {
-    await createLesson(courseId, activeChapterId.value, lessonForm.value)
+  try {
+    if (editingLessonId.value) {
+      await updateLesson(courseId, editingLessonId.value, lessonForm.value)
+    } else {
+      await createLesson(courseId, activeChapterId.value, lessonForm.value)
+    }
+    lessonForm.value = { title: '', freeTrial: false }
+    editingLessonId.value = null
+    activeChapterId.value = null
+    await load()
+  } catch (err: any) {
+    ElMessage.error('保存课时失败：' + (err?.message || '未知错误'))
   }
-  lessonForm.value = { title: '', freeTrial: false }
-  editingLessonId.value = null
-  activeChapterId.value = null
-  load()
 }
 
 function editLesson(l: AdminLesson, chapterId: number) {
@@ -130,8 +144,12 @@ function editLesson(l: AdminLesson, chapterId: number) {
 
 async function removeLesson(l: AdminLesson) {
   if (!courseId) return
-  await deleteLesson(courseId, l.id!)
-  load()
+  try {
+    await deleteLesson(courseId, l.id!)
+    await load()
+  } catch (err: any) {
+    ElMessage.error('删除课时失败：' + (err?.message || '未知错误'))
+  }
 }
 
 // 触发文件选择
@@ -236,11 +254,15 @@ async function onMaterialFileChange(e: Event) {
   }
 }
 
-async function removeMaterial(m: any) {
+async function removeMaterial(m: AdminMaterial) {
   if (!courseId) return
-  await deleteMaterial(courseId, m.id)
-  load()
-  ElMessage.success('课件已删除')
+  try {
+    await deleteMaterial(courseId, m.id)
+    await load()
+    ElMessage.success('课件已删除')
+  } catch (err: any) {
+    ElMessage.error('删除课件失败：' + (err?.message || '未知错误'))
+  }
 }
 
 onMounted(load)
@@ -359,7 +381,7 @@ onMounted(load)
         <el-table-column prop="cosKey" label="文件路径" />
         <el-table-column label="操作" width="90">
           <template #default="{ row }">
-            <el-button link type="danger" @click="removeMaterial(row)">删除</el-button>
+            <el-button link type="danger" @click="removeMaterial(row as AdminMaterial)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

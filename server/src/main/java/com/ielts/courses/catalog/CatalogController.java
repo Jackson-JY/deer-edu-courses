@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -25,12 +27,14 @@ public class CatalogController {
     private final CatalogService catalogService;
     private final EntitlementRepository entitlementRepository;
     private final LessonRepository lessonRepository;
+    private final CourseRepository courseRepository;
 
     public CatalogController(CatalogService catalogService, EntitlementRepository entitlementRepository,
-                             LessonRepository lessonRepository) {
+                             LessonRepository lessonRepository, CourseRepository courseRepository) {
         this.catalogService = catalogService;
         this.entitlementRepository = entitlementRepository;
         this.lessonRepository = lessonRepository;
+        this.courseRepository = courseRepository;
     }
 
     @GetMapping("/courses")
@@ -38,8 +42,17 @@ public class CatalogController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         Page<Course> coursePage = catalogService.listPublicCourses(page, size);
-        List<Map<String, Object>> list = coursePage.getContent().stream()
-                .map(this::toCourseCard)
+        List<Course> courses = coursePage.getContent();
+        List<Long> courseIds = courses.stream().map(Course::getId).toList();
+
+        // 批量查询课时数和学员数，消除 N+1
+        Map<Long, Long> lessonCounts = batchLessonCounts(courseIds);
+        Map<Long, Long> studentCounts = batchStudentCounts(courseIds);
+
+        List<Map<String, Object>> list = courses.stream()
+                .map(c -> toCourseCard(c,
+                        lessonCounts.getOrDefault(c.getId(), 0L),
+                        studentCounts.getOrDefault(c.getId(), 0L)))
                 .collect(Collectors.toList());
         Map<String, Object> meta = Map.of(
                 "page", page,
@@ -83,11 +96,20 @@ public class CatalogController {
     public ApiResult<List<Map<String, Object>>> myCourses(@CurrentUser LoginUser user) {
         if (user == null) return ApiResult.ok(List.of());
         List<Entitlement> entitlements = entitlementRepository.findAllActive(user.userId());
+        if (entitlements.isEmpty()) return ApiResult.ok(List.of());
+
+        // 批量查课程和课时数，消除 N+1
+        List<Long> courseIds = entitlements.stream().map(Entitlement::getCourseId).toList();
+        List<Course> courses = courseRepository.findAllById(courseIds);
+        Map<Long, Course> courseMap = courses.stream()
+                .collect(Collectors.toMap(Course::getId, Function.identity()));
+        Map<Long, Long> lessonCounts = batchLessonCounts(courseIds);
+
         List<Map<String, Object>> list = entitlements.stream()
                 .map(e -> {
-                    Course course = catalogService.findById(e.getCourseId());
+                    Course course = courseMap.get(e.getCourseId());
                     if (course == null) return null;
-                    long lessonCount = lessonRepository.countByCourseId(course.getId());
+                    long lessonCount = lessonCounts.getOrDefault(course.getId(), 0L);
                     return Map.<String, Object>of(
                             "id", course.getId(),
                             "title", course.getTitle() == null ? "" : course.getTitle(),
@@ -108,8 +130,21 @@ public class CatalogController {
         return hasEntitlement ? "LEARN" : "BUY";
     }
 
-    private Map<String, Object> toCourseCard(Course course) {
-        long lessonCount = lessonRepository.countByCourseId(course.getId());
+    /** 批量查询课时数，返回 courseId → count 映射 */
+    private Map<Long, Long> batchLessonCounts(List<Long> courseIds) {
+        if (courseIds.isEmpty()) return Map.of();
+        return lessonRepository.countByCourseIdBatch(courseIds).stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+    }
+
+    /** 批量查询学员数，返回 courseId → count 映射 */
+    private Map<Long, Long> batchStudentCounts(List<Long> courseIds) {
+        if (courseIds.isEmpty()) return Map.of();
+        return entitlementRepository.countActiveStudentsBatch(courseIds, LocalDateTime.now()).stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+    }
+
+    private Map<String, Object> toCourseCard(Course course, long lessonCount, long studentCount) {
         return Map.of(
                 "id", course.getId(),
                 "title", course.getTitle(),
@@ -120,7 +155,7 @@ public class CatalogController {
                 "price", course.getPrice() == null ? 0 : course.getPrice(),
                 "originalPrice", course.getOriginalPrice() == null ? 0 : course.getOriginalPrice(),
                 "inSubscription", course.getInSubscription() != null && course.getInSubscription() == 1,
-                "sales", (int) entitlementRepository.countActiveStudentsByCourse(course.getId(), LocalDateTime.now())
+                "sales", (int) studentCount
         );
     }
 

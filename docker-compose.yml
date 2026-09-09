@@ -3,33 +3,35 @@ services:
     image: mysql:8.4
     container_name: courses-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: Jackson@mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Jackson@mysql}
       MYSQL_DATABASE: ielts_courses
-    ports:
-      - "3306:3306"
+    # 不暴露端口到宿主机：容器间通过 Docker 网络通信，避免公网直连
+    # 如需本地调试可临时加 ports: ["127.0.0.1:3306:3306"]
     volumes:
       - mysql_data:/var/lib/mysql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pJackson@mysql"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-Jackson@mysql}"]
       interval: 10s
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    logging: { driver: "json-file", options: { max-size: "10m", max-file: "3" } }
 
   redis:
     image: redis:7-alpine
     container_name: courses-redis
-    ports:
-      - "6379:6379"
+    # 不暴露端口到宿主机，同上
     volumes:
       - redis_data:/data
+    command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    logging: { driver: "json-file", options: { max-size: "10m", max-file: "3" } }
 
   backend:
     build:
@@ -44,7 +46,7 @@ services:
       DB_PORT: 3306
       DB_NAME: ielts_courses
       DB_USER: root
-      DB_PASSWORD: Jackson@mysql
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Jackson@mysql}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET}
@@ -62,6 +64,7 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    logging: { driver: "json-file", options: { max-size: "10m", max-file: "3" } }
 
   frontend:
     build:
@@ -77,6 +80,7 @@ services:
       backend:
         condition: service_started
     restart: unless-stopped
+    logging: { driver: "json-file", options: { max-size: "10m", max-file: "3" } }
 
 volumes:
   mysql_data:

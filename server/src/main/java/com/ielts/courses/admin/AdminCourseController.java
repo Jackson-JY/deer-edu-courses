@@ -2,9 +2,11 @@ package com.ielts.courses.admin;
 
 import com.ielts.courses.catalog.*;
 import com.ielts.courses.common.ApiResult;
+import com.ielts.courses.play.WatchRecordRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,13 +29,16 @@ public class AdminCourseController {
     private final ChapterRepository chapterRepository;
     private final LessonRepository lessonRepository;
     private final MaterialRepository materialRepository;
+    private final WatchRecordRepository watchRecordRepository;
 
     public AdminCourseController(CourseRepository courseRepository, ChapterRepository chapterRepository,
-                                 LessonRepository lessonRepository, MaterialRepository materialRepository) {
+                                 LessonRepository lessonRepository, MaterialRepository materialRepository,
+                                 WatchRecordRepository watchRecordRepository) {
         this.courseRepository = courseRepository;
         this.chapterRepository = chapterRepository;
         this.lessonRepository = lessonRepository;
         this.materialRepository = materialRepository;
+        this.watchRecordRepository = watchRecordRepository;
     }
 
     @GetMapping
@@ -52,6 +57,7 @@ public class AdminCourseController {
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ApiResult<Map<String, Object>> detail(@PathVariable Long id) {
         Course course = courseRepository.findById(id).orElseThrow();
         Map<String, Object> result = toAdminCourseMap(course);
@@ -86,7 +92,20 @@ public class AdminCourseController {
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public ApiResult<Void> delete(@PathVariable Long id) {
+        // 级联删除：课程下的章节、课时、课件、观看记录
+        List<Chapter> chapters = chapterRepository.findByCourseIdOrderBySortAsc(id);
+        for (Chapter ch : chapters) {
+            List<Lesson> lessons = lessonRepository.findByChapterIdOrderBySortAsc(ch.getId());
+            for (Lesson ls : lessons) {
+                watchRecordRepository.deleteByLessonId(ls.getId());
+            }
+            lessonRepository.deleteAll(lessons);
+        }
+        chapterRepository.deleteAll(chapters);
+        materialRepository.deleteByCourseId(id);
+        watchRecordRepository.deleteByCourseId(id);
         courseRepository.deleteById(id);
         return ApiResult.ok();
     }
@@ -109,7 +128,14 @@ public class AdminCourseController {
     }
 
     @DeleteMapping("/{courseId}/chapters/{chapterId}")
+    @Transactional
     public ApiResult<Void> deleteChapter(@PathVariable Long chapterId) {
+        // 级联删除章节下的课时和关联的观看记录
+        List<Lesson> lessons = lessonRepository.findByChapterIdOrderBySortAsc(chapterId);
+        for (Lesson ls : lessons) {
+            watchRecordRepository.deleteByLessonId(ls.getId());
+        }
+        lessonRepository.deleteAll(lessons);
         chapterRepository.deleteById(chapterId);
         return ApiResult.ok();
     }
@@ -140,7 +166,9 @@ public class AdminCourseController {
     }
 
     @DeleteMapping("/{courseId}/lessons/{lessonId}")
+    @Transactional
     public ApiResult<Void> deleteLesson(@PathVariable Long lessonId) {
+        watchRecordRepository.deleteByLessonId(lessonId);
         lessonRepository.deleteById(lessonId);
         return ApiResult.ok();
     }

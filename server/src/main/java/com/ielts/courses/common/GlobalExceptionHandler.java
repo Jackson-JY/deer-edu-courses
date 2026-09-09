@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.NoSuchElementException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -24,6 +26,12 @@ public class GlobalExceptionHandler {
         };
         return ResponseEntity.status(status)
                 .body(ApiResult.error(bc.code(), ex.getMessage(), bc.name()));
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ApiResult<Void>> handleNotFound(NoSuchElementException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResult.error(BizCode.NOT_FOUND.code(), "资源不存在", BizCode.NOT_FOUND.name()));
     }
 
     @ExceptionHandler(Exception.class)

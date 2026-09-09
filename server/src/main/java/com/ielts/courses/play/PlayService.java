@@ -99,11 +99,21 @@ public class PlayService {
                     r.setUserId(user.userId());
                     r.setCourseId(lesson.getCourseId());
                     r.setLessonId(lessonId);
+                    r.setDurationWatched(0);
                     return r;
                 });
+        // durationWatched 按心跳间隔累加：如果本次上报进度比上次前进不超过 35s（心跳间隔 30s + 容差），
+        // 说明在正常播放，累加增量；如果后退或前进过多（拖拽），不累加
+        int prevPosition = record.getLastPosition() != null ? record.getLastPosition() : 0;
+        int delta = progressSeconds - prevPosition;
+        if (delta > 0 && delta <= 35) {
+            int watched = record.getDurationWatched() != null ? record.getDurationWatched() : 0;
+            record.setDurationWatched(watched + delta);
+        }
+
         record.setProgress(Math.max(record.getProgress(), progressSeconds));
         record.setLastPosition(Math.max(record.getLastPosition(), progressSeconds));
-        record.setDurationWatched(Math.max(record.getDurationWatched(), progressSeconds));
+
         if (totalSeconds > 0 && progressSeconds >= totalSeconds * 0.9) {
             record.setFinished(1);
         }

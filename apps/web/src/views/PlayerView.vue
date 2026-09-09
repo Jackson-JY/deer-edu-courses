@@ -91,6 +91,7 @@ async function openMaterial(m: MaterialMeta) {
 onBeforeUnmount(() => {
   if (heartbeatTimer) clearInterval(heartbeatTimer)
   if (observer) observer.disconnect()
+  document.removeEventListener('keydown', preventShortcut)
   if (player && typeof player.destroy === 'function') player.destroy()
 })
 
@@ -534,8 +535,10 @@ function startHeartbeat(lessonId: number) {
   .toc-body { max-height: 320px; }
   .player-watermark { font-size: 10.5px; }
 }
+</style>
 
-/* 课件预览弹窗 */
+<!-- 非 scoped：Teleport 到 body 的弹窗样式需要全局生效 -->
+<style>
 .preview-overlay {
   position: fixed; inset: 0; z-index: 9999;
   background: rgba(0, 0, 0, 0.6);

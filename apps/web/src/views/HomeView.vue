@@ -17,25 +17,29 @@ const cats = [
 ]
 
 const stats = [
-  { num: '5年+', label: '全科教学经验' },
-  { num: '剑桥', label: 'CELTA 认证' },
-  { num: '6.5+', label: '冲刺提分目标' },
-  { num: '7+', label: '口语写作突破' },
+  { num: '8分', label: '雅思总分' },
+  { num: 'CELTA', label: '剑桥认证' },
+  { num: 'UCL', label: '脑科院硕士' },
+  { num: '1000h+', label: '累计授课' },
 ]
 
 const teacherCreds = [
-  { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', label: '雅思 8 分' },
-  { icon: 'M5 13l4 4L19 7', label: '剑桥 CELTA 证书' },
-  { icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', label: '211 & 双一流 理科背景' },
-  { icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', label: '中传 · 中财 · 北二外 授课' },
+  { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', label: '雅思 8 分 · 剑桥 CELTA 认证' },
+  { icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', label: 'UCL 脑科院语言学硕士' },
+  { icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', label: '中传 · 北二等高校授课' },
+  { icon: 'M13 10V3L4 14h7v7l9-11h-7z', label: '全科联动提分法 创始人' },
+  { icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', label: '累计上千小时全科授课' },
 ]
 
 const teacherAchievements = [
-  '多名学员从 6 分冲刺 7-8 分',
-  '口语写作从 5.5 → 7+ 案例众多',
-  '学员考入剑桥、UCL、UAL 等世界名校',
-  '每天 6am 早起直播备课 110 天不间断',
+  '2 节课助学员口语上涨 1 分',
+  '2 节课助学员攻克写作 7 分瓶颈',
+  '带大批学员进入剑桥、帝国理工、UCL 等名校',
 ]
+
+const teacherQuote = {
+  text: '你的雅思不出分，输在认知。建立学习系统和解决问题比埋头苦学更重要。',
+}
 
 const features = [
   { icon: 'M9 12l2 2 4-4', title: '考官级教研', desc: '前考官参与评分标准拆解' },
@@ -65,7 +69,7 @@ onMounted(async () => {
       <div class="hero-copy">
         <div class="hero-eyebrow">Cris · 雅思全科提分导师</div>
         <h1>从 6 分到 7+<br />一套有方法的系统</h1>
-        <p class="subhead">211 理科自学雅思 8 分，剑桥 CELTA 认证，5 年全科教学，曾在中传、中财、北二外等多所高校授课。多名学员考入剑桥、UCL、UAL。</p>
+        <p class="subhead">雅思 8 分、剑桥 CELTA 认证、UCL 脑科院语言学硕士。曾在中传、北二等北京多所高校讲授雅思全科，"全科联动提分法""五句练习法"创始人。</p>
         <div class="hero-cta">
           <RouterLink to="/courses" class="btn btn-primary btn-lg">浏览课程</RouterLink>
           <a href="#about-teacher" class="btn btn-secondary btn-lg">了解 Cris</a>
@@ -131,7 +135,7 @@ onMounted(async () => {
   <section id="about-teacher" class="section-alt teacher-section">
     <div class="section teacher-wrapper">
       <div class="teacher-photo">
-        <img src="/teacher-cris.jpg" alt="Cris 老师" />
+        <img src="https://deeredu-1428001663.cos.ap-beijing.myqcloud.com/photo/teacher.jpg" alt="Cris 老师" />
         <div class="teacher-photo-badge">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           剑桥 CELTA 认证
@@ -142,9 +146,10 @@ onMounted(async () => {
         <div class="teacher-meta">主讲老师</div>
         <h2>Cris · 雅思全科提分导师</h2>
         <p class="teacher-intro">
-          211 & 双一流理科生，自学雅思 8 分后转战教学。持有剑桥 CELTA 证书，知名机构雅思听说读写教学经验 5 年，
-          曾在中国传媒大学、中央财经大学、北京第二外国语学院等北京多所高校教授雅思全科。
-          擅长冲刺总分 6.5 分，口语写作 7 分入名校。
+          雅思 8 分，剑桥 CELTA 国际英语教师认证，UCL 脑科院语言学硕士。
+          历任中国传媒大学、北京第二外国语学院等北京多所高校雅思全科讲师。
+          "全科联动提分法""五句练习法"创始人，累计上千小时雅思全科授课经验。
+          擅长系统提分：2 节课助学员口语上涨 1 分、攻克写作 7 分瓶颈，带大批学员进入剑桥、帝国理工、UCL 等名校。
         </p>
 
         <div class="teacher-creds">
@@ -158,6 +163,14 @@ onMounted(async () => {
         <ul class="teacher-achievements">
           <li v-for="a in teacherAchievements" :key="a">{{ a }}</li>
         </ul>
+
+        <blockquote class="teacher-quote">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 21c3 0 7-1 7-8V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2c0 2-1 3-3 3v5z"/>
+            <path d="M14 21c3 0 7-1 7-8V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2c0 2-1 3-3 3v5z"/>
+          </svg>
+          <p>{{ teacherQuote.text }}</p>
+        </blockquote>
 
         <div class="teacher-contact">
           <div class="contact-row">
@@ -473,6 +486,26 @@ onMounted(async () => {
   left: 0;
   color: var(--primary);
   font-weight: 700;
+}
+
+.teacher-quote {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0 0 1.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--accent);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+}
+.teacher-quote svg { color: var(--primary); flex-shrink: 0; opacity: 0.85; }
+.teacher-quote p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.7;
+  font-style: italic;
 }
 
 .teacher-contact {
