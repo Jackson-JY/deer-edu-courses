@@ -84,9 +84,11 @@ public class CosStorageService {
 
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(file.getSize());
-        if (file.getContentType() != null) {
-            metadata.setContentType(file.getContentType());
-        }
+        // 按扩展名设置精确的 Content-Type（不依赖浏览器上传时可能给错的值）
+        String contentType = contentTypeOf(ext);
+        metadata.setContentType(contentType);
+        // 强制内联显示，防止浏览器把 PDF/图片当附件下载
+        metadata.setContentDisposition("inline");
 
         try {
             PutObjectRequest request = new PutObjectRequest(bucket, key, file.getInputStream(), metadata);
@@ -114,5 +116,21 @@ public class CosStorageService {
         int dot = name.lastIndexOf('.');
         if (dot < 0 || dot == name.length() - 1) return "";
         return name.substring(dot + 1).toLowerCase();
+    }
+
+    /** 按扩展名映射 MIME 类型，未知扩展名回退为通用二进制。 */
+    private String contentTypeOf(String ext) {
+        return switch (ext) {
+            case "pdf" -> "application/pdf";
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "gif" -> "image/gif";
+            case "webp" -> "image/webp";
+            case "mp3" -> "audio/mpeg";
+            case "aac" -> "audio/aac";
+            case "m4a" -> "audio/mp4";
+            case "wav" -> "audio/wav";
+            default -> "application/octet-stream";
+        };
     }
 }

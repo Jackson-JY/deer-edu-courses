@@ -24,6 +24,12 @@ const detail = ref<CourseDetail | null>(null)
 const showMaterials = ref(false)
 const materialLoading = ref(false)
 
+// 课件预览弹窗
+const previewVisible = ref(false)
+const previewUrl = ref('')
+const previewType = ref('')
+const previewName = ref('')
+
 onMounted(async () => {
   try {
     cred.value = await fetchPlayCredential(lessonId)
@@ -70,7 +76,11 @@ async function openMaterial(m: MaterialMeta) {
   materialLoading.value = true
   try {
     const res = await fetchMaterialPreviewUrl(m.id)
-    window.open(res.url, '_blank', 'noopener')
+    // 弹窗内嵌预览，避免 window.open 触发下载
+    previewUrl.value = res.url
+    previewType.value = m.type
+    previewName.value = m.name
+    previewVisible.value = true
   } catch (e: any) {
     ElMessage.error('课件打开失败：' + (e?.message || '未知错误'))
   } finally {
@@ -261,10 +271,8 @@ function startHeartbeat(lessonId: number) {
         <video ref="videoEl" class="tcplayer-video" playsinline webkit-playsinline></video>
         <div v-if="loading" class="stage-loading">正在初始化播放器…</div>
         <div v-else-if="error" class="stage-error">{{ error }}</div>
-        <!-- 动态跑马灯水印 -->
+        <!-- 动态跑马灯水印（单行，顶部漂移） -->
         <div class="player-watermark wm wm-1">{{ wmText }}</div>
-        <div class="player-watermark wm wm-2">{{ wmText }}</div>
-        <div class="player-watermark wm wm-3">{{ wmText }}</div>
       </div>
 
       <div class="below">
@@ -345,6 +353,24 @@ function startHeartbeat(lessonId: number) {
         </div>
       </div>
     </aside>
+
+    <!-- 课件在线预览弹窗 -->
+    <Teleport to="body">
+      <div v-if="previewVisible" class="preview-overlay" @click.self="previewVisible = false">
+        <div class="preview-dialog">
+          <div class="preview-header">
+            <span class="preview-title">{{ previewName }}</span>
+            <button class="preview-close" @click="previewVisible = false">✕</button>
+          </div>
+          <div class="preview-body">
+            <iframe v-if="previewType === 'PDF'" :src="previewUrl" class="preview-iframe"></iframe>
+            <img v-else-if="previewType === 'IMAGE'" :src="previewUrl" class="preview-img" />
+            <audio v-else-if="previewType === 'AUDIO'" :src="previewUrl" controls class="preview-audio"></audio>
+            <div v-else class="preview-unsupported">不支持在线预览此文件类型</div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -382,7 +408,7 @@ function startHeartbeat(lessonId: number) {
   font-size: 14px;
 }
 .stage-error { color: #ff9f9f; }
-/* 动态水印：集中在画面顶部区域，水平轻微漂移；
+/* 动态水印：顶部单行，水平轻微漂移；
    白色文字 + 深色描边阴影，在明暗画面上都清晰可辨，又不遮挡视频主体 */
 .player-watermark {
   position: absolute;
@@ -398,17 +424,10 @@ function startHeartbeat(lessonId: number) {
   white-space: nowrap;
   z-index: 10;
 }
-/* wm-1/wm-2 左锚定（文字向右生长），wm-3 右锚定（文字向左生长，永不溢出右边缘） */
 .wm-1 { top: 4%; left: 2%; animation: drift-x 9s ease-in-out infinite alternate; }
-.wm-2 { top: 13%; left: 24%; animation: drift-x 11s ease-in-out infinite alternate-reverse; }
-.wm-3 { top: 5%; right: 2%; animation: drift-x-l 13s ease-in-out infinite alternate; }
 @keyframes drift-x {
   from { transform: translateX(0); }
   to { transform: translateX(24px); }
-}
-@keyframes drift-x-l {
-  from { transform: translateX(0); }
-  to { transform: translateX(-24px); }
 }
 .below { padding-top: 1rem; }
 .lesson-head {
@@ -513,10 +532,35 @@ function startHeartbeat(lessonId: number) {
   .stage { min-height: 200px; }
   .toc { max-height: 360px; }
   .toc-body { max-height: 320px; }
-  /* 窄屏水印缩小、靠左两行排列，隐藏第 3 条，避免长文案溢出或相互重叠 */
   .player-watermark { font-size: 10.5px; }
-  .wm-1 { top: 4%; left: 2%; }
-  .wm-2 { top: 13%; left: 2%; }
-  .wm-3 { display: none; }
 }
+
+/* 课件预览弹窗 */
+.preview-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.preview-dialog {
+  background: #fff; border-radius: 12px; overflow: hidden;
+  max-width: 900px; width: 100%; max-height: 90vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.preview-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid #eee; flex-shrink: 0;
+}
+.preview-title { font-size: 15px; font-weight: 600; color: #222; }
+.preview-close {
+  background: none; border: none; font-size: 18px; color: #999;
+  cursor: pointer; padding: 4px 8px; border-radius: 4px; line-height: 1;
+}
+.preview-close:hover { background: #f0f0f0; color: #333; }
+.preview-body { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; }
+.preview-iframe { width: 100%; height: 75vh; border: none; }
+.preview-img { max-width: 100%; max-height: 80vh; display: block; }
+.preview-audio { margin: 40px auto; }
+.preview-unsupported { padding: 60px 24px; color: #999; font-size: 14px; }
 </style>
