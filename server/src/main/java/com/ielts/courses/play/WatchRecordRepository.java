@@ -39,5 +39,11 @@ public interface WatchRecordRepository extends JpaRepository<WatchRecord, Long> 
     @Query("select w.courseId, count(distinct w.userId), coalesce(sum(w.durationWatched), 0) " +
             "from WatchRecord w group by w.courseId order by count(distinct w.userId) desc")
     List<Object[]> statsByCourse();
+
+    /** 按学员分组的观看统计，返回 [userId, 总观看秒数, 学完课时数]，按总观看时长降序 */
+    @Query("select w.userId, coalesce(sum(w.durationWatched), 0), " +
+            "sum(case when w.finished = 1 then 1 else 0 end) " +
+            "from WatchRecord w group by w.userId order by sum(w.durationWatched) desc")
+    List<Object[]> statsByUser();
 }
 

@@ -6,6 +6,7 @@ import com.ielts.courses.catalog.LessonRepository;
 import com.ielts.courses.common.ApiResult;
 import com.ielts.courses.play.EntitlementRepository;
 import com.ielts.courses.play.WatchRecordRepository;
+import com.ielts.courses.user.User;
 import com.ielts.courses.user.UserRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +17,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/dashboard")
@@ -83,6 +86,35 @@ public class AdminDashboardController {
         }
         data.put("courseRanking", courseRanking);
 
+        // 学员观看时长排行榜（按累计观看时长降序）
+        List<Object[]> userRows = watchRecordRepository.statsByUser();
+        Set<Long> userIds = userRows.stream().map(r -> (Long) r[0]).collect(Collectors.toSet());
+        Map<Long, User> userMap = userIds.isEmpty() ? Map.of()
+                : userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+        List<Map<String, Object>> userRanking = new ArrayList<>();
+        for (Object[] row : userRows) {
+            Long userId = (Long) row[0];
+            Long seconds = (Long) row[1];
+            Long finished = ((Number) row[2]).longValue();
+            User u = userMap.get(userId);
+            Map<String, Object> m = new HashMap<>();
+            m.put("userId", userId);
+            String nickname = (u != null && u.getNickname() != null && !u.getNickname().isBlank())
+                    ? u.getNickname() : ("学员" + userId);
+            m.put("nickname", nickname);
+            m.put("phone", u != null ? maskPhone(u.getPhone()) : "");
+            m.put("watchMinutes", seconds / 60);
+            m.put("finishedLessons", finished);
+            userRanking.add(m);
+        }
+        data.put("userRanking", userRanking);
+
         return ApiResult.ok(data);
+    }
+
+    private String maskPhone(String phone) {
+        if (phone == null || phone.length() != 11) return phone == null ? "" : phone;
+        return phone.substring(0, 3) + "****" + phone.substring(7);
     }
 }

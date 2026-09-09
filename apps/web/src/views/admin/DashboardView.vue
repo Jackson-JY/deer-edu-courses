@@ -2,6 +2,9 @@
 import { onMounted, ref } from 'vue'
 import { getDashboardStats } from '@/api/admin'
 
+interface CourseRank { courseId: number; title: string; learners: number; watchMinutes: number }
+interface UserRank { userId: number; nickname: string; phone: string; watchMinutes: number; finishedLessons: number }
+
 interface DashboardData {
   courseCount: number
   onlineCourseCount: number
@@ -12,7 +15,8 @@ interface DashboardData {
   totalWatchMinutes: number
   finishedLessonCount: number
   activeLearnerCount: number
-  courseRanking: { courseId: number; title: string; learners: number; watchMinutes: number }[]
+  courseRanking: CourseRank[]
+  userRanking: UserRank[]
 }
 
 const data = ref<DashboardData | null>(null)
@@ -82,19 +86,45 @@ onMounted(load)
       </div>
     </div>
 
-    <!-- 课程学习排行榜 -->
-    <h2 class="section-title">课程学习排行榜</h2>
-    <div class="ranking-card">
-      <el-table :data="data?.courseRanking ?? []" stripe style="width: 100%" empty-text="暂无学习数据">
-        <el-table-column type="index" label="排名" width="70" />
-        <el-table-column prop="title" label="课程名称" min-width="180" />
-        <el-table-column prop="learners" label="学习人数" width="120" align="center" />
-        <el-table-column label="累计观看时长" width="160" align="center">
-          <template #default="{ row }">
-            {{ formatMinutes(row.watchMinutes) }}
-          </template>
-        </el-table-column>
-      </el-table>
+    <!-- 排行榜 -->
+    <h2 class="section-title">学习排行榜</h2>
+    <div class="ranking-grid">
+      <div class="ranking-card">
+        <h3 class="ranking-title">学员观看时长榜</h3>
+        <el-table :data="data?.userRanking ?? []" stripe style="width: 100%" empty-text="暂无学习数据">
+          <el-table-column type="index" label="名次" width="60">
+            <template #default="{ $index }">
+              <span :class="['rank-medal', `rank-${$index + 1}`]">{{ $index + 1 }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="学员" min-width="140">
+            <template #default="{ row }">
+              <div class="rank-user">{{ row.nickname }}</div>
+              <div class="rank-phone">{{ row.phone || 'UID' + row.userId }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="观看时长" width="110" align="center">
+            <template #default="{ row }">{{ formatMinutes(row.watchMinutes) }}</template>
+          </el-table-column>
+          <el-table-column prop="finishedLessons" label="学完课时" width="90" align="center" />
+        </el-table>
+      </div>
+
+      <div class="ranking-card">
+        <h3 class="ranking-title">课程学习榜</h3>
+        <el-table :data="data?.courseRanking ?? []" stripe style="width: 100%" empty-text="暂无学习数据">
+          <el-table-column type="index" label="名次" width="60">
+            <template #default="{ $index }">
+              <span :class="['rank-medal', `rank-${$index + 1}`]">{{ $index + 1 }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="title" label="课程名称" min-width="150" />
+          <el-table-column prop="learners" label="学习人数" width="90" align="center" />
+          <el-table-column label="观看时长" width="110" align="center">
+            <template #default="{ row }">{{ formatMinutes(row.watchMinutes) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
     </div>
   </div>
 </template>
@@ -122,6 +152,13 @@ onMounted(load)
 
 .stat-accent .stat-value { color: var(--success, #10b981); }
 
+.ranking-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1024px) { .ranking-grid { grid-template-columns: 1fr; } }
+
 .ranking-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -129,4 +166,22 @@ onMounted(load)
   padding: 1rem;
   box-shadow: var(--shadow-sm);
 }
+.ranking-title { font-size: 14px; font-weight: 600; margin: 0 0 12px; color: var(--foreground); }
+.rank-user { font-size: 13px; font-weight: 500; color: var(--foreground); line-height: 1.3; }
+.rank-phone { font-size: 12px; color: var(--muted-foreground); line-height: 1.3; }
+.rank-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--secondary);
+  color: var(--muted-foreground);
+}
+.rank-medal.rank-1 { background: #f59e0b; color: #fff; }
+.rank-medal.rank-2 { background: #9ca3af; color: #fff; }
+.rank-medal.rank-3 { background: #d08a5e; color: #fff; }
 </style>

@@ -135,6 +135,7 @@ export function getDashboardStats() {
     finishedLessonCount: number
     activeLearnerCount: number
     courseRanking: { courseId: number; title: string; learners: number; watchMinutes: number }[]
+    userRanking: { userId: number; nickname: string; phone: string; watchMinutes: number; finishedLessons: number }[]
   }>('/api/admin/dashboard')
 }
 
