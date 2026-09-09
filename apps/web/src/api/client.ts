@@ -36,14 +36,22 @@ http.interceptors.response.use(
   },
   (error) => {
     const status = error?.response?.status
-    // HTTP 401/403：token 失效或权限不足 → 清 token 并触发重新登录
-    if (status === 401 || status === 403) {
+    const body = error?.response?.data as ApiError | undefined
+    // 带业务码的错误：交给 handleBizError 精准处理（仅 SESSION_KICKED 清登录态；
+    // 未购课 NO_ENTITLEMENT、未绑手机等业务错误保留登录态，由调用方引导购买/绑定）
+    if (body && typeof body.code === 'number') {
+      return Promise.reject(handleBizError(body))
+    }
+    // 无业务体的 401（token 真失效/Security 直接拒绝）→ 清登录态并要求重登
+    if (status === 401) {
       clearToken()
       window.dispatchEvent(new CustomEvent('auth:kicked'))
       return Promise.reject(new Error('登录已失效，请重新登录'))
     }
-    const body = error?.response?.data as ApiError | undefined
-    if (body) return Promise.reject(handleBizError(body))
+    // 无业务体的 403（权限不足，如非管理员访问后台）→ 保留登录态，仅报错
+    if (status === 403) {
+      return Promise.reject(new Error('没有访问权限'))
+    }
     return Promise.reject(error)
   },
 )

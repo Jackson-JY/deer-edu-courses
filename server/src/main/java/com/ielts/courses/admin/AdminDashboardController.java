@@ -50,7 +50,7 @@ public class AdminDashboardController {
         long onlineCourseCount = courseRepository.countByStatus("ONLINE");
         long userCount = userRepository.count();
         long lessonCount = lessonRepository.count();
-        long activeEntitlementCount = entitlementRepository.countByStatus("ACTIVE");
+        long activeEntitlementCount = entitlementRepository.countActiveEntitlements("ACTIVE", now);
         long activeUserCount = entitlementRepository.countDistinctActiveUsers("ACTIVE", now);
 
         // 学习数据
@@ -71,15 +71,18 @@ public class AdminDashboardController {
 
         // 课程学习排行榜（按去重学员数降序）
         List<Object[]> rows = watchRecordRepository.statsByCourse();
+        Set<Long> rankCourseIds = rows.stream().map(r -> (Long) r[0]).collect(Collectors.toSet());
+        Map<Long, String> courseTitleMap = rankCourseIds.isEmpty() ? Map.of()
+                : courseRepository.findAllById(rankCourseIds).stream()
+                .collect(Collectors.toMap(Course::getId, c -> c.getTitle() == null ? "" : c.getTitle()));
         List<Map<String, Object>> courseRanking = new ArrayList<>();
         for (Object[] row : rows) {
             Long courseId = (Long) row[0];
             Long learners = (Long) row[1];
             Long seconds = (Long) row[2];
-            String title = courseRepository.findById(courseId).map(Course::getTitle).orElse("未知课程");
             Map<String, Object> m = new HashMap<>();
             m.put("courseId", courseId);
-            m.put("title", title);
+            m.put("title", courseTitleMap.getOrDefault(courseId, "未知课程"));
             m.put("learners", learners);
             m.put("watchMinutes", seconds / 60);
             courseRanking.add(m);

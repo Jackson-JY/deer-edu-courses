@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,11 +42,16 @@ public interface EntitlementRepository extends JpaRepository<Entitlement, Long> 
             "group by e.courseId")
     List<Object[]> countActiveStudentsBatch(@Param("courseIds") List<Long> courseIds, @Param("now") LocalDateTime now);
 
-    /** 有效权益总数 */
-    long countByStatus(String status);
+    /** 有效权益总数（ACTIVE 且未过期） */
+    @Query("select count(e) from Entitlement e where e.status = :status " +
+            "and (e.expireAt is null or e.expireAt > :now)")
+    long countActiveEntitlements(@Param("status") String status, @Param("now") LocalDateTime now);
 
     /** 拥有有效权益的去重学员数 */
     @Query("select count(distinct e.userId) from Entitlement e where e.status = :status " +
             "and (e.expireAt is null or e.expireAt > :now)")
     long countDistinctActiveUsers(@Param("status") String status, @Param("now") LocalDateTime now);
+
+    @Transactional
+    long deleteByCourseId(Long courseId);
 }

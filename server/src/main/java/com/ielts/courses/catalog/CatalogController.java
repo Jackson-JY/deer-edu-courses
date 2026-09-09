@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -105,7 +106,17 @@ public class CatalogController {
                 .collect(Collectors.toMap(Course::getId, Function.identity()));
         Map<Long, Long> lessonCounts = batchLessonCounts(courseIds);
 
-        List<Map<String, Object>> list = entitlements.stream()
+        // 同一课程可能被重复授权，按 courseId 去重，永久权益优先、否则保留最晚过期的
+        Map<Long, Entitlement> distinctEntitlements = new LinkedHashMap<>();
+        for (Entitlement e : entitlements) {
+            distinctEntitlements.merge(e.getCourseId(), e, (a, b) -> {
+                if (b.getExpireAt() == null) return b;
+                if (a.getExpireAt() == null) return a;
+                return b.getExpireAt().isAfter(a.getExpireAt()) ? b : a;
+            });
+        }
+
+        List<Map<String, Object>> list = distinctEntitlements.values().stream()
                 .map(e -> {
                     Course course = courseMap.get(e.getCourseId());
                     if (course == null) return null;

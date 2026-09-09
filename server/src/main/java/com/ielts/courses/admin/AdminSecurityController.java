@@ -18,7 +18,7 @@ import java.util.Map;
 @RequestMapping("/api/admin/security")
 public class AdminSecurityController {
 
-    @Value("${app.watermark.template:{nickname} · {phoneTail} · UID{uid} · {time}}")
+    @Value("${app.play.watermark-template:{nickname} · {phoneTail} · UID{uid} · {time}}")
     private String watermarkTemplateDefault;
 
     @Value("${app.play.credential-ttl-seconds:300}")

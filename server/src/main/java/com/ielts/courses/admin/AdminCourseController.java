@@ -2,6 +2,7 @@ package com.ielts.courses.admin;
 
 import com.ielts.courses.catalog.*;
 import com.ielts.courses.common.ApiResult;
+import com.ielts.courses.play.EntitlementRepository;
 import com.ielts.courses.play.WatchRecordRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -30,15 +31,18 @@ public class AdminCourseController {
     private final LessonRepository lessonRepository;
     private final MaterialRepository materialRepository;
     private final WatchRecordRepository watchRecordRepository;
+    private final EntitlementRepository entitlementRepository;
 
     public AdminCourseController(CourseRepository courseRepository, ChapterRepository chapterRepository,
                                  LessonRepository lessonRepository, MaterialRepository materialRepository,
-                                 WatchRecordRepository watchRecordRepository) {
+                                 WatchRecordRepository watchRecordRepository,
+                                 EntitlementRepository entitlementRepository) {
         this.courseRepository = courseRepository;
         this.chapterRepository = chapterRepository;
         this.lessonRepository = lessonRepository;
         this.materialRepository = materialRepository;
         this.watchRecordRepository = watchRecordRepository;
+        this.entitlementRepository = entitlementRepository;
     }
 
     @GetMapping
@@ -94,18 +98,12 @@ public class AdminCourseController {
     @DeleteMapping("/{id}")
     @Transactional
     public ApiResult<Void> delete(@PathVariable Long id) {
-        // 级联删除：课程下的章节、课时、课件、观看记录
-        List<Chapter> chapters = chapterRepository.findByCourseIdOrderBySortAsc(id);
-        for (Chapter ch : chapters) {
-            List<Lesson> lessons = lessonRepository.findByChapterIdOrderBySortAsc(ch.getId());
-            for (Lesson ls : lessons) {
-                watchRecordRepository.deleteByLessonId(ls.getId());
-            }
-            lessonRepository.deleteAll(lessons);
-        }
-        chapterRepository.deleteAll(chapters);
+        // 级联删除：课时 → 章节 → 课件 → 观看记录 → 学员权益，均按 courseId 批量删除
+        lessonRepository.deleteByCourseId(id);
+        chapterRepository.deleteByCourseId(id);
         materialRepository.deleteByCourseId(id);
         watchRecordRepository.deleteByCourseId(id);
+        entitlementRepository.deleteByCourseId(id);
         courseRepository.deleteById(id);
         return ApiResult.ok();
     }
