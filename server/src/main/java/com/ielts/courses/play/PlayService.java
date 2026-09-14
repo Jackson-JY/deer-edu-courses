@@ -93,6 +93,7 @@ public class PlayService {
             throw new ApiException(BizCode.NO_ENTITLEMENT);
         }
 
+        LocalDateTime now = LocalDateTime.now();
         WatchRecord record = watchRecordRepository.findByUserIdAndLessonId(user.userId(), lessonId)
                 .orElseGet(() -> {
                     WatchRecord r = new WatchRecord();
@@ -102,13 +103,24 @@ public class PlayService {
                     r.setDurationWatched(0);
                     return r;
                 });
-        // durationWatched 按心跳间隔累加：如果本次上报进度比上次前进不超过 35s（心跳间隔 30s + 容差），
-        // 说明在正常播放，累加增量；如果后退或前进过多（拖拽），不累加
+        // 观看时长按"真实投入时间"累计，同时防拖拽刷量：
+        // 取播放头前进量 delta，但单次心跳最多计入"两次心跳真实间隔 + 5s 容差"，且整体封顶 60s。
+        //   - 正常 1x：delta≈30，墙钟≈30，计 30
+        //   - 倍速（如 2x，delta≈60 但墙钟仅 30）：按真实耗时计 30，不再整段丢弃
+        //   - 切后台/锁屏导致心跳被节流（墙钟 60s+，视频继续播）：按实际间隔计，不丢时长
+        //   - 拖拽（30s 内跳几百秒）：最多计一个周期，刷量无收益
+        //   - 暂停/回拖（delta<=0）：不计
+        LocalDateTime lastBeatAt = record.getUpdatedAt();
         int prevPosition = record.getLastPosition() != null ? record.getLastPosition() : 0;
         int delta = progressSeconds - prevPosition;
-        if (delta > 0 && delta <= 35) {
+        if (delta > 0) {
+            long wallSeconds = lastBeatAt == null
+                    ? 30L
+                    : Math.max(0L, java.time.Duration.between(lastBeatAt, now).toSeconds());
+            int cap = (int) Math.min(60L, wallSeconds + 5L);
+            int effective = Math.min(delta, cap);
             int watched = record.getDurationWatched() != null ? record.getDurationWatched() : 0;
-            record.setDurationWatched(watched + delta);
+            record.setDurationWatched(watched + effective);
         }
 
         record.setProgress(Math.max(record.getProgress(), progressSeconds));

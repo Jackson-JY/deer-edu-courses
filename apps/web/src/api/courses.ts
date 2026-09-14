@@ -1,6 +1,6 @@
 import { get } from './client'
 import type { CourseCard, CourseDetail, Page, PlayCredential } from '@ielts/shared-types'
-import { post } from './client'
+import { getToken, post } from './client'
 
 export function fetchCourses(params?: Record<string, unknown>) {
   return get<Page<CourseCard>>('/api/courses', params)
@@ -16,6 +16,26 @@ export function fetchPlayCredential(lessonId: number) {
 
 export function heartbeat(lessonId: number, progressSeconds: number, totalSeconds: number) {
   return post<{ alive: boolean; progressSeconds: number }>('/api/play/heartbeat', { lessonId, progressSeconds, totalSeconds })
+}
+
+/**
+ * 页面卸载/切后台时用 keepalive fetch 兜底上报（sendBeacon 无法携带鉴权头）。
+ * 浏览器保证页面关闭后请求仍能发出；失败静默，不影响播放。
+ */
+export function heartbeatBeacon(lessonId: number, progressSeconds: number, totalSeconds: number) {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    const token = getToken()
+    if (token) headers.Authorization = `Bearer ${token}`
+    void fetch('/api/play/heartbeat', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ lessonId, progressSeconds, totalSeconds }),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {
+    // 忽略：兜底上报失败不阻断任何流程
+  }
 }
 
 export interface MaterialPreview {

@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { CourseDetail, LessonBrief, MaterialMeta, PlayCredential } from '@ielts/shared-types'
-import { fetchCourseDetail, fetchMaterialPreviewUrl, fetchPlayCredential, heartbeat } from '@/api/courses'
+import { fetchCourseDetail, fetchMaterialPreviewUrl, fetchPlayCredential, heartbeat, heartbeatBeacon } from '@/api/courses'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,6 +49,9 @@ onMounted(async () => {
     await initPlayer()
     bindSecurity()
     startHeartbeat(lessonId)
+    // 切后台/关闭页面前兜底上报一次
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('pagehide', flushHeartbeatBeacon)
   } catch (e: any) {
     error.value = e?.message || '播放凭证获取失败'
   } finally {
@@ -102,6 +105,10 @@ async function openMaterial(m: MaterialMeta) {
 
 onBeforeUnmount(() => {
   if (heartbeatTimer) clearInterval(heartbeatTimer)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  window.removeEventListener('pagehide', flushHeartbeatBeacon)
+  // 离开课时前补发最后一次进度（需在销毁播放器前读取位置）
+  flushHeartbeatBeacon()
   if (observer) observer.disconnect()
   document.removeEventListener('keydown', preventShortcut)
   if (player && typeof player.destroy === 'function') player.destroy()
@@ -255,20 +262,43 @@ function pauseAndWarn() {
   ElMessage.warning('检测到播放环境异常，已暂停播放')
 }
 
+// 读取播放器当前位置/总时长（秒）
+function readPlayPosition() {
+  const currentTime = player && typeof player.currentTime === 'function'
+      ? Math.floor(player.currentTime())
+      : 0
+  const duration = player && typeof player.duration === 'function'
+      ? Math.floor(player.duration())
+      : 0
+  return { currentTime, duration }
+}
+
+// 常规心跳：每 30 秒一次
 function startHeartbeat(lessonId: number) {
-  heartbeatTimer = setInterval(async () => {
+  heartbeatTimer = setInterval(() => {
     try {
-      const currentTime = player && typeof player.currentTime === 'function'
-          ? Math.floor(player.currentTime())
-          : 0
-      const duration = player && typeof player.duration === 'function'
-          ? Math.floor(player.duration())
-          : 0
-      await heartbeat(lessonId, currentTime, duration)
+      const { currentTime, duration } = readPlayPosition()
+      heartbeat(lessonId, currentTime, duration).catch(() => {
+        // 心跳失败不阻断播放
+      })
     } catch {
-      // 心跳失败不阻断播放
+      // 忽略
     }
   }, 30000)
+}
+
+// 兜底心跳：切后台/关闭页面/组件卸载时立即补发，避免一个周期的时长丢失
+function flushHeartbeatBeacon() {
+  try {
+    const { currentTime, duration } = readPlayPosition()
+    if (currentTime > 0) heartbeatBeacon(lessonId, currentTime, duration)
+  } catch {
+    // 忽略
+  }
+}
+
+function onVisibilityChange() {
+  if (document.visibilityState === 'hidden') flushHeartbeatBeacon()
 }
 </script>
 
