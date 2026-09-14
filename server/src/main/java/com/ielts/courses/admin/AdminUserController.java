@@ -1,5 +1,7 @@
 package com.ielts.courses.admin;
 
+import com.ielts.courses.catalog.Course;
+import com.ielts.courses.catalog.CourseRepository;
 import com.ielts.courses.common.ApiException;
 import com.ielts.courses.common.ApiResult;
 import com.ielts.courses.common.BizCode;
@@ -13,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,12 +38,14 @@ public class AdminUserController {
     private final UserRepository userRepository;
     private final EntitlementRepository entitlementRepository;
     private final StaffRepository staffRepository;
+    private final CourseRepository courseRepository;
 
     public AdminUserController(UserRepository userRepository, EntitlementRepository entitlementRepository,
-                               StaffRepository staffRepository) {
+                               StaffRepository staffRepository, CourseRepository courseRepository) {
         this.userRepository = userRepository;
         this.entitlementRepository = entitlementRepository;
         this.staffRepository = staffRepository;
+        this.courseRepository = courseRepository;
     }
 
     @GetMapping
@@ -93,17 +99,58 @@ public class AdminUserController {
         return ApiResult.ok(m);
     }
 
+    /** 查询指定用户已开通的全部权益（含课程标题） */
+    @GetMapping("/{userId}/entitlements")
+    public ApiResult<List<Map<String, Object>>> listEntitlements(@PathVariable Long userId) {
+        List<Entitlement> ents = entitlementRepository.findByUserIdAndStatus(userId, "ACTIVE");
+        // 批量查询课程标题，避免逐条 findById 的 N+1
+        Set<Long> courseIds = ents.stream().map(Entitlement::getCourseId).collect(Collectors.toSet());
+        Map<Long, String> titleMap = courseIds.isEmpty() ? Map.of()
+                : courseRepository.findAllById(courseIds).stream()
+                .collect(Collectors.toMap(Course::getId, c -> c.getTitle() == null ? "未命名课程" : c.getTitle()));
+        return ApiResult.ok(ents.stream().map(e -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", e.getId());
+            m.put("courseId", e.getCourseId());
+            m.put("title", titleMap.getOrDefault(e.getCourseId(), "未知课程"));
+            m.put("source", e.getSource());
+            m.put("expireAt", e.getExpireAt() == null ? "" : e.getExpireAt().toString());
+            m.put("status", e.getStatus());
+            return m;
+        }).collect(Collectors.toList()));
+    }
+
+    /** 开通课程权益（幂等：已存在 ACTIVE 权益则更新到期时间，避免重复键 500） */
     @PostMapping("/{userId}/entitlements")
     public ApiResult<Entitlement> grant(@PathVariable Long userId,
                                         @Valid @RequestBody GrantReq req) {
-        User user = userRepository.findById(userId).orElseThrow();
+        userRepository.findById(userId).orElseThrow(() -> new ApiException(BizCode.NOT_FOUND, "用户不存在"));
+        courseRepository.findById(req.courseId()).orElseThrow(() -> new ApiException(BizCode.NOT_FOUND, "课程不存在"));
+        LocalDateTime expire = parseExpireAt(req.expireAt());
+
+        Entitlement existing = entitlementRepository.findByUserIdAndCourseIdAndStatus(userId, req.courseId(), "ACTIVE").orElse(null);
+        if (existing != null) {
+            // 已开通则更新到期时间（新指定的覆盖原时间；留空表示改永久）
+            existing.setExpireAt(expire);
+            return ApiResult.ok(entitlementRepository.save(existing));
+        }
         Entitlement entitlement = new Entitlement();
         entitlement.setUserId(userId);
         entitlement.setCourseId(req.courseId());
         entitlement.setSource(req.source() == null ? "MANUAL" : req.source());
-        entitlement.setExpireAt(req.expireAt());
+        entitlement.setExpireAt(expire);
         entitlement.setStatus("ACTIVE");
-        return ApiResult.ok(entitlementRepository.save(entitlement));
+        try {
+            return ApiResult.ok(entitlementRepository.save(entitlement));
+        } catch (DataIntegrityViolationException e) {
+            // 并发场景下重复提交：再查一次返回已存在记录
+            Entitlement dup = entitlementRepository.findByUserIdAndCourseIdAndStatus(userId, req.courseId(), "ACTIVE").orElse(null);
+            if (dup != null) {
+                dup.setExpireAt(expire);
+                return ApiResult.ok(entitlementRepository.save(dup));
+            }
+            throw e;
+        }
     }
 
     private String maskPhone(String phone) {
@@ -118,6 +165,13 @@ public class AdminUserController {
     ) {
     }
 
-    public record GrantReq(@NotNull Long courseId, String source, LocalDateTime expireAt) {
+    public record GrantReq(@NotNull Long courseId, String source, String expireAt) {
+    }
+
+    /** 解析到期时间，兼容前端 "yyyy-MM-dd HH:mm:ss" 与 ISO "yyyy-MM-dd'T'HH:mm:ss" 两种格式 */
+    private LocalDateTime parseExpireAt(String expireAt) {
+        if (expireAt == null || expireAt.isBlank()) return null;
+        String normalized = expireAt.trim().replace(' ', 'T');
+        return LocalDateTime.parse(normalized);
     }
 }

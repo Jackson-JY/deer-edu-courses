@@ -115,6 +115,19 @@ export function grantEntitlement(userId: number, data: { courseId: number; sourc
   return post<{ id: number; userId: number; courseId: number; status: string }>(`/api/admin/users/${userId}/entitlements`, data)
 }
 
+export interface UserEntitlement {
+  id: number
+  courseId: number
+  title: string
+  source: string | null
+  expireAt: string
+  status: string
+}
+
+export function listUserEntitlements(userId: number) {
+  return get<UserEntitlement[]>(`/api/admin/users/${userId}/entitlements`)
+}
+
 export function getSecurityConfig() {
   return get<{ watermarkTemplate: string; credentialTtl: number; previewTtl: number }>('/api/admin/security')
 }
