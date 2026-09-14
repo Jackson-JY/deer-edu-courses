@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getAdminCourse, createAdminCourse, updateAdminCourse,
   createChapter, updateChapter, deleteChapter,
@@ -116,8 +116,23 @@ function editChapter(c: AdminChapter) {
 async function removeChapter(c: AdminChapter) {
   if (!courseId) return
   try {
+    await ElMessageBox.confirm(
+      `确定删除章节「${c.title}」？该章节下的全部课时、课件及学习记录将一并删除，且不可恢复。`,
+      '删除章节',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger',
+      },
+    )
+  } catch {
+    return // 用户取消
+  }
+  try {
     await deleteChapter(courseId, c.id!)
     await load()
+    ElMessage.success('章节已删除')
   } catch (err: any) {
     ElMessage.error('删除章节失败：' + (err?.message || '未知错误'))
   }
@@ -150,8 +165,23 @@ function editLesson(l: AdminLesson, chapterId: number) {
 async function removeLesson(l: AdminLesson) {
   if (!courseId) return
   try {
+    await ElMessageBox.confirm(
+      `确定删除课时「${l.title}」？该课时的课件及学习记录将一并删除，且不可恢复。`,
+      '删除课时',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger',
+      },
+    )
+  } catch {
+    return // 用户取消
+  }
+  try {
     await deleteLesson(courseId, l.id!)
     await load()
+    ElMessage.success('课时已删除')
   } catch (err: any) {
     ElMessage.error('删除课时失败：' + (err?.message || '未知错误'))
   }
@@ -264,6 +294,20 @@ async function onMaterialFileChange(e: Event) {
 
 async function removeMaterial(m: AdminMaterial) {
   if (!courseId) return
+  try {
+    await ElMessageBox.confirm(
+      `确定删除课件「${m.name}」？删除后不可恢复。`,
+      '删除课件',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger',
+      },
+    )
+  } catch {
+    return // 用户取消
+  }
   try {
     await deleteMaterial(courseId, m.id)
     await load()

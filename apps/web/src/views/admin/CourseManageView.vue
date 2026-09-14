@@ -26,14 +26,39 @@ function goCreate() {
 }
 
 async function remove(c: any) {
-  await ElMessageBox.confirm(`确定删除课程《${c.title}》？`, '提示', { type: 'warning' })
+  try {
+    await ElMessageBox.confirm(
+      `确定删除课程《${c.title}》？课程下的章节、课时、课件等数据将一并删除，且不可恢复。`,
+      '删除课程',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger',
+      },
+    )
+  } catch {
+    return // 用户取消
+  }
   await deleteAdminCourse(c.id)
   ElMessage.success('已删除')
   load()
 }
 
 async function toggleStatus(c: any) {
-  if (c.status === 'ONLINE') {
+  const offline = c.status === 'ONLINE'
+  try {
+    await ElMessageBox.confirm(
+      offline
+        ? `确定下架课程《${c.title}》？下架后学员将无法看到和学习该课程，可随时重新上架。`
+        : `确定上架课程《${c.title}》？上架后学员即可看到并学习该课程。`,
+      offline ? '下架课程' : '上架课程',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' },
+    )
+  } catch {
+    return // 用户取消
+  }
+  if (offline) {
     await offlineCourse(c.id)
   } else {
     await publishCourse(c.id)
