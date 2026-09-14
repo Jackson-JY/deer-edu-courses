@@ -47,10 +47,15 @@ const pendingUploadLesson = ref<AdminLesson | null>(null)
 const uploadingCover = ref(false)
 const coverFileRef = ref<HTMLInputElement | null>(null)
 
-// 课件管理
+// 课件管理（按课时）
 const materials = ref<AdminMaterial[]>([])
-const uploadingMaterial = ref(false)
+const uploadingMaterialLessonId = ref<number | null>(null)
 const materialFileRef = ref<HTMLInputElement | null>(null)
+const pendingMaterialLesson = ref<AdminLesson | null>(null)
+
+function materialsOf(lessonId: number) {
+  return materials.value.filter((m) => m.lessonId === lessonId)
+}
 
 async function load() {
   if (isCreate || !courseId) return
@@ -227,12 +232,13 @@ async function onCoverFileChange(e: Event) {
   }
 }
 
-// 课件上传
-function triggerMaterialUpload() {
+// 课件上传（关联到具体课时）
+function triggerMaterialUpload(lesson: AdminLesson) {
   if (!courseId) {
     ElMessage.warning('请先保存课程')
     return
   }
+  pendingMaterialLesson.value = lesson
   materialFileRef.value?.click()
 }
 
@@ -240,17 +246,19 @@ async function onMaterialFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
-  if (!file || !courseId) return
-  uploadingMaterial.value = true
+  const lesson = pendingMaterialLesson.value
+  pendingMaterialLesson.value = null
+  if (!file || !lesson?.id || !courseId) return
+  uploadingMaterialLessonId.value = lesson.id
   try {
     ElMessage.info(`正在上传「${file.name}」...`)
-    await uploadMaterialFile(courseId, file)
+    await uploadMaterialFile(courseId, file, lesson.id)
     ElMessage.success('课件上传成功')
-    load()
+    await load()
   } catch (err: any) {
     ElMessage.error('课件上传失败：' + (err?.message || '未知错误'))
   } finally {
-    uploadingMaterial.value = false
+    uploadingMaterialLessonId.value = null
   }
 }
 
@@ -310,6 +318,9 @@ onMounted(load)
 
     <div v-if="!isCreate" class="section">
       <h2 class="section-title">章节与课时</h2>
+      <p class="section-tip">
+        每个课时可单独「上传课件」（PDF / Word doc·docx / 图片 / 音频），学生仅可在该课时在线预览。
+      </p>
       <div class="chapter-form">
         <el-input v-model="chapterForm.title" placeholder="章节标题" />
         <el-button type="primary" @click="saveChapter">
@@ -326,30 +337,55 @@ onMounted(load)
           </span>
         </div>
         <div class="lessons">
-          <div v-for="l in c.lessons" :key="l.id" class="lesson-row">
-            <span>
-              {{ l.title }}
-              <el-tag v-if="l.freeTrial" size="small" type="success">试看</el-tag>
-              <el-tag v-if="l.vodFileId" size="small" type="info" style="margin-left: 4px">已传</el-tag>
-            </span>
-            <span class="lesson-actions">
-              <el-button link type="primary" @click="editLesson(l, c.id!)">编辑</el-button>
-              <el-button
-                link
-                type="primary"
-                :loading="uploading && uploadLessonId === l.id"
-                @click="triggerUpload(l)"
-              >
-                {{ l.vodFileId ? '重新上传' : '上传视频' }}
-              </el-button>
-              <el-button link type="danger" @click="removeLesson(l)">删除</el-button>
-            </span>
-            <el-progress
-              v-if="uploading && uploadLessonId === l.id"
-              :percentage="uploadProgress"
-              :stroke-width="6"
-              style="margin-top: 4px"
-            />
+          <div v-for="l in c.lessons" :key="l.id" class="lesson-block">
+            <div class="lesson-row">
+              <span>
+                {{ l.title }}
+                <el-tag v-if="l.freeTrial" size="small" type="success">试看</el-tag>
+                <el-tag v-if="l.vodFileId" size="small" type="info" style="margin-left: 4px">已传视频</el-tag>
+                <el-tag v-if="materialsOf(l.id!).length" size="small" type="warning" style="margin-left: 4px">
+                  课件 {{ materialsOf(l.id!).length }}
+                </el-tag>
+              </span>
+              <span class="lesson-actions">
+                <el-button link type="primary" @click="editLesson(l, c.id!)">编辑</el-button>
+                <el-button
+                  link
+                  type="primary"
+                  :loading="uploading && uploadLessonId === l.id"
+                  @click="triggerUpload(l)"
+                >
+                  {{ l.vodFileId ? '重新上传' : '上传视频' }}
+                </el-button>
+                <el-button
+                  link
+                  type="primary"
+                  :loading="uploadingMaterialLessonId === l.id"
+                  @click="triggerMaterialUpload(l)"
+                >
+                  {{ uploadingMaterialLessonId === l.id ? '上传中…' : '上传课件' }}
+                </el-button>
+                <el-button link type="danger" @click="removeLesson(l)">删除</el-button>
+              </span>
+              <el-progress
+                v-if="uploading && uploadLessonId === l.id"
+                :percentage="uploadProgress"
+                :stroke-width="6"
+                style="margin-top: 4px"
+              />
+            </div>
+            <!-- 当前课时的课件列表 -->
+            <div v-if="materialsOf(l.id!).length" class="lesson-materials">
+              <div v-for="m in materialsOf(l.id!)" :key="m.id" class="lm-item">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lm-icon">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span class="lm-name" :title="m.name">{{ m.name }}</span>
+                <el-tag size="small" effect="plain">{{ m.type }}</el-tag>
+                <el-button link type="danger" size="small" @click="removeMaterial(m)">删除</el-button>
+              </div>
+            </div>
           </div>
           <div v-if="activeChapterId === c.id" class="lesson-form">
             <el-input v-model="lessonForm.title" placeholder="课时标题" />
@@ -362,29 +398,6 @@ onMounted(load)
           <el-button v-else link type="primary" @click="activeChapterId = c.id ?? null">+ 添加课时</el-button>
         </div>
       </div>
-    </div>
-
-    <div v-if="!isCreate" class="section">
-      <h2 class="section-title">课件管理</h2>
-      <div class="material-upload">
-        <el-button type="primary" :loading="uploadingMaterial" @click="triggerMaterialUpload">
-          {{ uploadingMaterial ? '上传中…' : '上传课件文件' }}
-        </el-button>
-        <span class="section-tip" style="margin: 0">
-          支持 PDF、图片（JPG/PNG/WebP/GIF）、音频（MP3/AAC/M4A/WAV），上传后自动登记；课件仅在线预览
-        </span>
-      </div>
-      <el-table :data="materials" border style="margin-top: 12px">
-        <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="name" label="名称" />
-        <el-table-column prop="type" label="类型" width="90" />
-        <el-table-column prop="cosKey" label="文件路径" />
-        <el-table-column label="操作" width="90">
-          <template #default="{ row }">
-            <el-button link type="danger" @click="removeMaterial(row as AdminMaterial)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
     </div>
 
     <!-- 隐藏的视频文件选择 -->
@@ -405,11 +418,11 @@ onMounted(load)
       @change="onCoverFileChange"
     >
 
-    <!-- 隐藏的课件文件选择 -->
+    <!-- 隐藏的课件文件选择（按课时上传） -->
     <input
       ref="materialFileRef"
       type="file"
-      accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp3,.aac,.m4a,.wav"
+      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.mp3,.aac,.m4a,.wav"
       style="display: none"
       @change="onMaterialFileChange"
     >
@@ -434,9 +447,8 @@ onMounted(load)
   font-size: 12px;
 }
 .cover-preview img { width: 100%; height: 100%; object-fit: cover; }
-.material-upload { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
 .section { margin-top: 32px; }
-.section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.section-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
 .chapter-form { display: flex; gap: 10px; margin-bottom: 16px; max-width: 480px; }
 .chapter-card {
   background: var(--card);
@@ -448,10 +460,27 @@ onMounted(load)
 }
 .chapter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .lessons { padding-left: 16px; }
+.lesson-block { border-bottom: 1px solid var(--border); }
+.lesson-block:last-child { border-bottom: none; }
 .lesson-row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid var(--border);
+  padding: 8px 0;
   flex-wrap: wrap;
+}
+/* 课时下的课件子列表 */
+.lesson-materials {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.lm-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.lm-icon { color: var(--primary); flex-shrink: 0; }
+.lm-name {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--foreground);
 }
 .lesson-actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .lesson-form { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
@@ -463,6 +492,5 @@ onMounted(load)
   .lesson-form { flex-wrap: wrap; }
   .lesson-row { flex-direction: column; align-items: flex-start; gap: 6px; }
   .cover-row { flex-wrap: wrap; }
-  .material-upload { flex-direction: column; align-items: stretch; }
 }
 </style>

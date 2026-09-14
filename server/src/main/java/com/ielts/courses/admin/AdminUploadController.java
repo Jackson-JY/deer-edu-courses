@@ -1,5 +1,7 @@
 package com.ielts.courses.admin;
 
+import com.ielts.courses.catalog.Lesson;
+import com.ielts.courses.catalog.LessonRepository;
 import com.ielts.courses.catalog.Material;
 import com.ielts.courses.catalog.MaterialRepository;
 import com.ielts.courses.common.ApiException;
@@ -24,18 +26,21 @@ import java.util.Set;
 @RequestMapping("/api/admin")
 public class AdminUploadController {
 
-    /** 课件仅支持在线预览的类型 */
+    /** 课件支持在线预览的类型 */
     private static final Set<String> ALLOWED_MATERIAL_EXT =
-            Set.of("pdf", "jpg", "jpeg", "png", "gif", "webp", "mp3", "aac", "m4a", "wav");
+            Set.of("pdf", "doc", "docx", "jpg", "jpeg", "png", "gif", "webp", "mp3", "aac", "m4a", "wav");
     private static final Set<String> ALLOWED_COVER_EXT =
             Set.of("jpg", "jpeg", "png", "webp", "gif");
 
     private final CosStorageService cosStorage;
     private final MaterialRepository materialRepository;
+    private final LessonRepository lessonRepository;
 
-    public AdminUploadController(CosStorageService cosStorage, MaterialRepository materialRepository) {
+    public AdminUploadController(CosStorageService cosStorage, MaterialRepository materialRepository,
+                                 LessonRepository lessonRepository) {
         this.cosStorage = cosStorage;
         this.materialRepository = materialRepository;
+        this.lessonRepository = lessonRepository;
     }
 
     /** 上传课程封面图，返回可访问 URL（回填到 course.cover）。 */
@@ -49,18 +54,28 @@ public class AdminUploadController {
         return ApiResult.ok(Map.of("url", up.url(), "key", up.key()));
     }
 
-    /** 上传课件文件到 COS 并直接登记为该课程的课件（默认仅预览）。 */
+    /** 上传课件文件到 COS 并登记为指定课时的课件（课件必须关联到具体课时）。 */
     @PostMapping("/courses/{courseId}/materials/upload")
     public ApiResult<Material> uploadMaterial(@PathVariable Long courseId,
                                               @RequestParam("file") MultipartFile file,
                                               @RequestParam(value = "lessonId", required = false) Long lessonId) {
+        if (lessonId == null) {
+            throw new ApiException(BizCode.BAD_REQUEST, "请选择课件所属课时");
+        }
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ApiException(BizCode.NOT_FOUND, "课时不存在"));
+        if (!courseId.equals(lesson.getCourseId())) {
+            throw new ApiException(BizCode.BAD_REQUEST, "课时不属于该课程");
+        }
+
         String original = file.getOriginalFilename();
         String ext = extensionOf(original);
         if (!ALLOWED_MATERIAL_EXT.contains(ext)) {
-            throw new ApiException(BizCode.BAD_REQUEST, "课件仅支持 PDF、图片（JPG/PNG/WebP/GIF）或音频（MP3/AAC/M4A/WAV）");
+            throw new ApiException(BizCode.BAD_REQUEST,
+                    "课件仅支持 PDF、Word（doc/docx）、图片（JPG/PNG/WebP/GIF）或音频（MP3/AAC/M4A/WAV）");
         }
 
-        CosStorageService.UploadedFile up = cosStorage.upload(file, "materials/" + courseId);
+        CosStorageService.UploadedFile up = cosStorage.upload(file, "materials/" + courseId + "/" + lessonId);
 
         Material material = new Material();
         material.setCourseId(courseId);
@@ -75,6 +90,7 @@ public class AdminUploadController {
     private String inferType(String ext) {
         return switch (ext) {
             case "pdf" -> "PDF";
+            case "doc", "docx" -> "DOC";
             case "mp3", "aac", "m4a", "wav" -> "AUDIO";
             default -> "IMAGE";
         };

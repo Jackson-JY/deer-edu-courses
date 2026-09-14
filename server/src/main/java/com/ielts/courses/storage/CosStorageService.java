@@ -122,6 +122,8 @@ public class CosStorageService {
     private String contentTypeOf(String ext) {
         return switch (ext) {
             case "pdf" -> "application/pdf";
+            case "doc" -> "application/msword";
+            case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             case "jpg", "jpeg" -> "image/jpeg";
             case "png" -> "image/png";
             case "gif" -> "image/gif";

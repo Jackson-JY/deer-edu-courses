@@ -63,12 +63,13 @@ export interface Chapter {
   lessons: LessonBrief[]
 }
 
-export type MaterialType = 'PDF' | 'IMAGE' | 'AUDIO'
+export type MaterialType = 'PDF' | 'IMAGE' | 'AUDIO' | 'DOC'
 
 export interface MaterialMeta {
   id: number
   name: string
   type: MaterialType
+  lessonId?: number | null
   previewOnly: boolean
 }
 

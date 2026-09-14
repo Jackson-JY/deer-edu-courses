@@ -175,10 +175,10 @@ export function uploadCover(file: File) {
   return postUpload<{ url: string; key: string }>('/api/admin/upload/cover', fd)
 }
 
-/** 上传课件文件到 COS 并自动登记为课程课件 */
-export function uploadMaterialFile(courseId: number, file: File, lessonId?: number) {
+/** 上传课件文件到 COS 并登记为指定课时的课件 */
+export function uploadMaterialFile(courseId: number, file: File, lessonId: number) {
   const fd = new FormData()
   fd.append('file', file)
-  if (lessonId) fd.append('lessonId', String(lessonId))
+  fd.append('lessonId', String(lessonId))
   return postUpload<AdminMaterial>(`/api/admin/courses/${courseId}/materials/upload`, fd)
 }

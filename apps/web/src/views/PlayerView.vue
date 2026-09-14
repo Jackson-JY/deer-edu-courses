@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { CourseDetail, LessonBrief, MaterialMeta, PlayCredential } from '@ielts/shared-types'
@@ -24,11 +24,23 @@ const detail = ref<CourseDetail | null>(null)
 const showMaterials = ref(false)
 const materialLoading = ref(false)
 
+// 当前课时关联的课件
+const currentMaterials = computed<MaterialMeta[]>(() =>
+  (detail.value?.materials ?? []).filter((m) => m.lessonId === lessonId),
+)
+
 // 课件预览弹窗
 const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewType = ref('')
 const previewName = ref('')
+
+// Word 文档用微软 Office Online 内嵌预览（要求文件 URL 公网可访问，COS 公有读满足）
+const previewEmbedUrl = computed(() =>
+  previewType.value === 'DOC'
+    ? `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(previewUrl.value)}`
+    : previewUrl.value,
+)
 
 onMounted(async () => {
   try {
@@ -292,17 +304,17 @@ function startHeartbeat(lessonId: number) {
           >
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             课件资料
-            <span v-if="detail?.materials.length" class="mat-badge">{{ detail.materials.length }}</span>
+            <span v-if="currentMaterials.length" class="mat-badge">{{ currentMaterials.length }}</span>
           </button>
         </div>
 
-        <!-- 课件列表面板 -->
+        <!-- 当前课时课件列表面板 -->
         <div v-if="showMaterials" class="material-panel">
           <div v-if="!detail" class="mp-empty">课件加载中…</div>
-          <div v-else-if="detail.materials.length === 0" class="mp-empty">本课程暂无课件</div>
+          <div v-else-if="currentMaterials.length === 0" class="mp-empty">本课时暂无课件</div>
           <template v-else>
             <div
-              v-for="m in detail.materials"
+              v-for="m in currentMaterials"
               :key="m.id"
               class="mp-item"
               :class="{ disabled: materialLoading }"
@@ -361,12 +373,26 @@ function startHeartbeat(lessonId: number) {
         <div class="preview-dialog">
           <div class="preview-header">
             <span class="preview-title">{{ previewName }}</span>
+            <a
+              v-if="previewType === 'DOC'"
+              :href="previewUrl"
+              target="_blank"
+              rel="noopener"
+              class="preview-open"
+              title="预览无法显示时点此在新窗口打开原文件"
+            >新窗口打开</a>
             <button class="preview-close" @click="previewVisible = false">✕</button>
           </div>
           <div class="preview-body">
             <iframe v-if="previewType === 'PDF'" :src="previewUrl" class="preview-iframe"></iframe>
             <img v-else-if="previewType === 'IMAGE'" :src="previewUrl" class="preview-img" />
             <audio v-else-if="previewType === 'AUDIO'" :src="previewUrl" controls class="preview-audio"></audio>
+            <iframe
+              v-else-if="previewType === 'DOC'"
+              :src="previewEmbedUrl"
+              class="preview-iframe"
+              title="Word 文档在线预览"
+            ></iframe>
             <div v-else class="preview-unsupported">不支持在线预览此文件类型</div>
           </div>
         </div>
@@ -556,6 +582,8 @@ function startHeartbeat(lessonId: number) {
   padding: 14px 20px; border-bottom: 1px solid #eee; flex-shrink: 0;
 }
 .preview-title { font-size: 15px; font-weight: 600; color: #222; }
+.preview-open { margin-left: auto; margin-right: 12px; font-size: 13px; color: #2563eb; text-decoration: none; }
+.preview-open:hover { text-decoration: underline; }
 .preview-close {
   background: none; border: none; font-size: 18px; color: #999;
   cursor: pointer; padding: 4px 8px; border-radius: 4px; line-height: 1;

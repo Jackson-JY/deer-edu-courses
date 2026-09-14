@@ -70,7 +70,7 @@ public class AdminCourseController {
             chapter.setLessons(lessonRepository.findByChapterIdOrderBySortAsc(chapter.getId()));
         }
         result.put("chapters", chapters);
-        result.put("materials", materialRepository.findByCourseId(id));
+        result.put("materials", materialRepository.findByCourseIdOrderByIdAsc(id));
         return ApiResult.ok(result);
     }
 
@@ -128,10 +128,11 @@ public class AdminCourseController {
     @DeleteMapping("/{courseId}/chapters/{chapterId}")
     @Transactional
     public ApiResult<Void> deleteChapter(@PathVariable Long chapterId) {
-        // 级联删除章节下的课时和关联的观看记录
+        // 级联删除章节下课时关联的观看记录与课件，再删课时和章节
         List<Lesson> lessons = lessonRepository.findByChapterIdOrderBySortAsc(chapterId);
         for (Lesson ls : lessons) {
             watchRecordRepository.deleteByLessonId(ls.getId());
+            materialRepository.deleteByLessonId(ls.getId());
         }
         lessonRepository.deleteAll(lessons);
         chapterRepository.deleteById(chapterId);
@@ -167,6 +168,7 @@ public class AdminCourseController {
     @Transactional
     public ApiResult<Void> deleteLesson(@PathVariable Long lessonId) {
         watchRecordRepository.deleteByLessonId(lessonId);
+        materialRepository.deleteByLessonId(lessonId);
         lessonRepository.deleteById(lessonId);
         return ApiResult.ok();
     }

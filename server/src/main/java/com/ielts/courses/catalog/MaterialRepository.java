@@ -9,8 +9,13 @@ import java.util.List;
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long> {
 
-    List<Material> findByCourseId(Long courseId);
+    List<Material> findByCourseIdOrderByIdAsc(Long courseId);
+
+    List<Material> findByCourseIdAndLessonIdOrderByIdAsc(Long courseId, Long lessonId);
 
     @Transactional
     void deleteByCourseId(Long courseId);
+
+    @Transactional
+    long deleteByLessonId(Long lessonId);
 }

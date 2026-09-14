@@ -38,7 +38,7 @@ public class CatalogService {
         for (Chapter chapter : chapters) {
             chapter.setLessons(lessonRepository.findByChapterIdOrderBySortAsc(chapter.getId()));
         }
-        List<Material> materials = materialRepository.findByCourseId(courseId);
+        List<Material> materials = materialRepository.findByCourseIdOrderByIdAsc(courseId);
         return new CourseDetail(course, chapters, materials);
     }
 

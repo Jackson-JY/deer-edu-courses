@@ -21,7 +21,7 @@ public class AdminMaterialController {
 
     @GetMapping
     public ApiResult<List<Material>> list(@PathVariable Long courseId) {
-        return ApiResult.ok(materialRepository.findByCourseId(courseId));
+        return ApiResult.ok(materialRepository.findByCourseIdOrderByIdAsc(courseId));
     }
 
     @PostMapping

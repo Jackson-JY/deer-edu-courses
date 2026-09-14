@@ -192,11 +192,12 @@ public class CatalogController {
     }
 
     private Map<String, Object> toMaterialMap(Material material) {
-        return Map.of(
-                "id", material.getId(),
-                "name", material.getName(),
-                "type", material.getType(),
-                "previewOnly", material.getPreviewOnly() != null && material.getPreviewOnly() == 1
-        );
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", material.getId());
+        m.put("name", material.getName());
+        m.put("type", material.getType());
+        m.put("lessonId", material.getLessonId());
+        m.put("previewOnly", material.getPreviewOnly() != null && material.getPreviewOnly() == 1);
+        return m;
     }
 }
