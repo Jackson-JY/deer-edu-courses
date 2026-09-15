@@ -33,18 +33,24 @@ public class VodPsignGenerator {
 
     private static final String HS256 = "HS256";
     private static final String ORIGINAL = "Original";
+    private static final String RAW_ADAPTIVE = "RawAdaptive";
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    /**
+     * 生成 psign（JWT 格式），播放原始文件。
+     */
+    public String generate(long appId, String fileId, String playKey, long ttl, String watermark) {
+        return generate(appId, fileId, playKey, ttl, watermark, false, 0);
+    }
 
     /**
      * 生成 psign（JWT 格式）。
      *
-     * @param appId     腾讯云 VOD subAppId
-     * @param fileId    视频 fileId
-     * @param playKey   播放器签名密钥
-     * @param ttl       签名有效时长（秒）
-     * @param watermark 动态水印文本（可选）
+     * @param adaptive           true 播放未加密自适应码流输出，false 播放上传的原始文件
+     * @param adaptiveDefinition 自适应码流模板 ID（adaptive=true 时必填）
      */
-    public String generate(long appId, String fileId, String playKey, long ttl, String watermark) {
+    public String generate(long appId, String fileId, String playKey, long ttl, String watermark,
+                           boolean adaptive, int adaptiveDefinition) {
         long current = System.currentTimeMillis() / 1000;
         long expire = current + ttl;
 
@@ -66,9 +72,14 @@ public class VodPsignGenerator {
         payload.put("urlAccessInfo", urlAccessInfo);
 
         // contentInfo - 必选，至少包含 audioVideoType
-        // 目前未配置转码模板，使用 Original（原始视频）
+        // 已转自适应码流的视频播 HLS（首帧快、可按网速切清晰度），否则回退原始文件
         Map<String, Object> contentInfo = new LinkedHashMap<>();
-        contentInfo.put("audioVideoType", ORIGINAL);
+        if (adaptive && adaptiveDefinition > 0) {
+            contentInfo.put("audioVideoType", RAW_ADAPTIVE);
+            contentInfo.put("rawAdaptiveDefinition", adaptiveDefinition);
+        } else {
+            contentInfo.put("audioVideoType", ORIGINAL);
+        }
         if (watermark != null && !watermark.isBlank()) {
             contentInfo.put("watermarkText", watermark);
         }

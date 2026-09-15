@@ -57,6 +57,10 @@ app:
       secret-id: ${VOD_SECRET_ID:}
       secret-key: ${VOD_SECRET_KEY:}
       play-key: ${VOD_PLAY_KEY:}
+      # 自适应码流模板 ID（预置 Adaptive-HLS 模板为 10），播放凭证按该模板转码状态动态签发
+      adaptive-definition: ${VOD_ADAPTIVE_DEFINITION:10}
+      # 客户端上传后自动执行的任务流名称（在 VOD 控制台创建含自适应转码的任务流后配置；为空则上传后不自动转码）
+      upload-procedure: ${VOD_UPLOAD_PROCEDURE:}
     cos:
       bucket: ${COS_BUCKET:}
       region: ${COS_REGION:ap-guangzhou}

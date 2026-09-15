@@ -24,6 +24,7 @@ public class PlayService {
     private final EntitlementService entitlementService;
     private final WatchRecordRepository watchRecordRepository;
     private final VodPsignGenerator psignGenerator;
+    private final VodMediaStatusService mediaStatusService;
     private final StringRedisTemplate redisTemplate;
     private final UserRepository userRepository;
 
@@ -33,16 +34,21 @@ public class PlayService {
     @Value("${app.tencent.vod.play-key:}")
     private String vodPlayKey;
 
+    @Value("${app.tencent.vod.adaptive-definition:10}")
+    private int adaptiveDefinition;
+
     private final AdminSecurityController securityConfig;
 
     public PlayService(LessonRepository lessonRepository, EntitlementService entitlementService,
                        WatchRecordRepository watchRecordRepository, VodPsignGenerator psignGenerator,
+                       VodMediaStatusService mediaStatusService,
                        StringRedisTemplate redisTemplate, UserRepository userRepository,
                        AdminSecurityController securityConfig) {
         this.lessonRepository = lessonRepository;
         this.entitlementService = entitlementService;
         this.watchRecordRepository = watchRecordRepository;
         this.psignGenerator = psignGenerator;
+        this.mediaStatusService = mediaStatusService;
         this.redisTemplate = redisTemplate;
         this.userRepository = userRepository;
         this.securityConfig = securityConfig;
@@ -61,8 +67,13 @@ public class PlayService {
         long credentialTtl = securityConfig.getCredentialTtl();
         String watermarkText = buildWatermarkText(user, lesson.getTitle());
         String psign = null;
-        if (vodAppId > 0 && vodPlayKey != null && !vodPlayKey.isEmpty()) {
-            psign = psignGenerator.generate(vodAppId, lesson.getVodFileId(), vodPlayKey, credentialTtl, watermarkText);
+        String vodFileId = lesson.getVodFileId();
+        if (vodAppId > 0 && vodPlayKey != null && !vodPlayKey.isEmpty()
+                && vodFileId != null && !vodFileId.isBlank()) {
+            // 已转自适应码流则播 HLS（秒开、按网速切清晰度），否则回退原始文件
+            boolean adaptive = mediaStatusService.hasAdaptiveStream(vodFileId);
+            psign = psignGenerator.generate(vodAppId, vodFileId, vodPlayKey, credentialTtl,
+                    watermarkText, adaptive, adaptiveDefinition);
         }
 
         int lastPosition = findLastPosition(user.userId(), lessonId);
