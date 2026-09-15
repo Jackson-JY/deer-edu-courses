@@ -29,13 +29,16 @@ public class CatalogController {
     private final EntitlementRepository entitlementRepository;
     private final LessonRepository lessonRepository;
     private final CourseRepository courseRepository;
+    private final com.ielts.courses.audit.EventLogService eventLogService;
 
     public CatalogController(CatalogService catalogService, EntitlementRepository entitlementRepository,
-                             LessonRepository lessonRepository, CourseRepository courseRepository) {
+                             LessonRepository lessonRepository, CourseRepository courseRepository,
+                             com.ielts.courses.audit.EventLogService eventLogService) {
         this.catalogService = catalogService;
         this.entitlementRepository = entitlementRepository;
         this.lessonRepository = lessonRepository;
         this.courseRepository = courseRepository;
+        this.eventLogService = eventLogService;
     }
 
     @GetMapping("/courses")
@@ -90,6 +93,9 @@ public class CatalogController {
         result.put("ctaState", ctaState);
         result.put("chapters", detail.chapters().stream().map(ch -> toChapterMap(ch, entitled)).collect(Collectors.toList()));
         result.put("materials", detail.materials().stream().map(this::toMaterialMap).collect(Collectors.toList()));
+        // 课程浏览记录（匿名可记，IP 兜底去重）
+        eventLogService.recordEvent(user == null ? null : user.userId(),
+                "COURSE_VIEW", "COURSE", String.valueOf(id), course.getTitle(), null);
         return ApiResult.ok(result);
     }
 

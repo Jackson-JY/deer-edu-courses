@@ -29,6 +29,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'courses/:id', name: 'admin-course-edit', component: () => import('@/views/admin/CourseEditView.vue') },
       { path: 'users', name: 'admin-users', component: () => import('@/views/admin/UserManageView.vue') },
       { path: 'users/:id/entitlements', name: 'admin-user-entitlements', component: () => import('@/views/admin/UserEntitlementView.vue') },
+      { path: 'logs', name: 'admin-logs', component: () => import('@/views/admin/OperationLogView.vue') },
       { path: 'security', name: 'admin-security', component: () => import('@/views/admin/SecurityView.vue') },
     ],
   },

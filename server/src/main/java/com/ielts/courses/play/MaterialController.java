@@ -23,16 +23,19 @@ public class MaterialController {
     private final MaterialRepository materialRepository;
     private final EntitlementService entitlementService;
     private final AdminSecurityController securityConfig;
+    private final com.ielts.courses.audit.EventLogService eventLogService;
 
     @Value("${app.tencent.cos.preview-url:}")
     private String previewUrlPrefix;
 
     public MaterialController(MaterialRepository materialRepository,
                               EntitlementService entitlementService,
-                              AdminSecurityController securityConfig) {
+                              AdminSecurityController securityConfig,
+                              com.ielts.courses.audit.EventLogService eventLogService) {
         this.materialRepository = materialRepository;
         this.entitlementService = entitlementService;
         this.securityConfig = securityConfig;
+        this.eventLogService = eventLogService;
     }
 
     @GetMapping("/{id}/preview-url")
@@ -48,6 +51,9 @@ public class MaterialController {
 
         // TODO: 接入腾讯云 COS 生成短时效签名 URL（存储桶转私有读后），目前返回公开拼链
         String url = previewUrlPrefix.isEmpty() ? "/preview/" + material.getCosKey() : previewUrlPrefix + material.getCosKey();
+        // 课件预览记录
+        eventLogService.recordEvent(user.userId(), "MATERIAL_PREVIEW", "MATERIAL",
+                String.valueOf(material.getId()), material.getName(), null);
         return ApiResult.ok(Map.of(
                 "url", url,
                 "name", material.getName(),

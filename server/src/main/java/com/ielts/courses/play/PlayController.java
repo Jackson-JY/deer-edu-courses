@@ -26,16 +26,24 @@ public class PlayController {
 
     private final PlayService playService;
     private final LessonRepository lessonRepository;
+    private final com.ielts.courses.audit.EventLogService eventLogService;
 
-    public PlayController(PlayService playService, LessonRepository lessonRepository) {
+    public PlayController(PlayService playService, LessonRepository lessonRepository,
+                          com.ielts.courses.audit.EventLogService eventLogService) {
         this.playService = playService;
         this.lessonRepository = lessonRepository;
+        this.eventLogService = eventLogService;
     }
 
     @PostMapping("/credential")
     public ApiResult<PlayService.PlayCredential> credential(@CurrentUser LoginUser user,
                                                             @Valid @RequestBody CredentialReq req) {
-        return ApiResult.ok(playService.issueCredential(user, req.lessonId));
+        PlayService.PlayCredential credential = playService.issueCredential(user, req.lessonId());
+        // 课时播放浏览记录
+        String lessonTitle = lessonRepository.findById(req.lessonId()).map(Lesson::getTitle).orElse(null);
+        eventLogService.recordEvent(user.userId(), "LESSON_VIEW", "LESSON",
+                String.valueOf(req.lessonId()), lessonTitle, null);
+        return ApiResult.ok(credential);
     }
 
     @PostMapping("/heartbeat")

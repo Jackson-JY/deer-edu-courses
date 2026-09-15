@@ -78,6 +78,13 @@ public class AuthService {
         redisTemplate.delete("login:session:" + userId);
     }
 
+    /** 登录失败时判断尝试的账号是否为管理员（用于管理员登录审计） */
+    public boolean isAdminPhone(String phone) {
+        return userRepository.findByPhone(phone)
+                .map(u -> resolveRoles(u.getId()).contains("ADMIN"))
+                .orElse(false);
+    }
+
     public UserProfile getProfile(long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new com.ielts.courses.common.ApiException(BizCode.NOT_FOUND));

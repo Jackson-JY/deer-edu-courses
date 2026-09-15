@@ -1,5 +1,7 @@
 package com.ielts.courses.auth;
 
+import com.ielts.courses.audit.EventLogService;
+import com.ielts.courses.common.ApiException;
 import com.ielts.courses.common.ApiResult;
 import com.ielts.courses.common.CurrentUser;
 import jakarta.validation.Valid;
@@ -17,26 +19,55 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final EventLogService eventLogService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, EventLogService eventLogService) {
         this.authService = authService;
+        this.eventLogService = eventLogService;
     }
 
     /** 用户注册：手机号 + 密码 + 昵称（无需验证码） */
     @PostMapping("/register")
     public ApiResult<AuthService.LoginResult> register(@Valid @RequestBody RegisterReq req) {
-        return ApiResult.ok(authService.register(req.phone, req.password, req.nickname));
+        AuthService.LoginResult result = authService.register(req.phone, req.password, req.nickname);
+        eventLogService.recordEvent(result.profile().id(), "REGISTER", null, null,
+                result.profile().nickname(), "手机号注册");
+        eventLogService.recordEvent(result.profile().id(), "LOGIN", null, null,
+                result.profile().nickname(), "注册后自动登录");
+        return ApiResult.ok(result);
     }
 
     /** 密码登录 */
     @PostMapping("/login")
     public ApiResult<AuthService.LoginResult> login(@Valid @RequestBody LoginReq req) {
-        return ApiResult.ok(authService.loginByPassword(req.phone, req.password));
+        AuthService.LoginResult result;
+        try {
+            result = authService.loginByPassword(req.phone, req.password);
+        } catch (ApiException e) {
+            String maskedPhone = maskPhone(req.phone);
+            eventLogService.recordEvent(null, "LOGIN_FAIL", null, null, null,
+                    maskedPhone + "：" + e.getMessage());
+            // 管理员账号登录失败同时进管理员操作日志
+            if (authService.isAdminPhone(req.phone)) {
+                eventLogService.recordAdminLogin(null, "手机号 " + maskedPhone, false, e.getMessage());
+            }
+            throw e;
+        }
+        Long uid = result.profile().id();
+        boolean isAdmin = result.profile().roles().contains("ADMIN");
+        eventLogService.recordEvent(uid, "LOGIN", null, null, result.profile().nickname(),
+                isAdmin ? "管理员登录" : "密码登录");
+        if (isAdmin) {
+            eventLogService.recordAdminLogin(uid, result.profile().nickname(), true, null);
+        }
+        return ApiResult.ok(result);
     }
 
     @PostMapping("/logout")
     public ApiResult<Void> logout(@CurrentUser LoginUser user) {
         if (user != null) {
+            eventLogService.recordEvent(user.userId(), "LOGOUT", null, null,
+                    user.isAdmin() ? "管理员退出" : "退出登录", null);
             authService.logout(user.userId());
         }
         return ApiResult.ok();
@@ -48,6 +79,11 @@ public class AuthController {
             return ApiResult.error(401, "未登录", "NEED_LOGIN");
         }
         return ApiResult.ok(authService.getProfile(user.userId()));
+    }
+
+    private String maskPhone(String phone) {
+        if (phone == null || phone.length() != 11) return phone == null ? "" : phone;
+        return phone.substring(0, 3) + "****" + phone.substring(7);
     }
 
     public record RegisterReq(

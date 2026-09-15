@@ -182,3 +182,76 @@ export function uploadMaterialFile(courseId: number, file: File, lessonId: numbe
   fd.append('lessonId', String(lessonId))
   return postUpload<AdminMaterial>(`/api/admin/courses/${courseId}/materials/upload`, fd)
 }
+
+// ===== 审计日志 / 访问看板 =====
+
+export interface AdminOperationLogItem {
+  id: number
+  adminUserId: number | null
+  adminName: string | null
+  module: string
+  action: string
+  method: string
+  path: string
+  params: string | null
+  ip: string | null
+  userAgent: string | null
+  success: number
+  error: string | null
+  durationMs: number | null
+  createdAt: string
+}
+
+export interface UserEventLogItem {
+  id: number
+  userId: number | null
+  userName: string | null
+  eventType: string
+  targetType: string | null
+  targetId: string | null
+  targetName: string | null
+  detail: string | null
+  ip: string | null
+  userAgent: string | null
+  createdAt: string
+}
+
+export interface LogOverview {
+  todayPv: number
+  todayUv: number
+  todayAdminOps: number
+  pvTrend: { date: string; pv: number; uv: number }[]
+  topCourses: { courseId: string; title: string; views: number }[]
+  eventTypeCounts: Record<string, number>
+  recentAdminOps: AdminOperationLogItem[]
+  recentUserEvents: UserEventLogItem[]
+}
+
+export interface PagedResult<T> {
+  list: T[]
+  total: number
+}
+
+export function listAdminLogs(params: {
+  page: number
+  size: number
+  adminId?: number
+  module?: string
+  keyword?: string
+}) {
+  return get<PagedResult<AdminOperationLogItem>>('/api/admin/logs/admin', params)
+}
+
+export function listUserLogs(params: {
+  page: number
+  size: number
+  userId?: number
+  eventType?: string
+  targetType?: string
+}) {
+  return get<PagedResult<UserEventLogItem>>('/api/admin/logs/user', params)
+}
+
+export function getLogOverview() {
+  return get<LogOverview>('/api/admin/logs/overview')
+}

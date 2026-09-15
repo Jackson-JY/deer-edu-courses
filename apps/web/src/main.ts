@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import { router } from './router'
+import { initTracking } from './api/track'
 import 'element-plus/dist/index.css'
 import './assets/base.css'
 
@@ -15,4 +16,5 @@ for (const [name, comp] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(createPinia())
 app.use(router)
+initTracking()
 app.mount('#app')
