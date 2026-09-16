@@ -40,10 +40,11 @@ app:
     # 水印占位符：{nickname} 昵称 {phone} 脱敏手机号 {phoneTail} 手机尾号 {uid} 用户ID {time} 时间 {lesson} 课时名
     watermark-template: '{nickname} · {phoneTail} · UID{uid} · {time}'
   # 大模型服务平台 TokenHub（OpenAI 兼容），用于写作 AI 批改草稿
+  # 默认 deepseek/deepseek-flash：批改整篇约 55s；hy4-preview 为深度思考模型，需 10 分钟以上
   llm:
     base-url: ${LLM_BASE_URL:https://tokenhub.tencentmaas.com}
     api-key: ${LLM_API_KEY:}
-    model: ${LLM_MODEL:hy4-preview}
+    model: ${LLM_MODEL:deepseek/deepseek-flash}
     timeout-seconds: ${LLM_TIMEOUT_SECONDS:300}
   # 写作批改：管理员开通后按自然月限 N 篇
   writing:
