@@ -39,13 +39,16 @@ public class AdminUserController {
     private final EntitlementRepository entitlementRepository;
     private final StaffRepository staffRepository;
     private final CourseRepository courseRepository;
+    private final com.ielts.courses.writing.WritingGrantRepository writingGrantRepository;
 
     public AdminUserController(UserRepository userRepository, EntitlementRepository entitlementRepository,
-                               StaffRepository staffRepository, CourseRepository courseRepository) {
+                               StaffRepository staffRepository, CourseRepository courseRepository,
+                               com.ielts.courses.writing.WritingGrantRepository writingGrantRepository) {
         this.userRepository = userRepository;
         this.entitlementRepository = entitlementRepository;
         this.staffRepository = staffRepository;
         this.courseRepository = courseRepository;
+        this.writingGrantRepository = writingGrantRepository;
     }
 
     @GetMapping
@@ -56,6 +59,11 @@ public class AdminUserController {
         } else {
             users = userRepository.findAll();
         }
+        // 批量取写作权限，避免逐条查询
+        Map<Long, com.ielts.courses.writing.WritingGrant> grantMap = new HashMap<>();
+        for (com.ielts.courses.writing.WritingGrant g : writingGrantRepository.findAllBy()) {
+            grantMap.put(g.getUserId(), g);
+        }
         List<Map<String, Object>> list = users.stream().map(u -> {
             Map<String, Object> m = new HashMap<>();
             m.put("id", u.getId());
@@ -64,6 +72,11 @@ public class AdminUserController {
             m.put("status", u.getStatus());
             m.put("roles", staffRepository.findByUserIdAndStatus(u.getId(), 1).stream()
                     .map(Staff::getRole).collect(Collectors.toList()));
+            com.ielts.courses.writing.WritingGrant grant = grantMap.get(u.getId());
+            boolean grantActive = grant != null
+                    && (grant.getExpireAt() == null || grant.getExpireAt().isAfter(LocalDateTime.now()));
+            m.put("writingGranted", grantActive);
+            m.put("writingExpireAt", grantActive && grant.getExpireAt() != null ? grant.getExpireAt().toString() : null);
             return m;
         }).collect(Collectors.toList());
         return ApiResult.ok(list);

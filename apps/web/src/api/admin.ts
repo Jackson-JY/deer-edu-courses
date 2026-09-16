@@ -101,6 +101,8 @@ export interface AdminUser {
   nickname: string
   status: number
   roles: string[]
+  writingGranted?: boolean
+  writingExpireAt?: string | null
 }
 
 export function listAdminUsers(phone?: string) {

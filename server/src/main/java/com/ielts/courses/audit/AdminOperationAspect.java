@@ -34,7 +34,8 @@ public class AdminOperationAspect {
         this.eventLogService = eventLogService;
     }
 
-    @Around("within(@org.springframework.web.bind.annotation.RestController com.ielts.courses.admin..*)")
+    @Around("within(@org.springframework.web.bind.annotation.RestController com.ielts.courses.admin..*) || " +
+            "execution(* com.ielts.courses.writing.WritingAdminController.*(..))")
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         HttpServletRequest request = WebUtils.currentRequest();
         // 只审计写操作；请求上下文缺失（内部调用）时直接放行
@@ -122,6 +123,10 @@ public class AdminOperationAspect {
         // 用户
         if (uri.matches("/api/admin/users/\\d+/role")) return "修改用户角色";
         if (uri.matches("/api/admin/users/\\d+/entitlements")) return "开通/编辑学习权限";
+        // 写作批改权限
+        if (uri.matches("/api/admin/writing/users/\\d+/grant")) {
+            return "DELETE".equalsIgnoreCase(method) ? "撤销写作权限" : "开通写作权限";
+        }
         // 视频/上传/安全
         if (uri.matches("/api/admin/vod/files/[^/]+/transcode")) return "触发视频转码";
         if (uri.equals("/api/admin/upload/cover")) return "上传课程封面";

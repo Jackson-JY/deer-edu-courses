@@ -17,6 +17,13 @@ const routes: RouteRecordRaw[] = [
   { path: '/my/learning', name: 'my-learning', component: () => import('@/views/MyLearningView.vue'), meta: { requiresAuth: true } },
   { path: '/my/settings', name: 'my-settings', component: () => import('@/views/AccountSettingsView.vue'), meta: { requiresAuth: true } },
 
+  // 写作批改
+  { path: '/writing/submit', name: 'writing-submit', component: () => import('@/views/WritingSubmitView.vue'), meta: { requiresAuth: true } },
+  { path: '/my/writing', name: 'my-writing', component: () => import('@/views/MyWritingView.vue'), meta: { requiresAuth: true } },
+  { path: '/writing/teacher', name: 'writing-teacher', component: () => import('@/views/TeacherWritingView.vue'), meta: { requiresAuth: true } },
+  { path: '/writing/review/:id', name: 'writing-review', component: () => import('@/views/WritingReviewView.vue'), meta: { requiresAuth: true } },
+  { path: '/writing/:id', name: 'writing-result', component: () => import('@/views/WritingResultView.vue'), meta: { requiresAuth: true } },
+
   // 管理后台
   { path: '/admin/login', name: 'admin-login', component: () => import('@/views/admin/AdminLoginView.vue') },
   {

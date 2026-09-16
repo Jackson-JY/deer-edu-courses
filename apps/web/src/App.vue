@@ -34,6 +34,7 @@ const navs = computed(() =>
     { to: '/courses', label: '课程', show: true },
     { to: '/courses?type=bundle', label: '套餐', show: features.bundle },
     { to: '/subscribe', label: '订阅会员', vip: true, show: features.subscription },
+    { to: '/my/writing', label: '写作批改', show: true },
     { to: '/my/learning', label: '我的学习', show: true },
   ].filter((n) => n.show),
 )
@@ -91,7 +92,8 @@ function onUserCommand(cmd: string) {
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="/my/learning">我的学习</el-dropdown-item>
-                <el-dropdown-item command="/my/settings">账号设置</el-dropdown-item>
+              <el-dropdown-item command="/my/writing">我的写作</el-dropdown-item>
+              <el-dropdown-item command="/my/settings">账号设置</el-dropdown-item>
                 <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
