@@ -34,12 +34,19 @@ public class AdminOperationAspect {
         this.eventLogService = eventLogService;
     }
 
-    @Around("within(@org.springframework.web.bind.annotation.RestController com.ielts.courses.admin..*) || " +
+    // 注意：不能写成 within(@RestController com.ielts.courses.admin..*) —— AspectJ 对
+    // 「注解+包限定」组合的解析会使包限定失效，从而匹配所有 @RestController。
+    // 这里用纯包 within + 单独列出包外的管理端 Controller，已用 AspectJ PointcutParser 实测精确匹配。
+    @Around("within(com.ielts.courses.admin..*) || " +
             "execution(* com.ielts.courses.writing.WritingAdminController.*(..))")
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         HttpServletRequest request = WebUtils.currentRequest();
         // 只审计写操作；请求上下文缺失（内部调用）时直接放行
         if (request == null || isReadOnly(request.getMethod())) {
+            return pjp.proceed();
+        }
+        // 双保险：非 /api/admin/ 路径一律不记（防止切点误匹配扩散）
+        if (!request.getRequestURI().startsWith("/api/admin/")) {
             return pjp.proceed();
         }
 
@@ -95,6 +102,7 @@ public class AdminOperationAspect {
         if (uri.startsWith("/api/admin/upload")) return "文件上传";
         if (uri.startsWith("/api/admin/dashboard")) return "工作台";
         if (uri.startsWith("/api/admin/logs")) return "日志审计";
+        if (uri.startsWith("/api/admin/writing")) return "写作批改";
         return "其他";
     }
 

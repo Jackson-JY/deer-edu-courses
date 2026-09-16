@@ -65,7 +65,7 @@ const pageSize = ref(20)
 const moduleFilter = ref('')
 const keyword = ref('')
 
-const MODULES = ['课程管理', '用户管理', '视频点播', '安全策略', '文件上传', '日志审计', '工作台', '其他']
+const MODULES = ['课程管理', '用户管理', '视频点播', '安全策略', '文件上传', '日志审计', '写作批改', '工作台', '其他']
 
 async function loadAdmin() {
   loading.value = true
