@@ -173,6 +173,27 @@ public class AdminCourseController {
         return ApiResult.ok();
     }
 
+    /** 批量调整章节下课时顺序：按 lessonIds 数组顺序重设 sort（0,1,2...）。 */
+    @PutMapping("/{courseId}/chapters/{chapterId}/lessons/sort")
+    @Transactional
+    public ApiResult<Void> sortLessons(@PathVariable Long courseId, @PathVariable Long chapterId,
+                                       @RequestBody List<Long> lessonIds) {
+        if (lessonIds == null || lessonIds.isEmpty()) {
+            return ApiResult.ok();
+        }
+        List<Lesson> lessons = lessonRepository.findByChapterIdOrderBySortAsc(chapterId);
+        Map<Long, Lesson> byId = lessons.stream().collect(Collectors.toMap(Lesson::getId, l -> l));
+        for (int i = 0; i < lessonIds.size(); i++) {
+            Lesson lesson = byId.get(lessonIds.get(i));
+            // 仅接受属于该章节且该课程的课时，忽略非法 id
+            if (lesson != null && courseId.equals(lesson.getCourseId())) {
+                lesson.setSort(i);
+            }
+        }
+        lessonRepository.saveAll(byId.values());
+        return ApiResult.ok();
+    }
+
     private void copyFromReq(Course course, CourseReq req) {
         course.setTitle(req.title());
         course.setCover(req.cover());

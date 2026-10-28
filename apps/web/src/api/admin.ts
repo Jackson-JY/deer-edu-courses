@@ -95,6 +95,11 @@ export function deleteLesson(courseId: number, lessonId: number) {
   return del<void>(`/api/admin/courses/${courseId}/lessons/${lessonId}`)
 }
 
+/** 批量调整章节下课时顺序，lessonIds 按目标顺序排列 */
+export function sortLessons(courseId: number, chapterId: number, lessonIds: number[]) {
+  return put<void>(`/api/admin/courses/${courseId}/chapters/${chapterId}/lessons/sort`, lessonIds)
+}
+
 export interface AdminUser {
   id: number
   phone: string

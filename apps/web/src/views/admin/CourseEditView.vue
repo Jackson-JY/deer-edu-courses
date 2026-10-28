@@ -5,7 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getAdminCourse, createAdminCourse, updateAdminCourse,
   createChapter, updateChapter, deleteChapter,
-  createLesson, updateLesson, deleteLesson,
+  createLesson, updateLesson, deleteLesson, sortLessons,
   deleteMaterial, uploadCover, uploadMaterialFile,
   type AdminCourse, type AdminChapter, type AdminLesson, type AdminMaterial,
 } from '@/api/admin'
@@ -185,6 +185,66 @@ async function removeLesson(l: AdminLesson) {
   } catch (err: any) {
     ElMessage.error('删除课时失败：' + (err?.message || '未知错误'))
   }
+}
+
+// ===== 课时排序：拖拽（桌面）+ 上下移按钮（移动端）=====
+const draggingLessonId = ref<number | null>(null)
+const dragChapterId = ref<number | null>(null)
+const dragOverLessonId = ref<number | null>(null)
+
+function lessonIdsOf(c: AdminChapter) {
+  return (c.lessons || []).map((l) => l.id!)
+}
+
+async function persistLessonOrder(c: AdminChapter) {
+  if (!courseId) return
+  try {
+    await sortLessons(courseId, c.id!, lessonIdsOf(c))
+  } catch (err: any) {
+    ElMessage.error('保存排序失败：' + (err?.message || '未知错误'))
+    await load() // 失败则回滚到服务端顺序
+  }
+}
+
+/** 上下移按钮：与相邻课时交换位置后保存 */
+async function moveLesson(c: AdminChapter, index: number, direction: -1 | 1) {
+  const list = c.lessons || []
+  const target = index + direction
+  if (target < 0 || target >= list.length) return
+  const [item] = list.splice(index, 1)
+  list.splice(target, 0, item)
+  await persistLessonOrder(c)
+}
+
+function onLessonDragStart(c: AdminChapter, l: AdminLesson) {
+  draggingLessonId.value = l.id!
+  dragChapterId.value = c.id!
+}
+
+function onLessonDragOver(c: AdminChapter, l: AdminLesson) {
+  // 仅允许同章节内排序
+  if (draggingLessonId.value == null || dragChapterId.value !== c.id) return
+  if (draggingLessonId.value === l.id) return
+  dragOverLessonId.value = l.id!
+}
+
+function onLessonDrop(c: AdminChapter, target: AdminLesson) {
+  if (draggingLessonId.value == null || dragChapterId.value !== c.id) return
+  const list = c.lessons || []
+  const from = list.findIndex((l) => l.id === draggingLessonId.value)
+  const to = list.findIndex((l) => l.id === target.id)
+  if (from >= 0 && to >= 0 && from !== to) {
+    const [item] = list.splice(from, 1)
+    list.splice(to, 0, item)
+    persistLessonOrder(c)
+  }
+  onLessonDragEnd()
+}
+
+function onLessonDragEnd() {
+  draggingLessonId.value = null
+  dragChapterId.value = null
+  dragOverLessonId.value = null
 }
 
 // 触发文件选择
@@ -381,9 +441,20 @@ onMounted(load)
           </span>
         </div>
         <div class="lessons">
-          <div v-for="l in c.lessons" :key="l.id" class="lesson-block">
+          <div
+            v-for="(l, li) in c.lessons"
+            :key="l.id"
+            class="lesson-block"
+            :class="{ dragging: draggingLessonId === l.id, 'drag-over': dragOverLessonId === l.id }"
+            draggable="true"
+            @dragstart="onLessonDragStart(c, l)"
+            @dragover.prevent="onLessonDragOver(c, l)"
+            @drop="onLessonDrop(c, l)"
+            @dragend="onLessonDragEnd"
+          >
             <div class="lesson-row">
-              <span>
+              <span class="lesson-title">
+                <span class="drag-handle" title="拖拽调整顺序">⠿</span>
                 {{ l.title }}
                 <el-tag v-if="l.freeTrial" size="small" type="success">试看</el-tag>
                 <el-tag v-if="l.vodFileId" size="small" type="info" style="margin-left: 4px">已传视频</el-tag>
@@ -392,6 +463,13 @@ onMounted(load)
                 </el-tag>
               </span>
               <span class="lesson-actions">
+                <el-button link type="primary" :disabled="li === 0" @click="moveLesson(c, li, -1)">上移</el-button>
+                <el-button
+                  link
+                  type="primary"
+                  :disabled="li === (c.lessons?.length ?? 1) - 1"
+                  @click="moveLesson(c, li, 1)"
+                >下移</el-button>
                 <el-button link type="primary" @click="editLesson(l, c.id!)">编辑</el-button>
                 <el-button
                   link
@@ -527,6 +605,17 @@ onMounted(load)
   color: var(--foreground);
 }
 .lesson-actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.lesson-title { display: inline-flex; align-items: center; }
+.drag-handle {
+  cursor: grab;
+  color: var(--muted-foreground);
+  margin-right: 6px;
+  user-select: none;
+  font-size: 14px;
+}
+.drag-handle:active { cursor: grabbing; }
+.lesson-block.dragging { opacity: 0.45; }
+.lesson-block.drag-over { box-shadow: inset 0 2px 0 var(--primary); }
 .lesson-form { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
 .lesson-form .el-input { flex: 1; }
 .section-tip { font-size: 12px; color: var(--muted-foreground); margin: 0 0 12px; }

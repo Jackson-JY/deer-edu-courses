@@ -110,6 +110,7 @@ public class AdminOperationAspect {
         // 课程
         if (uri.matches("/api/admin/courses/\\d+/publish")) return "上架课程";
         if (uri.matches("/api/admin/courses/\\d+/offline")) return "下架课程";
+        if (uri.matches("/api/admin/courses/\\d+/chapters/\\d+/lessons/sort")) return "调整课时排序";
         if (uri.matches("/api/admin/courses/\\d+/chapters/\\d+/lessons")) return "新建课时";
         if (uri.matches("/api/admin/courses/\\d+/lessons/\\d+")) {
             return "PUT".equalsIgnoreCase(method) ? "编辑课时" : "删除课时";
