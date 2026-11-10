@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
+const router = useRouter()
 const visible = computed({
   get: () => auth.loginVisible,
   set: (v) => (v ? null : auth.closeLogin()),
@@ -76,6 +78,11 @@ async function confirmLogin() {
 watch(visible, (v) => {
   if (!v) reset()
 })
+
+function goForgotPassword() {
+  auth.closeLogin()
+  router.push('/forgot-password')
+}
 </script>
 
 <template>
@@ -111,6 +118,10 @@ watch(visible, (v) => {
       <button class="ld-submit-btn" :disabled="loading" @click="confirmLogin">
         {{ loading ? '请稍候…' : (mode === 'login' ? '登录' : '注册并登录') }}
       </button>
+
+      <p v-if="mode === 'login'" class="ld-forgot">
+        <a @click="goForgotPassword">忘记密码？</a>
+      </p>
 
       <p class="ld-agree">{{ mode === 'login' ? '登录' : '注册' }}即代表同意《用户协议》和《隐私政策》</p>
     </div>
@@ -186,6 +197,9 @@ watch(visible, (v) => {
 .ld-submit-btn:active { transform: scale(0.98); }
 .ld-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .ld-agree { font-size: 12px; color: var(--muted-foreground); margin: 16px 0 0; }
+.ld-forgot { margin: 12px 0 0; text-align: right; font-size: 13px; }
+.ld-forgot a { color: var(--primary); cursor: pointer; text-decoration: none; }
+.ld-forgot a:hover { text-decoration: underline; }
 @media (max-width: 480px) {
   .ld { padding: 4px 4px 8px; }
 }

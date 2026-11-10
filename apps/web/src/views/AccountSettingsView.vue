@@ -2,10 +2,54 @@
 import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { changePassword } from '@/api/auth'
 
 const auth = useAuthStore()
 const nickname = ref(auth.user?.nickname || '雅思学员')
 const phone = ref(auth.user?.phone || '138****6021')
+
+// ===== 修改密码 =====
+const pwdDialog = ref(false)
+const oldPassword = ref('')
+const newPassword = ref('')
+const newPassword2 = ref('')
+const pwdSaving = ref(false)
+
+function openPwdDialog() {
+  oldPassword.value = ''
+  newPassword.value = ''
+  newPassword2.value = ''
+  pwdDialog.value = true
+}
+
+async function savePassword() {
+  if (!oldPassword.value) {
+    ElMessage.warning('请输入原密码')
+    return
+  }
+  if (newPassword.value.length < 6 || newPassword.value.length > 32) {
+    ElMessage.warning('新密码长度需为 6-32 位')
+    return
+  }
+  if (newPassword.value === oldPassword.value) {
+    ElMessage.warning('新密码不能与原密码相同')
+    return
+  }
+  if (newPassword.value !== newPassword2.value) {
+    ElMessage.warning('两次输入的新密码不一致')
+    return
+  }
+  pwdSaving.value = true
+  try {
+    await changePassword(oldPassword.value, newPassword.value)
+    ElMessage.success('密码已修改，当前登录状态保持有效')
+    pwdDialog.value = false
+  } catch (e: any) {
+    ElMessage.error(e?.message || '修改失败')
+  } finally {
+    pwdSaving.value = false
+  }
+}
 
 function rebindPhone() {
   ElMessage.info('换绑手机号需短信验证（demo）')
@@ -45,6 +89,11 @@ function deleteAccount() {
     <div class="card">
       <div class="card-title">账号与安全</div>
       <div class="row">
+        <span class="label">登录密码</span>
+        <span class="value">定期修改密码可提升账号安全性</span>
+        <el-button text type="primary" @click="openPwdDialog">修改密码</el-button>
+      </div>
+      <div class="row">
         <span class="label">登录方式</span>
         <span class="value"><el-icon color="#09bb07"><ChatRound /></el-icon> 微信已绑定</span>
       </div>
@@ -62,6 +111,38 @@ function deleteAccount() {
         <el-button type="danger" plain round @click="deleteAccount">注销账号</el-button>
       </div>
     </div>
+
+    <el-dialog v-model="pwdDialog" title="修改密码" width="400px">
+      <el-input
+        v-model="oldPassword"
+        type="password"
+        show-password
+        placeholder="原密码"
+        maxlength="32"
+        class="pwd-input"
+      />
+      <el-input
+        v-model="newPassword"
+        type="password"
+        show-password
+        placeholder="新密码（6-32 位）"
+        maxlength="32"
+        class="pwd-input"
+      />
+      <el-input
+        v-model="newPassword2"
+        type="password"
+        show-password
+        placeholder="确认新密码"
+        maxlength="32"
+        class="pwd-input"
+        @keyup.enter="savePassword"
+      />
+      <template #footer>
+        <el-button @click="pwdDialog = false">取消</el-button>
+        <el-button type="primary" :loading="pwdSaving" @click="savePassword">确认修改</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -89,4 +170,5 @@ function deleteAccount() {
 }
 .card.danger { border-color: rgba(224, 83, 61, 0.3); }
 .card.danger .card-title { color: var(--danger); }
+.pwd-input { margin-bottom: 12px; }
 </style>

@@ -20,10 +20,13 @@ public class AuthController {
 
     private final AuthService authService;
     private final EventLogService eventLogService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthService authService, EventLogService eventLogService) {
+    public AuthController(AuthService authService, EventLogService eventLogService,
+                          PasswordResetService passwordResetService) {
         this.authService = authService;
         this.eventLogService = eventLogService;
+        this.passwordResetService = passwordResetService;
     }
 
     /** 用户注册：手机号 + 密码 + 昵称（无需验证码） */
@@ -81,6 +84,17 @@ public class AuthController {
         return ApiResult.ok(authService.getProfile(user.userId()));
     }
 
+    /** 已登录用户修改密码（校验原密码，保持当前会话） */
+    @PostMapping("/change-password")
+    public ApiResult<Void> changePassword(@CurrentUser LoginUser user,
+                                          @Valid @RequestBody ChangePasswordReq req) {
+        if (user == null) {
+            return ApiResult.error(401, "未登录", "NEED_LOGIN");
+        }
+        passwordResetService.changePassword(user.userId(), req.oldPassword(), req.newPassword());
+        return ApiResult.ok();
+    }
+
     private String maskPhone(String phone) {
         if (phone == null || phone.length() != 11) return phone == null ? "" : phone;
         return phone.substring(0, 3) + "****" + phone.substring(7);
@@ -103,6 +117,15 @@ public class AuthController {
             String phone,
             @NotBlank(message = "密码不能为空")
             String password
+    ) {
+    }
+
+    public record ChangePasswordReq(
+            @NotBlank(message = "原密码不能为空")
+            String oldPassword,
+            @NotBlank(message = "新密码不能为空")
+            @Size(min = 6, max = 32, message = "密码长度需为 6-32 位")
+            String newPassword
     ) {
     }
 }

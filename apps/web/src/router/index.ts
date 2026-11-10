@@ -8,6 +8,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/course/:id', name: 'course-detail', component: () => import('@/views/CourseDetailView.vue') },
   { path: '/subscribe', name: 'subscribe', component: () => import('@/views/SubscribeView.vue') },
   { path: '/search', name: 'search', component: () => import('@/views/SearchView.vue') },
+  { path: '/forgot-password', name: 'forgot-password', component: () => import('@/views/ForgotPasswordView.vue') },
   {
     path: '/learn/:courseId/:lessonId',
     name: 'player',
@@ -35,6 +36,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'courses', name: 'admin-courses', component: () => import('@/views/admin/CourseManageView.vue') },
       { path: 'courses/:id', name: 'admin-course-edit', component: () => import('@/views/admin/CourseEditView.vue') },
       { path: 'users', name: 'admin-users', component: () => import('@/views/admin/UserManageView.vue') },
+      { path: 'password-resets', name: 'admin-password-resets', component: () => import('@/views/admin/PasswordResetView.vue') },
       { path: 'users/:id/entitlements', name: 'admin-user-entitlements', component: () => import('@/views/admin/UserEntitlementView.vue') },
       { path: 'logs', name: 'admin-logs', component: () => import('@/views/admin/OperationLogView.vue') },
       { path: 'security', name: 'admin-security', component: () => import('@/views/admin/SecurityView.vue') },

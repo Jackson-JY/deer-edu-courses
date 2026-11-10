@@ -190,6 +190,41 @@ export function uploadMaterialFile(courseId: number, file: File, lessonId: numbe
   return postUpload<AdminMaterial>(`/api/admin/courses/${courseId}/materials/upload`, fd)
 }
 
+// ===== 密码重置申请 =====
+
+export interface PasswordResetItem {
+  id: number
+  userId: number
+  phone: string
+  nickname: string | null
+  status: 'PENDING' | 'CODE_ISSUED' | 'USED' | 'REJECTED' | 'EXPIRED'
+  requestIp: string | null
+  codeExpireAt: string | null
+  handledAt: string | null
+  handledByName: string | null
+  createdAt: string
+}
+
+export interface PasswordResetPage {
+  list: PasswordResetItem[]
+  total: number
+  pendingCount: number
+}
+
+export function listPasswordResets(params: { status?: string; page: number; size: number }) {
+  return get<PasswordResetPage>('/api/admin/password-resets', params)
+}
+
+export function issueResetCode(id: number) {
+  return post<{ id: number; phone: string; nickname: string | null; code: string; expireAt: string }>(
+    `/api/admin/password-resets/${id}/issue-code`,
+  )
+}
+
+export function rejectResetRequest(id: number) {
+  return post<void>(`/api/admin/password-resets/${id}/reject`)
+}
+
 // ===== 审计日志 / 访问看板 =====
 
 export interface AdminOperationLogItem {

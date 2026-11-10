@@ -57,6 +57,9 @@ async function login() {
         <template #prefix><el-icon><Lock /></el-icon></template>
       </el-input>
       <el-button type="primary" round class="submit" :loading="loading" @click="login">登录</el-button>
+      <p class="forgot">
+        <a @click="router.push('/forgot-password')">忘记密码？</a>
+      </p>
     </div>
   </div>
 </template>
@@ -112,6 +115,9 @@ async function login() {
 .login-card p { color: var(--muted-foreground); font-size: 13px; margin: 0 0 1.5rem; }
 .input { margin-bottom: 14px; }
 .submit { width: 100%; }
+.forgot { text-align: right; margin: 12px 0 0 !important; font-size: 13px !important; }
+.forgot a { color: var(--primary); cursor: pointer; text-decoration: none; }
+.forgot a:hover { text-decoration: underline; }
 @media (max-width: 480px) {
   .login-card { padding: 1.5rem; }
 }

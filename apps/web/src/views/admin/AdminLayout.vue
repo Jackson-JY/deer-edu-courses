@@ -12,6 +12,7 @@ const menus = [
   { path: '/admin', label: '工作台', icon: 'DataLine' },
   { path: '/admin/courses', label: '课程管理', icon: 'Reading' },
   { path: '/admin/users', label: '用户管理', icon: 'User' },
+  { path: '/admin/password-resets', label: '密码重置', icon: 'Key' },
   { path: '/admin/logs', label: '日志审计', icon: 'Document' },
   { path: '/writing/teacher', label: '写作批改', icon: 'EditPen' },
   { path: '/admin/security', label: '安全策略', icon: 'Lock' },

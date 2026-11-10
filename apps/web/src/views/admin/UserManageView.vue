@@ -138,6 +138,7 @@ onMounted(load)
     <div class="search-bar">
       <el-input v-model="phone" placeholder="输入手机号搜索" maxlength="11" style="width: 220px" />
       <el-button type="primary" @click="load">搜索</el-button>
+      <el-button plain @click="router.push('/admin/password-resets')">密码重置申请</el-button>
     </div>
     <el-table v-loading="loading" :data="users" border>
       <el-table-column prop="id" label="ID" width="70" />

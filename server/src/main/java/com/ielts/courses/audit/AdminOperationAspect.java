@@ -97,6 +97,7 @@ public class AdminOperationAspect {
     private String resolveModule(String uri) {
         if (uri.startsWith("/api/admin/courses")) return "课程管理";
         if (uri.startsWith("/api/admin/users")) return "用户管理";
+        if (uri.startsWith("/api/admin/password-resets")) return "用户管理";
         if (uri.startsWith("/api/admin/vod")) return "视频点播";
         if (uri.startsWith("/api/admin/security")) return "安全策略";
         if (uri.startsWith("/api/admin/upload")) return "文件上传";
@@ -132,6 +133,9 @@ public class AdminOperationAspect {
         // 用户
         if (uri.matches("/api/admin/users/\\d+/role")) return "修改用户角色";
         if (uri.matches("/api/admin/users/\\d+/entitlements")) return "开通/编辑学习权限";
+        // 密码重置
+        if (uri.matches("/api/admin/password-resets/\\d+/issue-code")) return "生成密码重置码";
+        if (uri.matches("/api/admin/password-resets/\\d+/reject")) return "拒绝密码重置申请";
         // 写作批改权限
         if (uri.matches("/api/admin/writing/users/\\d+/grant")) {
             return "DELETE".equalsIgnoreCase(method) ? "撤销写作权限" : "开通写作权限";
